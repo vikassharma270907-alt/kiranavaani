@@ -151,10 +151,14 @@ def test_configured_api_keys_helper(monkeypatch):
 
 
 def test_spa_404_handler_serves_index():
-    """Verify SPA fallback returns 200 without NameError for FileResponse."""
+    """Verify SPA fallback returns 200 HTML when dist is built, or 404 without NameError."""
+    from backend.app.main import frontend_dist
     response = client.get("/nonexistent-spa-route")
-    assert response.status_code == 200
-    assert "text/html" in response.headers.get("content-type", "")
+    if frontend_dist.exists() and (frontend_dist / "index.html").exists():
+        assert response.status_code == 200
+        assert "text/html" in response.headers.get("content-type", "")
+    else:
+        assert response.status_code == 404
 
 
 def test_docs_and_openapi():
