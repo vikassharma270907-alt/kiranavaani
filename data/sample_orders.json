@@ -1,0 +1,1973 @@
+{
+  "synthetic_samples": [
+    {
+      "sample_id": "SYN-001",
+      "target_snr_db": 30,
+      "acoustic_tier": "30 dB Clean",
+      "caller_id": "SyntheticCaller_2",
+      "transcript": "भैया 2 kg राजधानी मैदा और 1 kg आशीर्वाद चक्की आटा लिख लो, बस इतना ही",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-005",
+          "name": "Rajdhani Fine Maida",
+          "qty": 2.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-001",
+          "name": "Aashirvaad Chakki Atta",
+          "qty": 1.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-002",
+      "target_snr_db": 20,
+      "acoustic_tier": "20 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_3",
+      "transcript": "नमस्ते गुप्ता जी, डेढ़ किलो विम डिशवॉश लेमन बार, डेढ़ किलो फॉर्च्यून सूजी (रवा) और 1 pack कुरकुरे मसाला मंच देना, हो गया",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-035",
+          "name": "Vim Dishwash Lemon Bar",
+          "qty": 1.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-004",
+          "name": "Fortune Sooji (Rava)",
+          "qty": 1.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-029",
+          "name": "Kurkure Masala Munch",
+          "qty": 1.0,
+          "unit": "pack"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-003",
+      "target_snr_db": 10,
+      "acoustic_tier": "10 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_4",
+      "transcript": "Please send 5 kg Aashirvaad Chakki Atta, 4 kg Kabuli Chana (Chole) and 2 pack Kurkure Masala Munch, that's all",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-001",
+          "name": "Aashirvaad Chakki Atta",
+          "qty": 5.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-010",
+          "name": "Kabuli Chana (Chole)",
+          "qty": 4.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-029",
+          "name": "Kurkure Masala Munch",
+          "qty": 2.0,
+          "unit": "pack"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-004",
+      "target_snr_db": 5,
+      "acoustic_tier": "5 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_5",
+      "transcript": "भैया केवल आधा किलो टाटा संपन्न तूर दाल पैक कर दो, बिल बना दो",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-007",
+          "name": "Tata Sampann Toor Dal",
+          "qty": 0.5,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-005",
+      "target_snr_db": 0,
+      "acoustic_tier": "0 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_6",
+      "transcript": "3 kg राजधानी मैदा, आधा किलो नेस्कैफे क्लासिक कॉफी, 3 bottle डेटॉल ओरिजिनल लिक्विड हैंडवॉश और 2 packet टाटा आयोडीन युक्त नमक, बस इतना ही है",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-005",
+          "name": "Rajdhani Fine Maida",
+          "qty": 3.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-026",
+          "name": "Nescafe Classic Instant Coffee",
+          "qty": 0.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-034",
+          "name": "Dettol Original Germ Protection Handwash",
+          "qty": 3.0,
+          "unit": "bottle"
+        },
+        {
+          "sku_id": "SKU-019",
+          "name": "Tata Vacuum Evaporated Iodized Salt",
+          "qty": 2.0,
+          "unit": "packet"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-006",
+      "target_snr_db": 30,
+      "acoustic_tier": "30 dB Clean",
+      "caller_id": "SyntheticCaller_7",
+      "transcript": "भैया 3 pack मैगी २-मिनट मसाला नूडल्स और 4 kg फॉर्च्यून सूजी (रवा) लिख लो, बस इतना ही",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-027",
+          "name": "Maggi 2-Minute Masala Noodles",
+          "qty": 3.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-004",
+          "name": "Fortune Sooji (Rava)",
+          "qty": 4.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-007",
+      "target_snr_db": 20,
+      "acoustic_tier": "20 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_8",
+      "transcript": "नमस्ते गुप्ता जी, सवा दो किलो चित्रा राजमा, ढाई किलो टाटा आयोडीन युक्त नमक और 2 kg फॉर्च्यून सूजी (रवा) देना, हो गया",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-011",
+          "name": "Chitra Red Rajma",
+          "qty": 2.25,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-019",
+          "name": "Tata Vacuum Evaporated Iodized Salt",
+          "qty": 2.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-004",
+          "name": "Fortune Sooji (Rava)",
+          "qty": 2.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-008",
+      "target_snr_db": 10,
+      "acoustic_tier": "10 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_9",
+      "transcript": "Please send 2 bottle Nescafe Classic Instant Coffee, 4 kg Tata Sampann Toor Dal and 2 pack Vim Dishwash Lemon Bar, that's all",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-026",
+          "name": "Nescafe Classic Instant Coffee",
+          "qty": 2.0,
+          "unit": "bottle"
+        },
+        {
+          "sku_id": "SKU-007",
+          "name": "Tata Sampann Toor Dal",
+          "qty": 4.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-035",
+          "name": "Vim Dishwash Lemon Bar",
+          "qty": 2.0,
+          "unit": "pack"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-009",
+      "target_snr_db": 5,
+      "acoustic_tier": "5 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_10",
+      "transcript": "भैया केवल ढाई किलो टाटा संपन्न तूर दाल पैक कर दो, बिल बना दो",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-007",
+          "name": "Tata Sampann Toor Dal",
+          "qty": 2.5,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-010",
+      "target_snr_db": 0,
+      "acoustic_tier": "0 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_11",
+      "transcript": "3 kg इंडिया गेट बासमती चावल, डेढ़ किलो चित्रा राजमा, 2 pack विम डिशवॉश लेमन बार और 1 pack मैगी २-मिनट मसाला नूडल्स, बस इतना ही है",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-002",
+          "name": "India Gate Basmati Chawal",
+          "qty": 3.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-011",
+          "name": "Chitra Red Rajma",
+          "qty": 1.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-035",
+          "name": "Vim Dishwash Lemon Bar",
+          "qty": 2.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-027",
+          "name": "Maggi 2-Minute Masala Noodles",
+          "qty": 1.0,
+          "unit": "pack"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-011",
+      "target_snr_db": 30,
+      "acoustic_tier": "30 dB Clean",
+      "caller_id": "SyntheticCaller_12",
+      "transcript": "भैया 5 kg मधुर शुद्ध सल्फर-मुक्त चीनी और 1 kg काबूली चना (छोले) लिख लो, बस इतना ही",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-020",
+          "name": "Madhur Pure Sulphurless Sugar",
+          "qty": 5.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-010",
+          "name": "Kabuli Chana (Chole)",
+          "qty": 1.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-012",
+      "target_snr_db": 20,
+      "acoustic_tier": "20 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_1",
+      "transcript": "नमस्ते गुप्ता जी, डेढ़ किलो विम डिशवॉश लेमन बार, सवा दो किलो अमूल गाय का शुद्ध घी और 1 pack कुरकुरे मसाला मंच देना, हो गया",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-035",
+          "name": "Vim Dishwash Lemon Bar",
+          "qty": 1.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-018",
+          "name": "Amul Pure Cow Ghee",
+          "qty": 2.25,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-029",
+          "name": "Kurkure Masala Munch",
+          "qty": 1.0,
+          "unit": "pack"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-013",
+      "target_snr_db": 10,
+      "acoustic_tier": "10 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_2",
+      "transcript": "Please send 2 kg Fortune Sooji (Rava), 4 kg India Gate Basmati Chawal and 2 kg Rajdhani Fine Maida, that's all",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-004",
+          "name": "Fortune Sooji (Rava)",
+          "qty": 2.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-002",
+          "name": "India Gate Basmati Chawal",
+          "qty": 4.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-005",
+          "name": "Rajdhani Fine Maida",
+          "qty": 2.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-014",
+      "target_snr_db": 5,
+      "acoustic_tier": "5 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_3",
+      "transcript": "भैया केवल ढाई किलो लेज़ क्लासिक साल्टेड चिप्स पैक कर दो, बिल बना दो",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-030",
+          "name": "Lay's Classic Salted Potato Chips",
+          "qty": 2.5,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-015",
+      "target_snr_db": 0,
+      "acoustic_tier": "0 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_4",
+      "transcript": "5 litre अमूल गाय का शुद्ध घी, ढाई किलो मधुर शुद्ध सल्फर-मुक्त चीनी, 2 kg राजधानी मैदा और 1 kg टाटा संपन्न पोहा, बस इतना ही है",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-018",
+          "name": "Amul Pure Cow Ghee",
+          "qty": 5.0,
+          "unit": "litre"
+        },
+        {
+          "sku_id": "SKU-020",
+          "name": "Madhur Pure Sulphurless Sugar",
+          "qty": 2.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-005",
+          "name": "Rajdhani Fine Maida",
+          "qty": 2.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-006",
+          "name": "Tata Sampann Thick Poha",
+          "qty": 1.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-016",
+      "target_snr_db": 30,
+      "acoustic_tier": "30 dB Clean",
+      "caller_id": "SyntheticCaller_5",
+      "transcript": "भैया 1 litre अमूल गाय का शुद्ध घी और 4 bottle डेटॉल ओरिजिनल लिक्विड हैंडवॉश लिख लो, बस इतना ही",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-018",
+          "name": "Amul Pure Cow Ghee",
+          "qty": 1.0,
+          "unit": "litre"
+        },
+        {
+          "sku_id": "SKU-034",
+          "name": "Dettol Original Germ Protection Handwash",
+          "qty": 4.0,
+          "unit": "bottle"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-017",
+      "target_snr_db": 20,
+      "acoustic_tier": "20 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_6",
+      "transcript": "नमस्ते गुप्ता जी, सवा किलो टाटा संपन्न तूर दाल, साढ़े तीन किलो डेटॉल ओरिजिनल लिक्विड हैंडवॉश और 1 kg आशीर्वाद चक्की आटा देना, हो गया",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-007",
+          "name": "Tata Sampann Toor Dal",
+          "qty": 1.25,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-034",
+          "name": "Dettol Original Germ Protection Handwash",
+          "qty": 3.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-001",
+          "name": "Aashirvaad Chakki Atta",
+          "qty": 1.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-018",
+      "target_snr_db": 10,
+      "acoustic_tier": "10 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_7",
+      "transcript": "Please send 1 packet Tata Vacuum Evaporated Iodized Salt, 1 kg Chitra Red Rajma and 3 kg India Gate Basmati Chawal, that's all",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-019",
+          "name": "Tata Vacuum Evaporated Iodized Salt",
+          "qty": 1.0,
+          "unit": "packet"
+        },
+        {
+          "sku_id": "SKU-011",
+          "name": "Chitra Red Rajma",
+          "qty": 1.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-002",
+          "name": "India Gate Basmati Chawal",
+          "qty": 3.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-019",
+      "target_snr_db": 5,
+      "acoustic_tier": "5 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_8",
+      "transcript": "भैया केवल डेढ़ किलो विम डिशवॉश लेमन बार पैक कर दो, बिल बना दो",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-035",
+          "name": "Vim Dishwash Lemon Bar",
+          "qty": 1.5,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-020",
+      "target_snr_db": 0,
+      "acoustic_tier": "0 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_9",
+      "transcript": "3 pack कुरकुरे मसाला मंच, डेढ़ किलो काबूली चना (छोले), 3 bottle डेटॉल ओरिजिनल लिक्विड हैंडवॉश और 2 bottle नेस्कैफे क्लासिक कॉफी, बस इतना ही है",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-029",
+          "name": "Kurkure Masala Munch",
+          "qty": 3.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-010",
+          "name": "Kabuli Chana (Chole)",
+          "qty": 1.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-034",
+          "name": "Dettol Original Germ Protection Handwash",
+          "qty": 3.0,
+          "unit": "bottle"
+        },
+        {
+          "sku_id": "SKU-026",
+          "name": "Nescafe Classic Instant Coffee",
+          "qty": 2.0,
+          "unit": "bottle"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-021",
+      "target_snr_db": 30,
+      "acoustic_tier": "30 dB Clean",
+      "caller_id": "SyntheticCaller_10",
+      "transcript": "भैया 1 pack लेज़ क्लासिक साल्टेड चिप्स और 2 kg राजधानी मैदा लिख लो, बस इतना ही",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-030",
+          "name": "Lay's Classic Salted Potato Chips",
+          "qty": 1.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-005",
+          "name": "Rajdhani Fine Maida",
+          "qty": 2.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-022",
+      "target_snr_db": 20,
+      "acoustic_tier": "20 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_11",
+      "transcript": "नमस्ते गुप्ता जी, डेढ़ किलो आशीर्वाद चक्की आटा, पाव भर फॉर्च्यून सूजी (रवा) और 2 kg इंडिया गेट बासमती चावल देना, हो गया",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-001",
+          "name": "Aashirvaad Chakki Atta",
+          "qty": 1.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-004",
+          "name": "Fortune Sooji (Rava)",
+          "qty": 0.25,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-002",
+          "name": "India Gate Basmati Chawal",
+          "qty": 2.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-023",
+      "target_snr_db": 10,
+      "acoustic_tier": "10 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_12",
+      "transcript": "Please send 2 litre Amul Pure Cow Ghee, 4 bottle Bajaj Almond Drops Non-Sticky Hair Oil and 3 kg Kabuli Chana (Chole), that's all",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-018",
+          "name": "Amul Pure Cow Ghee",
+          "qty": 2.0,
+          "unit": "litre"
+        },
+        {
+          "sku_id": "SKU-033",
+          "name": "Bajaj Almond Drops Non-Sticky Hair Oil",
+          "qty": 4.0,
+          "unit": "bottle"
+        },
+        {
+          "sku_id": "SKU-010",
+          "name": "Kabuli Chana (Chole)",
+          "qty": 3.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-024",
+      "target_snr_db": 5,
+      "acoustic_tier": "5 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_1",
+      "transcript": "भैया केवल सवा दो किलो बजाज बादाम ड्रॉप्स हेयर ऑयल पैक कर दो, बिल बना दो",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-033",
+          "name": "Bajaj Almond Drops Non-Sticky Hair Oil",
+          "qty": 2.25,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-025",
+      "target_snr_db": 0,
+      "acoustic_tier": "0 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_2",
+      "transcript": "5 pack लेज़ क्लासिक साल्टेड चिप्स, पाव भर इंडिया गेट बासमती चावल, 2 kg राजधानी मैदा और 1 kg आशीर्वाद चक्की आटा, बस इतना ही है",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-030",
+          "name": "Lay's Classic Salted Potato Chips",
+          "qty": 5.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-002",
+          "name": "India Gate Basmati Chawal",
+          "qty": 0.25,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-005",
+          "name": "Rajdhani Fine Maida",
+          "qty": 2.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-001",
+          "name": "Aashirvaad Chakki Atta",
+          "qty": 1.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-026",
+      "target_snr_db": 30,
+      "acoustic_tier": "30 dB Clean",
+      "caller_id": "SyntheticCaller_3",
+      "transcript": "भैया 2 kg काबूली चना (छोले) और 2 pack लेज़ क्लासिक साल्टेड चिप्स लिख लो, बस इतना ही",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-010",
+          "name": "Kabuli Chana (Chole)",
+          "qty": 2.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-030",
+          "name": "Lay's Classic Salted Potato Chips",
+          "qty": 2.0,
+          "unit": "pack"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-027",
+      "target_snr_db": 20,
+      "acoustic_tier": "20 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_4",
+      "transcript": "नमस्ते गुप्ता जी, सवा दो किलो लेज़ क्लासिक साल्टेड चिप्स, सवा दो किलो राजधानी मैदा और 1 kg इंडिया गेट बासमती चावल देना, हो गया",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-030",
+          "name": "Lay's Classic Salted Potato Chips",
+          "qty": 2.25,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-005",
+          "name": "Rajdhani Fine Maida",
+          "qty": 2.25,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-002",
+          "name": "India Gate Basmati Chawal",
+          "qty": 1.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-028",
+      "target_snr_db": 10,
+      "acoustic_tier": "10 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_5",
+      "transcript": "Please send 1 bottle Bajaj Almond Drops Non-Sticky Hair Oil, 1 kg Kabuli Chana (Chole) and 2 pack Maggi 2-Minute Masala Noodles, that's all",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-033",
+          "name": "Bajaj Almond Drops Non-Sticky Hair Oil",
+          "qty": 1.0,
+          "unit": "bottle"
+        },
+        {
+          "sku_id": "SKU-010",
+          "name": "Kabuli Chana (Chole)",
+          "qty": 1.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-027",
+          "name": "Maggi 2-Minute Masala Noodles",
+          "qty": 2.0,
+          "unit": "pack"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-029",
+      "target_snr_db": 5,
+      "acoustic_tier": "5 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_6",
+      "transcript": "भैया केवल पाव भर लेज़ क्लासिक साल्टेड चिप्स पैक कर दो, बिल बना दो",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-030",
+          "name": "Lay's Classic Salted Potato Chips",
+          "qty": 0.25,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-030",
+      "target_snr_db": 0,
+      "acoustic_tier": "0 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_7",
+      "transcript": "1 pack विम डिशवॉश लेमन बार, डेढ़ किलो इंडिया गेट बासमती चावल, 2 kg मधुर शुद्ध सल्फर-मुक्त चीनी और 1 kg आशीर्वाद चक्की आटा, बस इतना ही है",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-035",
+          "name": "Vim Dishwash Lemon Bar",
+          "qty": 1.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-002",
+          "name": "India Gate Basmati Chawal",
+          "qty": 1.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-020",
+          "name": "Madhur Pure Sulphurless Sugar",
+          "qty": 2.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-001",
+          "name": "Aashirvaad Chakki Atta",
+          "qty": 1.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-031",
+      "target_snr_db": 30,
+      "acoustic_tier": "30 dB Clean",
+      "caller_id": "SyntheticCaller_8",
+      "transcript": "भैया 1 kg फॉर्च्यून सूजी (रवा) और 4 kg टाटा संपन्न तूर दाल लिख लो, बस इतना ही",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-004",
+          "name": "Fortune Sooji (Rava)",
+          "qty": 1.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-007",
+          "name": "Tata Sampann Toor Dal",
+          "qty": 4.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-032",
+      "target_snr_db": 20,
+      "acoustic_tier": "20 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_9",
+      "transcript": "नमस्ते गुप्ता जी, पाव भर चित्रा राजमा, सवा किलो इंडिया गेट बासमती चावल और 1 kg फॉर्च्यून सूजी (रवा) देना, हो गया",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-011",
+          "name": "Chitra Red Rajma",
+          "qty": 0.25,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-002",
+          "name": "India Gate Basmati Chawal",
+          "qty": 1.25,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-004",
+          "name": "Fortune Sooji (Rava)",
+          "qty": 1.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-033",
+      "target_snr_db": 10,
+      "acoustic_tier": "10 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_10",
+      "transcript": "Please send 3 pack Maggi 2-Minute Masala Noodles, 1 kg Tata Sampann Thick Poha and 1 packet Tata Vacuum Evaporated Iodized Salt, that's all",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-027",
+          "name": "Maggi 2-Minute Masala Noodles",
+          "qty": 3.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-006",
+          "name": "Tata Sampann Thick Poha",
+          "qty": 1.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-019",
+          "name": "Tata Vacuum Evaporated Iodized Salt",
+          "qty": 1.0,
+          "unit": "packet"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-034",
+      "target_snr_db": 5,
+      "acoustic_tier": "5 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_11",
+      "transcript": "भैया केवल पाव भर राजधानी मैदा पैक कर दो, बिल बना दो",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-005",
+          "name": "Rajdhani Fine Maida",
+          "qty": 0.25,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-035",
+      "target_snr_db": 0,
+      "acoustic_tier": "0 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_12",
+      "transcript": "3 packet टाटा आयोडीन युक्त नमक, साढ़े तीन किलो टाटा संपन्न तूर दाल, 3 pack लेज़ क्लासिक साल्टेड चिप्स और 1 pack कुरकुरे मसाला मंच, बस इतना ही है",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-019",
+          "name": "Tata Vacuum Evaporated Iodized Salt",
+          "qty": 3.0,
+          "unit": "packet"
+        },
+        {
+          "sku_id": "SKU-007",
+          "name": "Tata Sampann Toor Dal",
+          "qty": 3.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-030",
+          "name": "Lay's Classic Salted Potato Chips",
+          "qty": 3.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-029",
+          "name": "Kurkure Masala Munch",
+          "qty": 1.0,
+          "unit": "pack"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-036",
+      "target_snr_db": 30,
+      "acoustic_tier": "30 dB Clean",
+      "caller_id": "SyntheticCaller_1",
+      "transcript": "भैया 2 pack विम डिशवॉश लेमन बार और 2 packet टाटा आयोडीन युक्त नमक लिख लो, बस इतना ही",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-035",
+          "name": "Vim Dishwash Lemon Bar",
+          "qty": 2.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-019",
+          "name": "Tata Vacuum Evaporated Iodized Salt",
+          "qty": 2.0,
+          "unit": "packet"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-037",
+      "target_snr_db": 20,
+      "acoustic_tier": "20 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_2",
+      "transcript": "नमस्ते गुप्ता जी, ढाई किलो टाटा संपन्न पोहा, ढाई किलो अमूल गाय का शुद्ध घी और 2 packet टाटा आयोडीन युक्त नमक देना, हो गया",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-006",
+          "name": "Tata Sampann Thick Poha",
+          "qty": 2.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-018",
+          "name": "Amul Pure Cow Ghee",
+          "qty": 2.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-019",
+          "name": "Tata Vacuum Evaporated Iodized Salt",
+          "qty": 2.0,
+          "unit": "packet"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-038",
+      "target_snr_db": 10,
+      "acoustic_tier": "10 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_3",
+      "transcript": "Please send 1 litre Amul Pure Cow Ghee, 1 bottle Dettol Original Germ Protection Handwash and 3 bottle Bajaj Almond Drops Non-Sticky Hair Oil, that's all",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-018",
+          "name": "Amul Pure Cow Ghee",
+          "qty": 1.0,
+          "unit": "litre"
+        },
+        {
+          "sku_id": "SKU-034",
+          "name": "Dettol Original Germ Protection Handwash",
+          "qty": 1.0,
+          "unit": "bottle"
+        },
+        {
+          "sku_id": "SKU-033",
+          "name": "Bajaj Almond Drops Non-Sticky Hair Oil",
+          "qty": 3.0,
+          "unit": "bottle"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-039",
+      "target_snr_db": 5,
+      "acoustic_tier": "5 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_4",
+      "transcript": "भैया केवल ढाई किलो इंडिया गेट बासमती चावल पैक कर दो, बिल बना दो",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-002",
+          "name": "India Gate Basmati Chawal",
+          "qty": 2.5,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-040",
+      "target_snr_db": 0,
+      "acoustic_tier": "0 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_5",
+      "transcript": "1 pack विम डिशवॉश लेमन बार, सवा किलो कुरकुरे मसाला मंच, 1 kg आशीर्वाद चक्की आटा और 1 kg इंडिया गेट बासमती चावल, बस इतना ही है",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-035",
+          "name": "Vim Dishwash Lemon Bar",
+          "qty": 1.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-029",
+          "name": "Kurkure Masala Munch",
+          "qty": 1.25,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-001",
+          "name": "Aashirvaad Chakki Atta",
+          "qty": 1.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-002",
+          "name": "India Gate Basmati Chawal",
+          "qty": 1.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-041",
+      "target_snr_db": 30,
+      "acoustic_tier": "30 dB Clean",
+      "caller_id": "SyntheticCaller_6",
+      "transcript": "भैया 1 pack विम डिशवॉश लेमन बार और 2 kg टाटा संपन्न पोहा लिख लो, बस इतना ही",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-035",
+          "name": "Vim Dishwash Lemon Bar",
+          "qty": 1.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-006",
+          "name": "Tata Sampann Thick Poha",
+          "qty": 2.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-042",
+      "target_snr_db": 20,
+      "acoustic_tier": "20 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_7",
+      "transcript": "नमस्ते गुप्ता जी, पाव भर चित्रा राजमा, साढ़े तीन किलो राजधानी मैदा और 3 bottle नेस्कैफे क्लासिक कॉफी देना, हो गया",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-011",
+          "name": "Chitra Red Rajma",
+          "qty": 0.25,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-005",
+          "name": "Rajdhani Fine Maida",
+          "qty": 3.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-026",
+          "name": "Nescafe Classic Instant Coffee",
+          "qty": 3.0,
+          "unit": "bottle"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-043",
+      "target_snr_db": 10,
+      "acoustic_tier": "10 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_8",
+      "transcript": "Please send 2 kg Tata Sampann Toor Dal, 4 pack Vim Dishwash Lemon Bar and 2 pack Kurkure Masala Munch, that's all",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-007",
+          "name": "Tata Sampann Toor Dal",
+          "qty": 2.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-035",
+          "name": "Vim Dishwash Lemon Bar",
+          "qty": 4.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-029",
+          "name": "Kurkure Masala Munch",
+          "qty": 2.0,
+          "unit": "pack"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-044",
+      "target_snr_db": 5,
+      "acoustic_tier": "5 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_9",
+      "transcript": "भैया केवल पाव भर चित्रा राजमा पैक कर दो, बिल बना दो",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-011",
+          "name": "Chitra Red Rajma",
+          "qty": 0.25,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-045",
+      "target_snr_db": 0,
+      "acoustic_tier": "0 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_10",
+      "transcript": "2 pack लेज़ क्लासिक साल्टेड चिप्स, सवा किलो नेस्कैफे क्लासिक कॉफी, 1 packet टाटा आयोडीन युक्त नमक और 1 pack कुरकुरे मसाला मंच, बस इतना ही है",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-030",
+          "name": "Lay's Classic Salted Potato Chips",
+          "qty": 2.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-026",
+          "name": "Nescafe Classic Instant Coffee",
+          "qty": 1.25,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-019",
+          "name": "Tata Vacuum Evaporated Iodized Salt",
+          "qty": 1.0,
+          "unit": "packet"
+        },
+        {
+          "sku_id": "SKU-029",
+          "name": "Kurkure Masala Munch",
+          "qty": 1.0,
+          "unit": "pack"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-046",
+      "target_snr_db": 30,
+      "acoustic_tier": "30 dB Clean",
+      "caller_id": "SyntheticCaller_11",
+      "transcript": "भैया 5 litre अमूल गाय का शुद्ध घी और 4 kg फॉर्च्यून सूजी (रवा) लिख लो, बस इतना ही",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-018",
+          "name": "Amul Pure Cow Ghee",
+          "qty": 5.0,
+          "unit": "litre"
+        },
+        {
+          "sku_id": "SKU-004",
+          "name": "Fortune Sooji (Rava)",
+          "qty": 4.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-047",
+      "target_snr_db": 20,
+      "acoustic_tier": "20 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_12",
+      "transcript": "नमस्ते गुप्ता जी, ढाई किलो अमूल गाय का शुद्ध घी, साढ़े तीन किलो टाटा संपन्न तूर दाल और 2 pack विम डिशवॉश लेमन बार देना, हो गया",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-018",
+          "name": "Amul Pure Cow Ghee",
+          "qty": 2.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-007",
+          "name": "Tata Sampann Toor Dal",
+          "qty": 3.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-035",
+          "name": "Vim Dishwash Lemon Bar",
+          "qty": 2.0,
+          "unit": "pack"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-048",
+      "target_snr_db": 10,
+      "acoustic_tier": "10 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_1",
+      "transcript": "Please send 2 kg Madhur Pure Sulphurless Sugar, 2 pack Kurkure Masala Munch and 1 kg Rajdhani Fine Maida, that's all",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-020",
+          "name": "Madhur Pure Sulphurless Sugar",
+          "qty": 2.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-029",
+          "name": "Kurkure Masala Munch",
+          "qty": 2.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-005",
+          "name": "Rajdhani Fine Maida",
+          "qty": 1.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-049",
+      "target_snr_db": 5,
+      "acoustic_tier": "5 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_2",
+      "transcript": "भैया केवल ढाई किलो विम डिशवॉश लेमन बार पैक कर दो, बिल बना दो",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-035",
+          "name": "Vim Dishwash Lemon Bar",
+          "qty": 2.5,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-050",
+      "target_snr_db": 0,
+      "acoustic_tier": "0 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_3",
+      "transcript": "5 kg राजधानी मैदा, पाव भर टाटा आयोडीन युक्त नमक, 2 bottle डेटॉल ओरिजिनल लिक्विड हैंडवॉश और 2 kg मधुर शुद्ध सल्फर-मुक्त चीनी, बस इतना ही है",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-005",
+          "name": "Rajdhani Fine Maida",
+          "qty": 5.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-019",
+          "name": "Tata Vacuum Evaporated Iodized Salt",
+          "qty": 0.25,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-034",
+          "name": "Dettol Original Germ Protection Handwash",
+          "qty": 2.0,
+          "unit": "bottle"
+        },
+        {
+          "sku_id": "SKU-020",
+          "name": "Madhur Pure Sulphurless Sugar",
+          "qty": 2.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-051",
+      "target_snr_db": 30,
+      "acoustic_tier": "30 dB Clean",
+      "caller_id": "SyntheticCaller_4",
+      "transcript": "भैया 2 kg काबूली चना (छोले) और 4 pack कुरकुरे मसाला मंच लिख लो, बस इतना ही",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-010",
+          "name": "Kabuli Chana (Chole)",
+          "qty": 2.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-029",
+          "name": "Kurkure Masala Munch",
+          "qty": 4.0,
+          "unit": "pack"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-052",
+      "target_snr_db": 20,
+      "acoustic_tier": "20 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_5",
+      "transcript": "नमस्ते गुप्ता जी, सवा दो किलो आशीर्वाद चक्की आटा, सवा दो किलो टाटा आयोडीन युक्त नमक और 3 bottle डेटॉल ओरिजिनल लिक्विड हैंडवॉश देना, हो गया",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-001",
+          "name": "Aashirvaad Chakki Atta",
+          "qty": 2.25,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-019",
+          "name": "Tata Vacuum Evaporated Iodized Salt",
+          "qty": 2.25,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-034",
+          "name": "Dettol Original Germ Protection Handwash",
+          "qty": 3.0,
+          "unit": "bottle"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-053",
+      "target_snr_db": 10,
+      "acoustic_tier": "10 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_6",
+      "transcript": "Please send 2 pack Lay's Classic Salted Potato Chips, 4 kg Kabuli Chana (Chole) and 1 bottle Bajaj Almond Drops Non-Sticky Hair Oil, that's all",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-030",
+          "name": "Lay's Classic Salted Potato Chips",
+          "qty": 2.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-010",
+          "name": "Kabuli Chana (Chole)",
+          "qty": 4.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-033",
+          "name": "Bajaj Almond Drops Non-Sticky Hair Oil",
+          "qty": 1.0,
+          "unit": "bottle"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-054",
+      "target_snr_db": 5,
+      "acoustic_tier": "5 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_7",
+      "transcript": "भैया केवल आधा किलो मधुर शुद्ध सल्फर-मुक्त चीनी पैक कर दो, बिल बना दो",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-020",
+          "name": "Madhur Pure Sulphurless Sugar",
+          "qty": 0.5,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-055",
+      "target_snr_db": 0,
+      "acoustic_tier": "0 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_8",
+      "transcript": "5 kg चित्रा राजमा, ढाई किलो बजाज बादाम ड्रॉप्स हेयर ऑयल, 3 kg फॉर्च्यून सूजी (रवा) और 1 pack विम डिशवॉश लेमन बार, बस इतना ही है",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-011",
+          "name": "Chitra Red Rajma",
+          "qty": 5.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-033",
+          "name": "Bajaj Almond Drops Non-Sticky Hair Oil",
+          "qty": 2.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-004",
+          "name": "Fortune Sooji (Rava)",
+          "qty": 3.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-035",
+          "name": "Vim Dishwash Lemon Bar",
+          "qty": 1.0,
+          "unit": "pack"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-056",
+      "target_snr_db": 30,
+      "acoustic_tier": "30 dB Clean",
+      "caller_id": "SyntheticCaller_9",
+      "transcript": "भैया 2 pack मैगी २-मिनट मसाला नूडल्स और 4 bottle बजाज बादाम ड्रॉप्स हेयर ऑयल लिख लो, बस इतना ही",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-027",
+          "name": "Maggi 2-Minute Masala Noodles",
+          "qty": 2.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-033",
+          "name": "Bajaj Almond Drops Non-Sticky Hair Oil",
+          "qty": 4.0,
+          "unit": "bottle"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-057",
+      "target_snr_db": 20,
+      "acoustic_tier": "20 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_10",
+      "transcript": "नमस्ते गुप्ता जी, साढ़े तीन किलो राजधानी मैदा, आधा किलो कुरकुरे मसाला मंच और 3 kg चित्रा राजमा देना, हो गया",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-005",
+          "name": "Rajdhani Fine Maida",
+          "qty": 3.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-029",
+          "name": "Kurkure Masala Munch",
+          "qty": 0.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-011",
+          "name": "Chitra Red Rajma",
+          "qty": 3.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-058",
+      "target_snr_db": 10,
+      "acoustic_tier": "10 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_11",
+      "transcript": "Please send 3 pack Lay's Classic Salted Potato Chips, 2 kg Tata Sampann Thick Poha and 3 pack Vim Dishwash Lemon Bar, that's all",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-030",
+          "name": "Lay's Classic Salted Potato Chips",
+          "qty": 3.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-006",
+          "name": "Tata Sampann Thick Poha",
+          "qty": 2.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-035",
+          "name": "Vim Dishwash Lemon Bar",
+          "qty": 3.0,
+          "unit": "pack"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-059",
+      "target_snr_db": 5,
+      "acoustic_tier": "5 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_12",
+      "transcript": "भैया केवल साढ़े तीन किलो लेज़ क्लासिक साल्टेड चिप्स पैक कर दो, बिल बना दो",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-030",
+          "name": "Lay's Classic Salted Potato Chips",
+          "qty": 3.5,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-060",
+      "target_snr_db": 0,
+      "acoustic_tier": "0 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_1",
+      "transcript": "5 bottle डेटॉल ओरिजिनल लिक्विड हैंडवॉश, सवा किलो बजाज बादाम ड्रॉप्स हेयर ऑयल, 3 kg चित्रा राजमा और 2 kg टाटा संपन्न पोहा, बस इतना ही है",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-034",
+          "name": "Dettol Original Germ Protection Handwash",
+          "qty": 5.0,
+          "unit": "bottle"
+        },
+        {
+          "sku_id": "SKU-033",
+          "name": "Bajaj Almond Drops Non-Sticky Hair Oil",
+          "qty": 1.25,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-011",
+          "name": "Chitra Red Rajma",
+          "qty": 3.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-006",
+          "name": "Tata Sampann Thick Poha",
+          "qty": 2.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-061",
+      "target_snr_db": 30,
+      "acoustic_tier": "30 dB Clean",
+      "caller_id": "SyntheticCaller_2",
+      "transcript": "भैया 2 kg मधुर शुद्ध सल्फर-मुक्त चीनी और 1 pack विम डिशवॉश लेमन बार लिख लो, बस इतना ही",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-020",
+          "name": "Madhur Pure Sulphurless Sugar",
+          "qty": 2.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-035",
+          "name": "Vim Dishwash Lemon Bar",
+          "qty": 1.0,
+          "unit": "pack"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-062",
+      "target_snr_db": 20,
+      "acoustic_tier": "20 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_3",
+      "transcript": "नमस्ते गुप्ता जी, साढ़े तीन किलो फॉर्च्यून सूजी (रवा), सवा दो किलो कुरकुरे मसाला मंच और 1 bottle डेटॉल ओरिजिनल लिक्विड हैंडवॉश देना, हो गया",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-004",
+          "name": "Fortune Sooji (Rava)",
+          "qty": 3.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-029",
+          "name": "Kurkure Masala Munch",
+          "qty": 2.25,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-034",
+          "name": "Dettol Original Germ Protection Handwash",
+          "qty": 1.0,
+          "unit": "bottle"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-063",
+      "target_snr_db": 10,
+      "acoustic_tier": "10 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_4",
+      "transcript": "Please send 1 pack Maggi 2-Minute Masala Noodles, 2 kg Aashirvaad Chakki Atta and 2 pack Vim Dishwash Lemon Bar, that's all",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-027",
+          "name": "Maggi 2-Minute Masala Noodles",
+          "qty": 1.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-001",
+          "name": "Aashirvaad Chakki Atta",
+          "qty": 2.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-035",
+          "name": "Vim Dishwash Lemon Bar",
+          "qty": 2.0,
+          "unit": "pack"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-064",
+      "target_snr_db": 5,
+      "acoustic_tier": "5 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_5",
+      "transcript": "भैया केवल सवा दो किलो कुरकुरे मसाला मंच पैक कर दो, बिल बना दो",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-029",
+          "name": "Kurkure Masala Munch",
+          "qty": 2.25,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-065",
+      "target_snr_db": 0,
+      "acoustic_tier": "0 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_6",
+      "transcript": "2 pack मैगी २-मिनट मसाला नूडल्स, डेढ़ किलो टाटा संपन्न तूर दाल, 3 pack लेज़ क्लासिक साल्टेड चिप्स और 1 bottle बजाज बादाम ड्रॉप्स हेयर ऑयल, बस इतना ही है",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-027",
+          "name": "Maggi 2-Minute Masala Noodles",
+          "qty": 2.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-007",
+          "name": "Tata Sampann Toor Dal",
+          "qty": 1.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-030",
+          "name": "Lay's Classic Salted Potato Chips",
+          "qty": 3.0,
+          "unit": "pack"
+        },
+        {
+          "sku_id": "SKU-033",
+          "name": "Bajaj Almond Drops Non-Sticky Hair Oil",
+          "qty": 1.0,
+          "unit": "bottle"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-066",
+      "target_snr_db": 30,
+      "acoustic_tier": "30 dB Clean",
+      "caller_id": "SyntheticCaller_7",
+      "transcript": "भैया 5 kg आशीर्वाद चक्की आटा और 1 kg फॉर्च्यून सूजी (रवा) लिख लो, बस इतना ही",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-001",
+          "name": "Aashirvaad Chakki Atta",
+          "qty": 5.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-004",
+          "name": "Fortune Sooji (Rava)",
+          "qty": 1.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-067",
+      "target_snr_db": 20,
+      "acoustic_tier": "20 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_8",
+      "transcript": "नमस्ते गुप्ता जी, साढ़े तीन किलो काबूली चना (छोले), आधा किलो लेज़ क्लासिक साल्टेड चिप्स और 2 kg मधुर शुद्ध सल्फर-मुक्त चीनी देना, हो गया",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-010",
+          "name": "Kabuli Chana (Chole)",
+          "qty": 3.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-030",
+          "name": "Lay's Classic Salted Potato Chips",
+          "qty": 0.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-020",
+          "name": "Madhur Pure Sulphurless Sugar",
+          "qty": 2.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-068",
+      "target_snr_db": 10,
+      "acoustic_tier": "10 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_9",
+      "transcript": "Please send 2 bottle Bajaj Almond Drops Non-Sticky Hair Oil, 4 kg Aashirvaad Chakki Atta and 1 kg India Gate Basmati Chawal, that's all",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-033",
+          "name": "Bajaj Almond Drops Non-Sticky Hair Oil",
+          "qty": 2.0,
+          "unit": "bottle"
+        },
+        {
+          "sku_id": "SKU-001",
+          "name": "Aashirvaad Chakki Atta",
+          "qty": 4.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-002",
+          "name": "India Gate Basmati Chawal",
+          "qty": 1.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-069",
+      "target_snr_db": 5,
+      "acoustic_tier": "5 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_10",
+      "transcript": "भैया केवल ढाई किलो चित्रा राजमा पैक कर दो, बिल बना दो",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-011",
+          "name": "Chitra Red Rajma",
+          "qty": 2.5,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-070",
+      "target_snr_db": 0,
+      "acoustic_tier": "0 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_11",
+      "transcript": "3 kg काबूली चना (छोले), साढ़े तीन किलो लेज़ क्लासिक साल्टेड चिप्स, 3 litre अमूल गाय का शुद्ध घी और 1 pack मैगी २-मिनट मसाला नूडल्स, बस इतना ही है",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-010",
+          "name": "Kabuli Chana (Chole)",
+          "qty": 3.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-030",
+          "name": "Lay's Classic Salted Potato Chips",
+          "qty": 3.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-018",
+          "name": "Amul Pure Cow Ghee",
+          "qty": 3.0,
+          "unit": "litre"
+        },
+        {
+          "sku_id": "SKU-027",
+          "name": "Maggi 2-Minute Masala Noodles",
+          "qty": 1.0,
+          "unit": "pack"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-071",
+      "target_snr_db": 30,
+      "acoustic_tier": "30 dB Clean",
+      "caller_id": "SyntheticCaller_12",
+      "transcript": "भैया 1 kg टाटा संपन्न तूर दाल और 2 packet टाटा आयोडीन युक्त नमक लिख लो, बस इतना ही",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-007",
+          "name": "Tata Sampann Toor Dal",
+          "qty": 1.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-019",
+          "name": "Tata Vacuum Evaporated Iodized Salt",
+          "qty": 2.0,
+          "unit": "packet"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-072",
+      "target_snr_db": 20,
+      "acoustic_tier": "20 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_1",
+      "transcript": "नमस्ते गुप्ता जी, साढ़े तीन किलो काबूली चना (छोले), डेढ़ किलो फॉर्च्यून सूजी (रवा) और 3 kg चित्रा राजमा देना, हो गया",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-010",
+          "name": "Kabuli Chana (Chole)",
+          "qty": 3.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-004",
+          "name": "Fortune Sooji (Rava)",
+          "qty": 1.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-011",
+          "name": "Chitra Red Rajma",
+          "qty": 3.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-073",
+      "target_snr_db": 10,
+      "acoustic_tier": "10 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_2",
+      "transcript": "Please send 3 kg India Gate Basmati Chawal, 1 bottle Nescafe Classic Instant Coffee and 3 pack Kurkure Masala Munch, that's all",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-002",
+          "name": "India Gate Basmati Chawal",
+          "qty": 3.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-026",
+          "name": "Nescafe Classic Instant Coffee",
+          "qty": 1.0,
+          "unit": "bottle"
+        },
+        {
+          "sku_id": "SKU-029",
+          "name": "Kurkure Masala Munch",
+          "qty": 3.0,
+          "unit": "pack"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-074",
+      "target_snr_db": 5,
+      "acoustic_tier": "5 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_3",
+      "transcript": "भैया केवल सवा दो किलो कुरकुरे मसाला मंच पैक कर दो, बिल बना दो",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-029",
+          "name": "Kurkure Masala Munch",
+          "qty": 2.25,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-075",
+      "target_snr_db": 0,
+      "acoustic_tier": "0 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_4",
+      "transcript": "5 bottle डेटॉल ओरिजिनल लिक्विड हैंडवॉश, साढ़े तीन किलो अमूल गाय का शुद्ध घी, 3 bottle बजाज बादाम ड्रॉप्स हेयर ऑयल और 2 kg चित्रा राजमा, बस इतना ही है",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-034",
+          "name": "Dettol Original Germ Protection Handwash",
+          "qty": 5.0,
+          "unit": "bottle"
+        },
+        {
+          "sku_id": "SKU-018",
+          "name": "Amul Pure Cow Ghee",
+          "qty": 3.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-033",
+          "name": "Bajaj Almond Drops Non-Sticky Hair Oil",
+          "qty": 3.0,
+          "unit": "bottle"
+        },
+        {
+          "sku_id": "SKU-011",
+          "name": "Chitra Red Rajma",
+          "qty": 2.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-076",
+      "target_snr_db": 30,
+      "acoustic_tier": "30 dB Clean",
+      "caller_id": "SyntheticCaller_5",
+      "transcript": "भैया 5 kg चित्रा राजमा और 1 kg फॉर्च्यून सूजी (रवा) लिख लो, बस इतना ही",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-011",
+          "name": "Chitra Red Rajma",
+          "qty": 5.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-004",
+          "name": "Fortune Sooji (Rava)",
+          "qty": 1.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-077",
+      "target_snr_db": 20,
+      "acoustic_tier": "20 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_6",
+      "transcript": "नमस्ते गुप्ता जी, सवा किलो बजाज बादाम ड्रॉप्स हेयर ऑयल, डेढ़ किलो मधुर शुद्ध सल्फर-मुक्त चीनी और 2 kg टाटा संपन्न तूर दाल देना, हो गया",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-033",
+          "name": "Bajaj Almond Drops Non-Sticky Hair Oil",
+          "qty": 1.25,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-020",
+          "name": "Madhur Pure Sulphurless Sugar",
+          "qty": 1.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-007",
+          "name": "Tata Sampann Toor Dal",
+          "qty": 2.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-078",
+      "target_snr_db": 10,
+      "acoustic_tier": "10 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_7",
+      "transcript": "Please send 2 litre Amul Pure Cow Ghee, 4 kg Aashirvaad Chakki Atta and 2 kg Kabuli Chana (Chole), that's all",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-018",
+          "name": "Amul Pure Cow Ghee",
+          "qty": 2.0,
+          "unit": "litre"
+        },
+        {
+          "sku_id": "SKU-001",
+          "name": "Aashirvaad Chakki Atta",
+          "qty": 4.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-010",
+          "name": "Kabuli Chana (Chole)",
+          "qty": 2.0,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-079",
+      "target_snr_db": 5,
+      "acoustic_tier": "5 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_8",
+      "transcript": "भैया केवल सवा दो किलो चित्रा राजमा पैक कर दो, बिल बना दो",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-011",
+          "name": "Chitra Red Rajma",
+          "qty": 2.25,
+          "unit": "kg"
+        }
+      ]
+    },
+    {
+      "sample_id": "SYN-080",
+      "target_snr_db": 0,
+      "acoustic_tier": "0 dB Noisy Telephony",
+      "caller_id": "SyntheticCaller_9",
+      "transcript": "3 kg चित्रा राजमा, ढाई किलो टाटा आयोडीन युक्त नमक, 3 bottle नेस्कैफे क्लासिक कॉफी और 2 pack विम डिशवॉश लेमन बार, बस इतना ही है",
+      "ground_truth_items": [
+        {
+          "sku_id": "SKU-011",
+          "name": "Chitra Red Rajma",
+          "qty": 3.0,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-019",
+          "name": "Tata Vacuum Evaporated Iodized Salt",
+          "qty": 2.5,
+          "unit": "kg"
+        },
+        {
+          "sku_id": "SKU-026",
+          "name": "Nescafe Classic Instant Coffee",
+          "qty": 3.0,
+          "unit": "bottle"
+        },
+        {
+          "sku_id": "SKU-035",
+          "name": "Vim Dishwash Lemon Bar",
+          "qty": 2.0,
+          "unit": "pack"
+        }
+      ]
+    }
+  ],
+  "count": 80
+}

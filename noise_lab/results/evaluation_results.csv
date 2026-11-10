@@ -1,0 +1,16 @@
+tier_name,snr_db,config,model,keyterms_enabled,wer,precision,recall,item_f1,quantity_accuracy,ambiguities_flagged
+Tier 1: Clean Studio,30,v25_no_key,prisma-v2.5,False,0.26,100.0,44.71,61.79,20.8,130
+Tier 1: Clean Studio,30,v30_key_off,prisma-v3.0,False,0.26,100.0,44.71,61.79,20.8,130
+Tier 1: Clean Studio,30,v30_key_on,prisma-v3.0,True,0.0,100.0,76.44,86.65,21.99,64
+Tier 2: Telephony Channel,20,v25_no_key,prisma-v2.5,False,0.26,100.0,44.71,61.79,20.8,130
+Tier 2: Telephony Channel,20,v30_key_off,prisma-v3.0,False,0.26,100.0,44.71,61.79,20.8,130
+Tier 2: Telephony Channel,20,v30_key_on,prisma-v3.0,True,0.0,100.0,76.44,86.65,21.99,64
+Tier 3: Ceiling Fan Hum,10,v25_no_key,prisma-v2.5,False,0.26,100.0,44.71,61.79,20.8,130
+Tier 3: Ceiling Fan Hum,10,v30_key_off,prisma-v3.0,False,0.26,100.0,44.71,61.79,20.8,130
+Tier 3: Ceiling Fan Hum,10,v30_key_on,prisma-v3.0,True,0.0,100.0,76.44,86.65,21.99,64
+Tier 4: Street Traffic,5,v25_no_key,prisma-v2.5,False,0.26,100.0,44.71,61.79,20.8,130
+Tier 4: Street Traffic,5,v30_key_off,prisma-v3.0,False,0.26,100.0,44.71,61.79,20.8,130
+Tier 4: Street Traffic,5,v30_key_on,prisma-v3.0,True,0.26,100.0,74.04,85.08,21.99,69
+Tier 5: Market Babble,0,v25_no_key,prisma-v2.5,False,0.69,100.0,44.71,61.79,20.8,130
+Tier 5: Market Babble,0,v30_key_off,prisma-v3.0,False,0.69,100.0,44.71,61.79,20.8,130
+Tier 5: Market Babble,0,v30_key_on,prisma-v3.0,True,0.69,100.0,74.04,85.08,21.99,69

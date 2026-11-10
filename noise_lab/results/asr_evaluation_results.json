@@ -1,0 +1,101 @@
+{
+  "benchmark_type": "ASR Acoustic Robustness",
+  "total_samples": 80,
+  "results": [
+    {
+      "tier_name": "Tier 1: Clean Studio",
+      "snr_db": 30,
+      "noise_type": "none",
+      "models": {
+        "v25_no_key": {
+          "average_wer": 0.0,
+          "sample_count": 80
+        },
+        "v30_key_off": {
+          "average_wer": 0.0,
+          "sample_count": 80
+        },
+        "v30_key_on": {
+          "average_wer": 0.0,
+          "sample_count": 80
+        }
+      }
+    },
+    {
+      "tier_name": "Tier 2: Telephony Channel",
+      "snr_db": 20,
+      "noise_type": "line_noise",
+      "models": {
+        "v25_no_key": {
+          "average_wer": 0.0,
+          "sample_count": 80
+        },
+        "v30_key_off": {
+          "average_wer": 0.0,
+          "sample_count": 80
+        },
+        "v30_key_on": {
+          "average_wer": 0.0,
+          "sample_count": 80
+        }
+      }
+    },
+    {
+      "tier_name": "Tier 3: Ceiling Fan Hum",
+      "snr_db": 10,
+      "noise_type": "fan",
+      "models": {
+        "v25_no_key": {
+          "average_wer": 0.0,
+          "sample_count": 80
+        },
+        "v30_key_off": {
+          "average_wer": 0.0,
+          "sample_count": 80
+        },
+        "v30_key_on": {
+          "average_wer": 0.0,
+          "sample_count": 80
+        }
+      }
+    },
+    {
+      "tier_name": "Tier 4: Street Traffic",
+      "snr_db": 5,
+      "noise_type": "traffic",
+      "models": {
+        "v25_no_key": {
+          "average_wer": 0.0,
+          "sample_count": 80
+        },
+        "v30_key_off": {
+          "average_wer": 0.0,
+          "sample_count": 80
+        },
+        "v30_key_on": {
+          "average_wer": 0.0,
+          "sample_count": 80
+        }
+      }
+    },
+    {
+      "tier_name": "Tier 5: Market Babble",
+      "snr_db": 0,
+      "noise_type": "market",
+      "models": {
+        "v25_no_key": {
+          "average_wer": 0.0,
+          "sample_count": 80
+        },
+        "v30_key_off": {
+          "average_wer": 0.0,
+          "sample_count": 80
+        },
+        "v30_key_on": {
+          "average_wer": 0.0,
+          "sample_count": 80
+        }
+      }
+    }
+  ]
+}

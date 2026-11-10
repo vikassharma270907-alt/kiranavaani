@@ -1,0 +1,16 @@
+tier_name,snr_db,config,model,keyterms_enabled,average_wer
+Tier 1: Clean Studio,30,v25_no_key,prisma-v2.5,False,0.0
+Tier 1: Clean Studio,30,v30_key_off,prisma-v3.0,False,0.0
+Tier 1: Clean Studio,30,v30_key_on,prisma-v3.0,True,0.0
+Tier 2: Telephony Channel,20,v25_no_key,prisma-v2.5,False,0.0
+Tier 2: Telephony Channel,20,v30_key_off,prisma-v3.0,False,0.0
+Tier 2: Telephony Channel,20,v30_key_on,prisma-v3.0,True,0.0
+Tier 3: Ceiling Fan Hum,10,v25_no_key,prisma-v2.5,False,0.0
+Tier 3: Ceiling Fan Hum,10,v30_key_off,prisma-v3.0,False,0.0
+Tier 3: Ceiling Fan Hum,10,v30_key_on,prisma-v3.0,True,0.0
+Tier 4: Street Traffic,5,v25_no_key,prisma-v2.5,False,0.0
+Tier 4: Street Traffic,5,v30_key_off,prisma-v3.0,False,0.0
+Tier 4: Street Traffic,5,v30_key_on,prisma-v3.0,True,0.0
+Tier 5: Market Babble,0,v25_no_key,prisma-v2.5,False,0.0
+Tier 5: Market Babble,0,v30_key_off,prisma-v3.0,False,0.0
+Tier 5: Market Babble,0,v30_key_on,prisma-v3.0,True,0.0

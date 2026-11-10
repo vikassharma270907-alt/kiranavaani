@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KiranaVaani – System Architecture (16:9 Widescreen)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-canvas: #060a14;
+      --bg-card: rgba(13, 22, 41, 0.88);
+      --bg-card-inner: rgba(9, 15, 30, 0.78);
+      --border-card: rgba(56, 189, 248, 0.16);
+      --border-card-hover: rgba(56, 189, 248, 0.38);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --accent-blue: #38bdf8;
+      --accent-electric: #0284c7;
+      --accent-teal: #14b8a6;
+      --accent-amber: #f59e0b;
+      --accent-emerald: #10b981;
+      --accent-red: #f87171;
+      --gnani-glow: rgba(56, 189, 248, 0.28);
+      --card-radius: 12px;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', Consolas, monospace;
+    }
+
+    [data-theme="light"] {
+      --bg-canvas: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-card-inner: #f8fafc;
+      --border-card: #cbd5e1;
+      --border-card-hover: #0284c7;
+      --text-main: #0f172a;
+      --text-muted: #334155;
+      --text-dim: #64748b;
+      --accent-blue: #0284c7;
+      --accent-electric: #0369a1;
+      --accent-teal: #0d9488;
+      --accent-amber: #b45309;
+      --accent-emerald: #059669;
+      --accent-red: #dc2626;
+      --gnani-glow: rgba(2, 132, 199, 0.18);
+    }
+
+    [data-theme="light"] .pipe-card.gnani-highlight {
+      background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+      border: 1.5px solid #0284c7 !important;
+      box-shadow: 0 8px 24px -4px rgba(2, 132, 199, 0.25) !important;
+    }
+
+    [data-theme="light"] .pipe-card.gnani-highlight h3 {
+      color: #0369a1 !important;
+    }
+
+    [data-theme="light"] .noiselab-section {
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
+      border: 1px solid rgba(2, 132, 199, 0.35) !important;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06) !important;
+    }
+
+    [data-theme="light"] .noiselab-title {
+      color: #0f172a !important;
+    }
+
+    [data-theme="light"] .lab-card {
+      background: #f8fafc !important;
+      border: 1px solid #e2e8f0 !important;
+    }
+
+    [data-theme="light"] .lab-card.active-cond {
+      background: #f0fdf4 !important;
+      border-color: rgba(5, 150, 105, 0.3) !important;
+    }
+
+    [data-theme="light"] .lab-card-title {
+      color: #0f172a !important;
+    }
+
+    [data-theme="light"] .snr-pill {
+      background: #ffffff !important;
+      border: 1px solid #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+
+    [data-theme="light"] .snr-pill .db-badge {
+      color: #0284c7 !important;
+    }
+
+    [data-theme="light"] .metric-eval-card {
+      background: #ffffff !important;
+      border: 1px solid #cbd5e1 !important;
+    }
+
+    [data-theme="light"] .metric-name {
+      color: #0f172a !important;
+    }
+
+    [data-theme="light"] .json-code-box {
+      background: #0f172a !important;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #020611;
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 16px 0;
+    }
+
+    /* Fixed 16:9 Presentation Viewport Wrapper */
+    .viewport-frame {
+      width: 100%;
+      max-width: 1920px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .slide-toolbar {
+      width: 100%;
+      max-width: 1920px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 38px 12px 38px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-action {
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      color: #e2e8f0;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-action:hover {
+      background: rgba(51, 65, 85, 0.95);
+      border-color: var(--accent-blue);
+      color: #fff;
+    }
+
+    /* 16:9 Aspect Ratio Master Slide Canvas (1920x1080) */
+    .slide-canvas {
+      width: 1920px;
+      height: 1080px;
+      background: var(--bg-canvas);
+      background-image: 
+        radial-gradient(circle at 10% 12%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 15%, rgba(20, 184, 166, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 50% 85%, rgba(37, 99, 235, 0.06) 0%, transparent 50%),
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8);
+      padding: 26px 38px 20px 38px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      transform-origin: top center;
+    }
+
+    /* Responsive scaling for standard displays */
+    @media screen and (max-width: 1960px) {
+      .slide-canvas {
+        transform: scale(var(--slide-scale, 0.75));
+        margin-bottom: calc((1080px * (1 - var(--slide-scale, 0.75))) * -1);
+      }
+    }
+
+    /* Print styles for direct 16:9 PDF export */
+    @media print {
+      @page {
+        size: 1920px 1080px;
+        margin: 0;
+      }
+      body {
+        background: var(--bg-canvas);
+        padding: 0;
+        margin: 0;
+      }
+      .slide-toolbar {
+        display: none !important;
+      }
+      .slide-canvas {
+        transform: none !important;
+        margin: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        width: 1920px !important;
+        height: 1080px !important;
+        page-break-after: always;
+      }
+    }
+
+    /* ========================================================= */
+    /* 1. HEADER SECTION                                        */
+    /* ========================================================= */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 68px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 10px;
+    }
+
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .super-title-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .challenge-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--accent-blue);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 2px 10px;
+      border-radius: 9999px;
+    }
+
+    .challenge-badge .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      box-shadow: 0 0 8px var(--accent-blue);
+    }
+
+    .slide-title {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      line-height: 1.15;
+    }
+
+    .slide-title span.accent {
+      background: linear-gradient(135deg, #38bdf8 0%, #14b8a6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .slide-subtitle {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: -0.01em;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .meta-chip {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 5px 12px;
+      border-radius: 7px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .meta-chip .meta-label {
+      font-size: 9.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+    }
+
+    .meta-chip .meta-value {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #e2e8f0;
+      font-family: var(--font-mono);
+    }
+
+    .meta-chip.highlight {
+      border-color: rgba(56, 189, 248, 0.35);
+      background: rgba(56, 189, 248, 0.08);
+    }
+    .meta-chip.highlight .meta-value {
+      color: var(--accent-blue);
+    }
+
+    /* ========================================================= */
+    /* 2. MAIN HORIZONTAL PIPELINE                               */
+    /* ========================================================= */
+    .pipeline-section {
+      height: 575px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      margin-top: 6px;
+    }
+
+    .section-eyebrow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 24px;
+      margin-bottom: 8px;
+    }
+
+    .section-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-label::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      background: var(--accent-blue);
+      border-radius: 2px;
+    }
+
+    .pipeline-badge-live {
+      font-size: 10.5px;
+      font-weight: 600;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--accent-emerald);
+      padding: 2px 10px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* 7-Step Main Pipeline Grid */
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: 220px 30px 250px 30px 255px 30px 275px 30px 220px 30px 250px 30px 214px;
+      align-items: stretch;
+      height: 450px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Pipe Step Card Base */
+    .pipe-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--card-radius);
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      transition: all 0.25s ease;
+    }
+
+    .pipe-card:hover {
+      border-color: var(--border-card-hover);
+      box-shadow: 0 14px 30px -5px rgba(0, 0, 0, 0.65);
+    }
+
+    /* Gnani AI Highlighted Cards */
+    .pipe-card.gnani-highlight {
+      border: 1.5px solid rgba(56, 189, 248, 0.5);
+      box-shadow: 0 0 25px -5px var(--gnani-glow), 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      background: linear-gradient(180deg, rgba(14, 25, 46, 0.95) 0%, rgba(10, 18, 34, 0.92) 100%);
+    }
+
+    .pipe-card.gnani-highlight::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 15%;
+      right: 15%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #38bdf8, transparent);
+    }
+
+    .brand-pill {
+      position: absolute;
+      top: -9px;
+      right: 12px;
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: #ffffff;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    /* Card Header */
+    .card-top {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .card-step-num {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .step-tag {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--accent-blue);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-family: var(--font-mono);
+    }
+
+    .card-icon-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-blue);
+    }
+
+    .card-icon-wrap.teal {
+      background: rgba(20, 184, 166, 0.1);
+      border-color: rgba(20, 184, 166, 0.25);
+      color: var(--accent-teal);
+    }
+
+    .card-icon-wrap.amber {
+      background: rgba(245, 158, 11, 0.1);
+      border-color: rgba(245, 158, 11, 0.25);
+      color: var(--accent-amber);
+    }
+
+    .card-icon-wrap.emerald {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: rgba(16, 185, 129, 0.25);
+      color: var(--accent-emerald);
+    }
+
+    .card-title-group h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.2;
+      margin-bottom: 2px;
+    }
+
+    .card-title-group .component-role {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent-teal);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* Bullet List & Content */
+    .card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      flex-grow: 1;
+      margin-top: 6px;
+    }
+
+    .feature-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .feature-list li {
+      font-size: 11px;
+      line-height: 1.35;
+      color: var(--text-muted);
+      position: relative;
+      padding-left: 11px;
+      display: block;
+    }
+
+    .feature-list li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: var(--accent-blue);
+      font-weight: bold;
+      font-size: 13px;
+      line-height: 1.2;
+    }
+
+    .feature-list.independent li::before {
+      color: var(--text-dim);
+    }
+
+    /* Example & Artifact Boxes */
+    .example-box {
+      background: var(--bg-card-inner);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 7px;
+      padding: 7px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .example-box.speech {
+      border-left: 3px solid var(--accent-blue);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .example-box.tts-response {
+      border-left: 3px solid var(--accent-teal);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .example-box.clarification {
+      border-left: 3px solid var(--accent-amber);
+      background: rgba(245, 158, 11, 0.08);
+    }
+
+    .example-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .example-text {
+      font-size: 10.5px;
+      font-style: italic;
+      line-height: 1.3;
+      color: #e2e8f0;
+    }
+
+    /* Code & JSON Display - Compact & Non-wrapping */
+    .json-code-box {
+      background: #040813;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-family: var(--font-mono);
+      font-size: 9.2px;
+      line-height: 1.32;
+      color: #38bdf8;
+      overflow: hidden;
+      white-space: pre;
+    }
+
+    .json-code-box .jk { color: #94a3b8; }
+    .json-code-box .js { color: #facc15; }
+    .json-code-box .jn { color: #4ade80; }
+
+    /* Branching Decision Box inside Step 4 */
+    .branch-decision-box {
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px dashed rgba(245, 158, 11, 0.45);
+      border-radius: 7px;
+      padding: 7px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-top: 2px;
+    }
+
+    .branch-path {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 6px;
+      border-radius: 4px;
+    }
+
+    .branch-path.high {
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border-left: 2px solid #10b981;
+    }
+
+    .branch-path.low {
+      background: rgba(245, 158, 11, 0.14);
+      color: #fbbf24;
+      border-left: 2px solid #f59e0b;
+    }
+
+    /* Directional Pipeline Connectors */
+    .pipe-connector {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .connector-line {
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(56, 189, 248, 0.3), rgba(56, 189, 248, 0.85), rgba(56, 189, 248, 0.3));
+      position: relative;
+    }
+
+    .connector-arrow {
+      position: absolute;
+      right: 0px;
+      top: -4px;
+      width: 0;
+      height: 0;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      border-left: 7px solid var(--accent-blue);
+    }
+
+    .connector-pulse {
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #38bdf8;
+      box-shadow: 0 0 8px #38bdf8;
+      top: -1.5px;
+      left: 40%;
+    }
+
+    /* Step Bottom Meta Pill */
+    .card-footer-pill {
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 9.5px;
+      color: var(--text-dim);
+    }
+
+    .card-footer-pill .badge {
+      font-weight: 600;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .badge-inhouse {
+      font-size: 8.5px;
+      font-weight: 700;
+      color: #94a3b8;
+      background: rgba(148, 163, 184, 0.1);
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    /* Dedicated Clarification Loop Corridor (Below Cards) */
+    .clarification-corridor {
+      height: 70px;
+      position: relative;
+      margin-top: 10px;
+      width: 100%;
+    }
+
+    .clarification-svg-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    /* ========================================================= */
+    /* 3. NOISE LAB EVALUATION WORKFLOW                          */
+    /* ========================================================= */
+    .noiselab-section {
+      height: 310px;
+      background: linear-gradient(180deg, rgba(13, 21, 38, 0.9) 0%, rgba(7, 12, 24, 0.96) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: var(--card-radius);
+      padding: 14px 18px 12px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 12px 28px rgba(0, 0, 0, 0.5);
+    }
+
+    .noiselab-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 8px;
+      height: 36px;
+    }
+
+    .noiselab-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lab-icon-box {
+      width: 26px;
+      height: 26px;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: var(--accent-amber);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .noiselab-title {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .noiselab-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .lab-tags {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lab-isolated-tag {
+      font-size: 10px;
+      font-weight: 700;
+      color: #f59e0b;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .keyterm-badge {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 3px 10px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .keyterm-badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #38bdf8;
+      box-shadow: 0 0 6px #38bdf8;
+    }
+
+    /* Noise Lab Pipeline Flow */
+    .noiselab-flow {
+      display: grid;
+      grid-template-columns: 270px 28px 330px 28px 430px 28px 290px 28px 348px;
+      align-items: stretch;
+      height: 228px;
+      margin-top: 8px;
+    }
+
+    .lab-card {
+      background: rgba(9, 15, 30, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 11px 13px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .lab-card.active-cond {
+      border-color: rgba(56, 189, 248, 0.3);
+      background: rgba(14, 22, 40, 0.88);
+    }
+
+    .lab-card-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 5px;
+    }
+
+    .lab-card-desc {
+      font-size: 10.5px;
+      line-height: 1.36;
+      color: #94a3b8;
+    }
+
+    /* SNR Conditions Grid */
+    .snr-pills-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+      margin-top: 4px;
+    }
+
+    .snr-pill {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 5px;
+      padding: 4px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 9.5px;
+      font-family: var(--font-mono);
+    }
+
+    .snr-pill.clean {
+      border-color: rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.08);
+      color: #34d399;
+      grid-column: span 2;
+    }
+
+    .snr-pill .db-badge {
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+
+    /* Metric Dual Cards */
+    .metrics-dual-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 3px;
+    }
+
+    .metric-eval-card {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      padding: 7px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .metric-eval-card.wer {
+      border-left: 3px solid #f87171;
+    }
+
+    .metric-eval-card.f1 {
+      border-left: 3px solid #34d399;
+    }
+
+    .metric-icon-mini {
+      font-size: 13px;
+      font-weight: 800;
+      color: #ffffff;
+      font-family: var(--font-mono);
+      width: 42px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 3px 4px;
+      border-radius: 4px;
+    }
+
+    .metric-details {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .metric-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .metric-meaning {
+      font-size: 9.5px;
+      color: var(--text-muted);
+      line-height: 1.25;
+    }
+
+    /* Lab Connectors */
+    .lab-connector {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .lab-connector-line {
+      width: 100%;
+      height: 2px;
+      background: rgba(245, 158, 11, 0.4);
+      position: relative;
+    }
+
+    .lab-connector-arrow {
+      position: absolute;
+      right: 0px;
+      top: -3.5px;
+      width: 0;
+      height: 0;
+      border-top: 4.5px solid transparent;
+      border-bottom: 4.5px solid transparent;
+      border-left: 6px solid var(--accent-amber);
+    }
+
+    /* ========================================================= */
+    /* 4. FOOTER                                                */
+    /* ========================================================= */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 26px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 5px;
+      color: var(--text-dim);
+      font-size: 10.5px;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .footer-brand {
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .footer-center {
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.04em;
+      font-size: 11.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .footer-center span.hl {
+      color: var(--accent-blue);
+    }
+
+    .footer-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+    }
+
+    /* Custom SVGs and Utilities */
+    svg.icon {
+      width: 17px;
+      height: 17px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="viewport-frame">
+    <!-- Quick Toolbar for Viewing and PDF Export -->
+    <div class="slide-toolbar">
+      <div>
+        <strong>KiranaVaani Widescreen Master Slide (16:9)</strong> — System Architecture & Noise Lab
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn-action" onclick="toggleTheme()">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          Toggle Dark / Light
+        </button>
+        <button class="btn-action" onclick="fitToWindow()">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          Fit to Screen
+        </button>
+        <button class="btn-action" onclick="window.print()">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Export / Print PDF (16:9)
+        </button>
+      </div>
+    </div>
+
+    <!-- MAIN 16:9 SLIDE CONTAINER (1920x1080) -->
+    <div class="slide-canvas" id="slideCanvas">
+
+      <!-- ========================================== -->
+      <!-- TOP HEADER                                 -->
+      <!-- ========================================== -->
+      <header class="slide-header">
+        <div class="header-left">
+          <div class="super-title-row">
+            <div class="challenge-badge">
+              <span class="pulse-dot"></span>
+              Great Indian AI Internship Challenge
+            </div>
+            <span style="color: var(--text-dim); font-size: 12px;">•</span>
+            <span style="color: var(--accent-teal); font-size: 11.5px; font-weight: 600;">Technical Project Architecture</span>
+          </div>
+          <h1 class="slide-title">
+            KiranaVaani <span style="font-weight: 300; opacity: 0.5;">–</span> <span class="accent">System Architecture</span>
+          </h1>
+          <p class="slide-subtitle">Noise-Robust Hinglish Voice Assistant for Neighbourhood Kirana Stores</p>
+        </div>
+
+        <div class="header-right">
+          <div class="meta-chip">
+            <span class="meta-label">Aspect Ratio</span>
+            <span class="meta-value">16:9 Widescreen</span>
+          </div>
+          <div class="meta-chip highlight">
+            <span class="meta-label">Voice Pipeline</span>
+            <span class="meta-value">Prisma STT + Timbre TTS</span>
+          </div>
+          <div class="meta-chip">
+            <span class="meta-label">Evaluation Lab</span>
+            <span class="meta-value">0 to 20 dB Noise Bench</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- ========================================== -->
+      <!-- CENTRE: MAIN SYSTEM ARCHITECTURE PIPELINE  -->
+      <!-- ========================================== -->
+      <section class="pipeline-section">
+        <div class="section-eyebrow">
+          <div class="section-label">
+            Live Customer Voice Ordering Architecture — End-to-End Execution Flow
+          </div>
+          <div class="pipeline-badge-live">
+            <span style="width: 6px; height: 6px; background: var(--accent-emerald); border-radius: 50%;"></span>
+            Active Production Pipeline
+          </div>
+        </div>
+
+        <!-- 7-STEP HORIZONTAL ARCHITECTURE GRID -->
+        <div class="pipeline-grid">
+
+          <!-- STEP 1: VOICE INPUT -->
+          <div class="pipe-card" id="step1">
+            <div class="card-top">
+              <div class="card-step-num">
+                <span class="step-tag">Step 01</span>
+                <div class="card-icon-wrap">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                </div>
+              </div>
+              <div class="card-title-group">
+                <h3>Voice Input</h3>
+                <span class="component-role">Customer / Microphone</span>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <ul class="feature-list">
+                <li>Customer speaks natural Hinglish grocery order.</li>
+                <li>Audio captured via browser Web Audio API / MediaRecorder.</li>
+                <li>16 kHz PCM stream or telephony audio input.</li>
+              </ul>
+
+              <div class="example-box speech">
+                <span class="example-label">
+                  <svg class="icon" style="width: 11px; height: 11px;" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  Spoken Order Example
+                </span>
+                <div class="example-text">
+                  "Bhaiya, do packet Maggi, ek kilo sugar aur aadha litre milk bhej dena."
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer-pill">
+              <span>Client Audio</span>
+              <span class="badge">Web Audio API</span>
+            </div>
+          </div>
+
+          <!-- CONNECTOR 1 -> 2 -->
+          <div class="pipe-connector">
+            <div class="connector-line">
+              <div class="connector-arrow"></div>
+              <div class="connector-pulse"></div>
+            </div>
+          </div>
+
+          <!-- STEP 2: SPEECH RECOGNITION (GNANI AI PRISMA) -->
+          <div class="pipe-card gnani-highlight" id="step2">
+            <div class="brand-pill">Gnani AI Model</div>
+            <div class="card-top">
+              <div class="card-step-num">
+                <span class="step-tag" style="color: #38bdf8;">Step 02</span>
+                <div class="card-icon-wrap" style="background: rgba(56, 189, 248, 0.2); border-color: #38bdf8;">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M2 10v3M6 6v11M10 3v18M14 8v7M18 5v13M22 10v3"/></svg>
+                </div>
+              </div>
+              <div class="card-title-group">
+                <h3 style="color: #ffffff;">Gnani AI Prisma</h3>
+                <span class="component-role" style="color: #38bdf8;">Speech-to-Text (STT)</span>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <ul class="feature-list">
+                <li>Receives the raw audio stream from client.</li>
+                <li>Recognizes mixed Hindi-English speech (Hinglish).</li>
+                <li>Produces clean text transcription.</li>
+                <li><strong>Catalogue Keyterms:</strong> Injects domain vocabulary when configured.</li>
+              </ul>
+
+              <div class="example-box">
+                <span class="example-label">
+                  <svg class="icon" style="width: 11px; height: 11px;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                  STT Output Transcription
+                </span>
+                <div class="example-text" style="font-family: var(--font-mono); font-size: 9.8px; color: #7dd3fc; font-style: normal;">
+                  "bhaiya do packet maggi ek kilo sugar aur aadha litre milk bhej dena"
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer-pill">
+              <span>Speech Model</span>
+              <span class="badge" style="color: #38bdf8;">Prisma v3.0 STT</span>
+            </div>
+          </div>
+
+          <!-- CONNECTOR 2 -> 3 -->
+          <div class="pipe-connector">
+            <div class="connector-line">
+              <div class="connector-arrow"></div>
+              <div class="connector-pulse"></div>
+            </div>
+          </div>
+
+          <!-- STEP 3: NATURAL LANGUAGE UNDERSTANDING (ORDER PARSER) -->
+          <div class="pipe-card" id="step3">
+            <div class="card-top">
+              <div class="card-step-num">
+                <span class="step-tag">Step 03</span>
+                <div class="card-icon-wrap teal">
+                  <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+              </div>
+              <div class="card-title-group">
+                <h3>Order Parser</h3>
+                <span class="component-role">NLU & Entity Extractor</span>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <ul class="feature-list independent">
+                <li>Processes transcription & strips fillers.</li>
+                <li>Identifies grocery entities, quantities & units.</li>
+                <li>Normalizes numerals: <em>do</em> &rarr; 2, <em>aadha</em> &rarr; 0.5.</li>
+              </ul>
+
+              <div class="example-box" style="padding: 6px 8px;">
+                <span class="example-label" style="margin-bottom: 3px;">
+                  <svg class="icon" style="width: 10px; height: 10px;" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                  Structured JSON Output
+                </span>
+                <div class="json-code-box" style="font-size: 8.8px; line-height: 1.32; padding: 6px 8px;">{
+  <span class="jk">"items"</span>: [
+    {
+      <span class="jk">"product"</span>: <span class="js">"Maggi"</span>,
+      <span class="jk">"quantity"</span>: <span class="jn">2</span>,
+      <span class="jk">"unit"</span>: <span class="js">"packets"</span>
+    },
+    {
+      <span class="jk">"product"</span>: <span class="js">"Sugar"</span>,
+      <span class="jk">"quantity"</span>: <span class="jn">1</span>,
+      <span class="jk">"unit"</span>: <span class="js">"kg"</span>
+    },
+    {
+      <span class="jk">"product"</span>: <span class="js">"Milk"</span>,
+      <span class="jk">"quantity"</span>: <span class="jn">0.5</span>,
+      <span class="jk">"unit"</span>: <span class="js">"litre"</span>
+    }
+  ]
+}</div>
+              </div>
+            </div>
+
+            <div class="card-footer-pill">
+              <span class="badge-inhouse">In-House Rule / NLU</span>
+              <span class="badge">Independent</span>
+            </div>
+          </div>
+
+          <!-- CONNECTOR 3 -> 4 -->
+          <div class="pipe-connector">
+            <div class="connector-line">
+              <div class="connector-arrow"></div>
+              <div class="connector-pulse"></div>
+            </div>
+          </div>
+
+          <!-- STEP 4: CATALOGUE MATCHING & BRANCHING DECISION -->
+          <div class="pipe-card" id="step4">
+            <div class="card-top">
+              <div class="card-step-num">
+                <span class="step-tag">Step 04</span>
+                <div class="card-icon-wrap amber">
+                  <svg class="icon" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                </div>
+              </div>
+              <div class="card-title-group">
+                <h3>Catalogue Matcher</h3>
+                <span class="component-role">Fuzzy Matcher & Decision Gate</span>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <ul class="feature-list independent">
+                <li>RapidFuzz matching vs 35-SKU catalogue.</li>
+                <li>Handles phonetic variants: <em>meggi</em>, <em>chini</em>.</li>
+                <li>Ambiguity scoring & confidence checks.</li>
+              </ul>
+
+              <!-- Branching Decision Box -->
+              <div class="branch-decision-box">
+                <div class="branch-path high">
+                  <span>✔ High-Confidence Match</span>
+                  <span style="font-size: 8.5px; opacity: 0.9;">Direct → Cart</span>
+                </div>
+                <div class="branch-path low">
+                  <span>⚠ Low / Ambiguous Match</span>
+                  <span style="font-size: 8.5px; opacity: 0.9;">Clarification Loop</span>
+                </div>
+
+                <div class="example-box clarification" style="padding: 5px 6px;">
+                  <span class="example-label" style="color: var(--accent-amber);">
+                    <svg class="icon" style="width: 10px; height: 10px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    Clarification Prompt
+                  </span>
+                  <div class="example-text" style="font-size: 9.8px; color: #fde68a;">
+                    "Did you mean Maggi or Magic Masala?"
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer-pill">
+              <span class="badge-inhouse">RapidFuzz Engine</span>
+              <span class="badge">Branching Loop</span>
+            </div>
+          </div>
+
+          <!-- CONNECTOR 4 -> 5 -->
+          <div class="pipe-connector">
+            <div class="connector-line">
+              <div class="connector-arrow"></div>
+              <div class="connector-pulse"></div>
+            </div>
+          </div>
+
+          <!-- STEP 5: SHOPPING CART -->
+          <div class="pipe-card" id="step5">
+            <div class="card-top">
+              <div class="card-step-num">
+                <span class="step-tag">Step 05</span>
+                <div class="card-icon-wrap emerald">
+                  <svg class="icon" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                </div>
+              </div>
+              <div class="card-title-group">
+                <h3>Shopping Cart</h3>
+                <span class="component-role">Order State Management</span>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <ul class="feature-list independent">
+                <li>Adds matched SKU products, quantities & units.</li>
+                <li>Displays structured grocery cart in real time.</li>
+                <li>Allows customer confirmation or manual edits.</li>
+                <li>Maintains live item ledger & total price.</li>
+              </ul>
+
+              <div class="example-box" style="border-left: 3px solid #10b981;">
+                <span class="example-label" style="color: #34d399;">
+                  <svg class="icon" style="width: 10px; height: 10px;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  Structured Cart State
+                </span>
+                <div style="font-size: 10px; line-height: 1.35; color: #cbd5e1; font-family: var(--font-mono);">
+                  • Maggi 2-Min × 2 pkts<br>
+                  • Madhur Sugar × 1 kg<br>
+                  • Amul Taaza × 0.5 L
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer-pill">
+              <span>Cart State</span>
+              <span class="badge">Real-Time Sync</span>
+            </div>
+          </div>
+
+          <!-- CONNECTOR 5 -> 6 -->
+          <div class="pipe-connector">
+            <div class="connector-line">
+              <div class="connector-arrow"></div>
+              <div class="connector-pulse"></div>
+            </div>
+          </div>
+
+          <!-- STEP 6: VOICE RESPONSE (GNANI AI TIMBRE) -->
+          <div class="pipe-card gnani-highlight" id="step6">
+            <div class="brand-pill">Gnani AI Model</div>
+            <div class="card-top">
+              <div class="card-step-num">
+                <span class="step-tag" style="color: #38bdf8;">Step 06</span>
+                <div class="card-icon-wrap" style="background: rgba(56, 189, 248, 0.2); border-color: #38bdf8;">
+                  <svg class="icon" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                </div>
+              </div>
+              <div class="card-title-group">
+                <h3 style="color: #ffffff;">Gnani AI Timbre</h3>
+                <span class="component-role" style="color: #38bdf8;">Text-to-Speech (TTS)</span>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <ul class="feature-list">
+                <li>Converts confirmation text into natural speech.</li>
+                <li>Reads complete order summary back to customer.</li>
+                <li>Low-latency Hinglish colloquial voice synthesis.</li>
+                <li>Requests final customer confirmation.</li>
+              </ul>
+
+              <div class="example-box tts-response">
+                <span class="example-label" style="color: var(--accent-teal);">
+                  <svg class="icon" style="width: 10px; height: 10px;" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                  Spoken Feedback (Voice)
+                </span>
+                <div class="example-text" style="color: #a7f3d0; font-size: 10px;">
+                  "Aapka order hai do packet Maggi, ek kilo sugar aur aadha litre milk. Kya main confirm kar doon?"
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer-pill">
+              <span>Speech Model</span>
+              <span class="badge" style="color: #38bdf8;">Timbre v2.5 TTS</span>
+            </div>
+          </div>
+
+          <!-- CONNECTOR 6 -> 7 -->
+          <div class="pipe-connector">
+            <div class="connector-line">
+              <div class="connector-arrow"></div>
+              <div class="connector-pulse"></div>
+            </div>
+          </div>
+
+          <!-- STEP 7: FINAL OUTPUT -->
+          <div class="pipe-card" id="step7" style="border-color: rgba(16, 185, 129, 0.45); background: linear-gradient(180deg, rgba(14, 25, 42, 0.9) 0%, rgba(6, 40, 28, 0.5) 100%);">
+            <div class="card-top">
+              <div class="card-step-num">
+                <span class="step-tag" style="color: #34d399;">Step 07</span>
+                <div class="card-icon-wrap emerald">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                </div>
+              </div>
+              <div class="card-title-group">
+                <h3>Final Output</h3>
+                <span class="component-role" style="color: #34d399;">Confirmed Grocery Order</span>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <ul class="feature-list independent">
+                <li>Structured cart with verified item quantities.</li>
+                <li>Customer spoken voice confirmation logged.</li>
+                <li>Final spoken response acknowledgment sent.</li>
+                <li>Ready for neighbourhood Kirana fulfillment.</li>
+              </ul>
+
+              <div class="example-box" style="border: 1px solid rgba(16, 185, 129, 0.35); background: rgba(16, 185, 129, 0.1);">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #10b981; color: #fff; font-size: 12px; font-weight: bold;">✓</span>
+                  <div>
+                    <div style="font-size: 11px; font-weight: 700; color: #ffffff;">Order Locked & Verified</div>
+                    <div style="font-size: 9px; color: #a7f3d0;">Structured Cart + Voice Confirmed</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer-pill">
+              <span>Order State</span>
+              <span class="badge" style="color: #34d399;">Ready for Delivery</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- DEDICATED CLARIFICATION RETURN LOOP CORRIDOR (CLEAR FROM CARDS) -->
+        <div class="clarification-corridor">
+          <svg class="clarification-svg-layer" viewBox="0 0 1844 70">
+            <defs>
+              <marker id="amber-arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#f59e0b" />
+              </marker>
+              <filter id="glow-amber" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+            </defs>
+
+            <!-- 
+              Coordinates in 1844px grid:
+              Step 4 center X = 220 + 30 + 250 + 30 + 255 + 30 + (275 / 2) = 952.5
+              Step 1 center X = 220 / 2 = 110
+              Start at (952, 0), drop down to Y=35, turn left to (110, 35), turn up to (110, 0)
+            -->
+            <path d="M 952 2 
+                     L 952 26
+                     Q 952 38, 936 38
+                     L 126 38
+                     Q 110 38, 110 26
+                     L 110 4" 
+                  fill="none" 
+                  stroke="#f59e0b" 
+                  stroke-width="2.5" 
+                  stroke-dasharray="7,4"
+                  marker-end="url(#amber-arrow)"
+                  filter="url(#glow-amber)" />
+
+            <!-- Clarification Return Pill Badge centered at X ~ 530, Y = 38 -->
+            <rect x="315" y="26" width="430" height="24" rx="12" fill="#0d1829" stroke="#f59e0b" stroke-width="1.4"/>
+            <text x="530" y="42" fill="#fbbf24" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="700" text-anchor="middle">
+              ↺ Clarification Question → Customer Response → Re-match Loop
+            </text>
+          </svg>
+        </div>
+
+      </section>
+
+      <!-- ========================================== -->
+      <!-- BOTTOM: NOISE LAB EVALUATION WORKFLOW      -->
+      <!-- ========================================== -->
+      <section class="noiselab-section">
+        <div class="noiselab-header">
+          <div class="noiselab-title-group">
+            <div class="lab-icon-box">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M10 2v7.31M14 2v7.31M8.5 2h7M14 9.3a6.5 6.5 0 1 1-4 0"/></svg>
+            </div>
+            <div>
+              <div class="noiselab-title">
+                Noise Lab <span style="font-weight: 300; opacity: 0.5;">–</span> Speech Robustness Evaluation
+              </div>
+              <div class="noiselab-sub">
+                Experimental evaluation framework assessing Gnani AI Prisma STT under harsh retail acoustic noise tiers
+              </div>
+            </div>
+          </div>
+
+          <div class="lab-tags">
+            <div class="lab-isolated-tag">
+              Separate Evaluation Branch • Offline Research Workflow
+            </div>
+            <div class="keyterm-badge">
+              <span class="dot"></span>
+              Catalogue Keyterms: ON vs OFF
+            </div>
+          </div>
+        </div>
+
+        <!-- 5-STAGE EVALUATION WORKFLOW -->
+        <div class="noiselab-flow">
+
+          <!-- STAGE 1: TEST AUDIO DATASET -->
+          <div class="lab-card">
+            <div>
+              <div class="lab-card-title">
+                <span style="color: var(--accent-blue); font-family: var(--font-mono);">01</span>
+                Test Audio Dataset
+              </div>
+              <p class="lab-card-desc">
+                Curated domain-specific corpus of Hinglish grocery audio recordings representing authentic Kirana orders.
+              </p>
+            </div>
+            <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 6px; padding: 7px 9px; font-size: 10px; color: var(--text-muted);">
+              • Authenticated Kirana test audio<br>
+              • Diverse phonetic & dialect accents
+            </div>
+          </div>
+
+          <!-- LAB CONNECTOR -->
+          <div class="lab-connector">
+            <div class="lab-connector-line"><div class="lab-connector-arrow"></div></div>
+          </div>
+
+          <!-- STAGE 2: AUDIO PREPROCESSING & NOISE SIMULATION -->
+          <div class="lab-card">
+            <div>
+              <div class="lab-card-title">
+                <span style="color: var(--accent-blue); font-family: var(--font-mono);">02</span>
+                Audio Preprocessing & Noise Simulation
+              </div>
+              <p class="lab-card-desc">
+                Simulates real-world retail acoustic distortion via calibrated noise injection & telephony transcoding.
+              </p>
+            </div>
+            <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 6px; padding: 7px 9px; font-size: 10px; color: var(--text-muted);">
+              • ITU-T G.711 μ-Law (8 kHz Telephony)<br>
+              • ESC-50 Environmental Noise Mixing
+            </div>
+          </div>
+
+          <!-- LAB CONNECTOR -->
+          <div class="lab-connector">
+            <div class="lab-connector-line"><div class="lab-connector-arrow"></div></div>
+          </div>
+
+          <!-- STAGE 3: 5 AUDIO CONDITIONS -->
+          <div class="lab-card active-cond">
+            <div>
+              <div class="lab-card-title">
+                <span style="color: var(--accent-blue); font-family: var(--font-mono);">03</span>
+                Different Audio Conditions
+              </div>
+              <p class="lab-card-desc" style="margin-bottom: 3px;">
+                Graded acoustic stress tiers for systematic robustness profiling:
+              </p>
+            </div>
+            <div class="snr-pills-grid">
+              <div class="snr-pill clean">
+                <span>Clean Audio (Studio Reference)</span>
+                <span class="db-badge">16 kHz Linear</span>
+              </div>
+              <div class="snr-pill">
+                <span>Telephony Line</span>
+                <span class="db-badge">20 dB SNR</span>
+              </div>
+              <div class="snr-pill">
+                <span>Shop Fan</span>
+                <span class="db-badge">10 dB SNR</span>
+              </div>
+              <div class="snr-pill">
+                <span>Street Traffic</span>
+                <span class="db-badge">5 dB SNR</span>
+              </div>
+              <div class="snr-pill">
+                <span>Market Babble</span>
+                <span class="db-badge" style="color: #f87171;">0 dB SNR</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- LAB CONNECTOR -->
+          <div class="lab-connector">
+            <div class="lab-connector-line"><div class="lab-connector-arrow"></div></div>
+          </div>
+
+          <!-- STAGE 4: SPEECH RECOGNITION USING PRISMA -->
+          <div class="lab-card" style="border-color: rgba(56, 189, 248, 0.35);">
+            <div>
+              <div class="lab-card-title">
+                <span style="color: #38bdf8; font-family: var(--font-mono);">04</span>
+                Speech Recognition using Prisma
+              </div>
+              <p class="lab-card-desc">
+                Inference through Gnani AI Prisma STT across all noise tiers with comparative keyterm biasing.
+              </p>
+            </div>
+            <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 6px; padding: 7px 9px; font-size: 10px;">
+              <div style="font-weight: 700; color: #38bdf8; margin-bottom: 2px;">Evaluation Comparison</div>
+              <div style="color: #cbd5e1; font-size: 9.5px; line-height: 1.4;">
+                • Baseline STT (Catalogue Keyterms OFF)<br>
+                • Biased STT (Catalogue Keyterms ON)
+              </div>
+            </div>
+          </div>
+
+          <!-- LAB CONNECTOR -->
+          <div class="lab-connector">
+            <div class="lab-connector-line"><div class="lab-connector-arrow"></div></div>
+          </div>
+
+          <!-- STAGE 5: EVALUATION AND COMPARISON -->
+          <div class="lab-card">
+            <div>
+              <div class="lab-card-title">
+                <span style="color: var(--accent-blue); font-family: var(--font-mono);">05</span>
+                Evaluation and Comparison
+              </div>
+            </div>
+
+            <div class="metrics-dual-container">
+              <!-- Metric 1: WER -->
+              <div class="metric-eval-card wer">
+                <div class="metric-icon-mini" style="color: #f87171;">WER</div>
+                <div class="metric-details">
+                  <span class="metric-name">Word Error Rate (WER)</span>
+                  <span class="metric-meaning">Measures acoustic & lexical transcription errors against reference transcripts.</span>
+                </div>
+              </div>
+
+              <!-- Metric 2: Item F1 -->
+              <div class="metric-eval-card f1">
+                <div class="metric-icon-mini" style="color: #34d399;">F1</div>
+                <div class="metric-details">
+                  <span class="metric-name">Item-Level F1-Score</span>
+                  <span class="metric-meaning">Measures correct grocery product, quantity, and unit extraction accuracy.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- FOOTER                                     -->
+      <!-- ========================================== -->
+      <footer class="slide-footer">
+        <div class="footer-left">
+          <span class="footer-brand">KIRANAVAANI ARCHITECTURE</span>
+          <span>•</span>
+          <span>Great Indian AI Internship Challenge</span>
+        </div>
+
+        <div class="footer-center">
+          <span>Speech AI</span> <span class="hl">+</span> 
+          <span>NLP</span> <span class="hl">+</span> 
+          <span>Catalogue Intelligence</span> <span class="hl">+</span> 
+          <span>Noise Robustness</span>
+        </div>
+
+        <div class="footer-right">
+          <span>Gnani AI Prisma (STT) & Timbre (TTS)</span>
+          <span>•</span>
+          <span>Catalogue: RapidFuzz (35 SKUs)</span>
+          <span>•</span>
+          <span>Slide 1 of 1 (16:9)</span>
+        </div>
+      </footer>
+
+    </div>
+  </div>
+
+  <script>
+    // Auto scale slide to fit viewport smoothly
+    function fitToWindow() {
+      const canvas = document.getElementById('slideCanvas');
+      const availWidth = window.innerWidth - 40;
+      const targetWidth = 1920;
+      const scale = Math.min(1, availWidth / targetWidth);
+      document.documentElement.style.setProperty('--slide-scale', scale);
+    }
+
+    window.addEventListener('resize', fitToWindow);
+    window.addEventListener('DOMContentLoaded', fitToWindow);
+
+    // Theme toggler (Dark Navy default vs Crisp Light Grey)
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      if (current === 'light') {
+        document.documentElement.removeAttribute('data-theme');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    }
+  </script>
+</body>
+</html>

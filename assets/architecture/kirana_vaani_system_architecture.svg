@@ -1,0 +1,657 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" style="background:#060a14; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <defs>
+    <!-- Background Gradients -->
+    <radialGradient id="bg-glow-1" cx="12%" cy="15%" r="45%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bg-glow-2" cx="88%" cy="18%" r="45%">
+      <stop offset="0%" stop-color="#14b8a6" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#14b8a6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="header-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+    <linearGradient id="gnani-card-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0e192e" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#0a1222" stop-opacity="0.92"/>
+    </linearGradient>
+    <linearGradient id="gnani-badge-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+    <linearGradient id="card-standard-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0d1629" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#090f1e" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="noiselab-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0d1526" stop-opacity="0.92"/>
+      <stop offset="100%" stop-color="#070c18" stop-opacity="0.98"/>
+    </linearGradient>
+    <linearGradient id="pipe-arrow-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.3"/>
+      <stop offset="50%" stop-color="#38bdf8" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.3"/>
+    </linearGradient>
+
+    <!-- Filters & Shadows -->
+    <filter id="card-shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+    <filter id="gnani-glow-filter" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#38bdf8" flood-opacity="0.3"/>
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+    <filter id="amber-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <!-- Arrow Markers -->
+    <marker id="pipe-arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#38bdf8"/>
+    </marker>
+    <marker id="lab-arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#f59e0b"/>
+    </marker>
+    <marker id="amber-loop-arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#f59e0b"/>
+    </marker>
+  </defs>
+
+  <!-- Background Grids & Ambient Lights -->
+  <rect width="1920" height="1080" fill="#060a14"/>
+  <rect width="1920" height="1080" fill="url(#bg-glow-1)"/>
+  <rect width="1920" height="1080" fill="url(#bg-glow-2)"/>
+
+  <!-- ============================================================ -->
+  <!-- 1. SLIDE HEADER                                              -->
+  <!-- ============================================================ -->
+  <g transform="translate(38, 26)">
+    <!-- Badge -->
+    <rect x="0" y="0" width="265" height="22" rx="11" fill="#38bdf8" fill-opacity="0.12" stroke="#38bdf8" stroke-opacity="0.3" stroke-width="1"/>
+    <circle cx="12" cy="11" r="3" fill="#38bdf8"/>
+    <text x="22" y="15" fill="#38bdf8" font-size="10" font-weight="700" letter-spacing="0.08em">GREAT INDIAN AI INTERNSHIP CHALLENGE</text>
+    <circle cx="280" cy="11" r="2" fill="#64748b"/>
+    <text x="292" y="15" fill="#14b8a6" font-size="11.5" font-weight="600">Technical Project Architecture</text>
+
+    <!-- Title & Subtitle -->
+    <text x="0" y="48" font-size="26" font-weight="800" fill="#ffffff" letter-spacing="-0.02em">
+      KiranaVaani <tspan font-weight="300" fill-opacity="0.5">– </tspan><tspan fill="url(#header-grad)">System Architecture</tspan>
+    </text>
+    <text x="0" y="66" font-size="13.5" font-weight="500" fill="#94a3b8">
+      Noise-Robust Hinglish Voice Assistant for Neighbourhood Kirana Stores
+    </text>
+
+    <!-- Top Right Meta Chips -->
+    <g transform="translate(1360, 4)">
+      <rect x="0" y="0" width="130" height="42" rx="7" fill="#0f172a" fill-opacity="0.7" stroke="#ffffff" stroke-opacity="0.08"/>
+      <text x="118" y="16" fill="#64748b" font-size="9" font-weight="600" text-anchor="end" letter-spacing="0.06em">ASPECT RATIO</text>
+      <text x="118" y="32" fill="#e2e8f0" font-size="12" font-weight="700" text-anchor="end" font-family="'JetBrains Mono', monospace">16:9 Widescreen</text>
+
+      <rect x="142" y="0" width="180" height="42" rx="7" fill="#38bdf8" fill-opacity="0.08" stroke="#38bdf8" stroke-opacity="0.35"/>
+      <text x="310" y="16" fill="#64748b" font-size="9" font-weight="600" text-anchor="end" letter-spacing="0.06em">VOICE PIPELINE</text>
+      <text x="310" y="32" fill="#38bdf8" font-size="12" font-weight="700" text-anchor="end" font-family="'JetBrains Mono', monospace">Prisma STT + Timbre TTS</text>
+
+      <rect x="334" y="0" width="150" height="42" rx="7" fill="#0f172a" fill-opacity="0.7" stroke="#ffffff" stroke-opacity="0.08"/>
+      <text x="472" y="16" fill="#64748b" font-size="9" font-weight="600" text-anchor="end" letter-spacing="0.06em">EVALUATION LAB</text>
+      <text x="472" y="32" fill="#e2e8f0" font-size="12" font-weight="700" text-anchor="end" font-family="'JetBrains Mono', monospace">0 to 20 dB Noise Bench</text>
+    </g>
+    <line x1="0" y1="78" x2="1844" y2="78" stroke="#ffffff" stroke-opacity="0.08"/>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- 2. MAIN HORIZONTAL PIPELINE                                  -->
+  <!-- ============================================================ -->
+  <g transform="translate(38, 118)">
+    <!-- Eyebrow -->
+    <rect x="0" y="0" width="7" height="7" rx="2" fill="#38bdf8"/>
+    <text x="15" y="8" fill="#38bdf8" font-size="11.5" font-weight="700" letter-spacing="0.1em">LIVE CUSTOMER VOICE ORDERING ARCHITECTURE — END-TO-END EXECUTION FLOW</text>
+    
+    <rect x="1680" y="-4" width="164" height="20" rx="10" fill="#10b981" fill-opacity="0.12" stroke="#10b981" stroke-opacity="0.3"/>
+    <circle cx="1692" cy="6" r="3" fill="#10b981"/>
+    <text x="1702" y="10" fill="#10b981" font-size="10.5" font-weight="600">Active Production Pipeline</text>
+
+    <!-- STEP 1: VOICE INPUT (X: 0, W: 220, H: 450) -->
+    <g transform="translate(0, 24)">
+      <rect width="220" height="450" rx="12" fill="url(#card-standard-bg)" stroke="#38bdf8" stroke-opacity="0.16" filter="url(#card-shadow)"/>
+      <text x="14" y="24" fill="#38bdf8" font-size="9.5" font-weight="700" font-family="'JetBrains Mono', monospace">STEP 01</text>
+      <!-- Mic Icon -->
+      <rect x="174" y="10" width="32" height="32" rx="8" fill="#38bdf8" fill-opacity="0.1" stroke="#38bdf8" stroke-opacity="0.25"/>
+      <path d="M190 20 a2 2 0 0 0-2 2 v4 a2 2 0 0 0 4 0 v-4 a2 2 0 0 0-2-2 z M194 25 a4 4 0 0 1-8 0 M190 30 v3" fill="none" stroke="#38bdf8" stroke-width="1.6" stroke-linecap="round"/>
+      
+      <text x="14" y="52" fill="#ffffff" font-size="15" font-weight="700">Voice Input</text>
+      <text x="14" y="68" fill="#14b8a6" font-size="11" font-weight="600">Customer / Microphone</text>
+
+      <!-- Bullets -->
+      <text x="14" y="94" fill="#cbd5e1" font-size="11">• Customer speaks natural Hinglish</text>
+      <text x="22" y="108" fill="#cbd5e1" font-size="11">grocery order.</text>
+      <text x="14" y="128" fill="#cbd5e1" font-size="11">• Audio captured via browser Web</text>
+      <text x="22" y="142" fill="#cbd5e1" font-size="11">Audio API / MediaRecorder.</text>
+      <text x="14" y="162" fill="#cbd5e1" font-size="11">• 16 kHz PCM stream or telephony</text>
+      <text x="22" y="176" fill="#cbd5e1" font-size="11">audio input.</text>
+
+      <!-- Spoken Box -->
+      <g transform="translate(14, 204)">
+        <rect width="192" height="92" rx="7" fill="#0f172a" fill-opacity="0.9" stroke="#ffffff" stroke-opacity="0.08"/>
+        <line x1="0" y1="0" x2="0" y2="92" stroke="#38bdf8" stroke-width="3"/>
+        <text x="10" y="18" fill="#64748b" font-size="9" font-weight="700" letter-spacing="0.07em">SPOKEN ORDER EXAMPLE</text>
+        <text x="10" y="38" fill="#e2e8f0" font-size="10.5" font-style="italic">"Bhaiya, do packet Maggi, ek</text>
+        <text x="10" y="54" fill="#e2e8f0" font-size="10.5" font-style="italic">kilo sugar aur aadha litre milk</text>
+        <text x="10" y="70" fill="#e2e8f0" font-size="10.5" font-style="italic">bhej dena."</text>
+      </g>
+
+      <!-- Footer Pill -->
+      <line x1="14" y1="418" x2="206" y2="418" stroke="#ffffff" stroke-opacity="0.06"/>
+      <text x="14" y="436" fill="#64748b" font-size="9.5">Client Audio</text>
+      <text x="206" y="436" fill="#94a3b8" font-size="9.5" font-weight="600" text-anchor="end" font-family="'JetBrains Mono', monospace">Web Audio API</text>
+    </g>
+
+    <!-- CONNECTOR 1 -> 2 (X: 220, W: 30) -->
+    <g transform="translate(220, 249)">
+      <line x1="2" y1="0" x2="26" y2="0" stroke="#38bdf8" stroke-width="2" marker-end="url(#pipe-arrow)"/>
+      <circle cx="12" cy="0" r="2.5" fill="#38bdf8"/>
+    </g>
+
+    <!-- STEP 2: SPEECH RECOGNITION (GNANI AI PRISMA) (X: 250, W: 250, H: 450) -->
+    <g transform="translate(250, 24)">
+      <rect width="250" height="450" rx="12" fill="url(#gnani-card-bg)" stroke="#38bdf8" stroke-opacity="0.5" stroke-width="1.5" filter="url(#gnani-glow-filter)"/>
+      <!-- Top Accent Line -->
+      <line x1="40" y1="0" x2="210" y2="0" stroke="#38bdf8" stroke-width="2"/>
+      
+      <!-- Gnani AI Badge -->
+      <rect x="148" y="-9" width="90" height="18" rx="4" fill="url(#gnani-badge-grad)" stroke="#ffffff" stroke-opacity="0.25"/>
+      <text x="193" y="4" fill="#ffffff" font-size="9" font-weight="800" text-anchor="middle" letter-spacing="0.08em">GNANI AI MODEL</text>
+
+      <text x="14" y="24" fill="#38bdf8" font-size="9.5" font-weight="700" font-family="'JetBrains Mono', monospace">STEP 02</text>
+      <!-- Waveform Icon -->
+      <rect x="204" y="10" width="32" height="32" rx="8" fill="#38bdf8" fill-opacity="0.2" stroke="#38bdf8" stroke-opacity="0.5"/>
+      <path d="M211 26 v-4 M215 30 v-12 M219 33 v-18 M223 29 v-10 M227 26 v-4" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/>
+
+      <text x="14" y="52" fill="#ffffff" font-size="15" font-weight="700">Gnani AI Prisma</text>
+      <text x="14" y="68" fill="#38bdf8" font-size="11" font-weight="600">Speech-to-Text (STT)</text>
+
+      <!-- Bullets -->
+      <text x="14" y="94" fill="#cbd5e1" font-size="11">• Receives the raw audio stream from client.</text>
+      <text x="14" y="114" fill="#cbd5e1" font-size="11">• Recognizes mixed Hindi-English speech (Hinglish).</text>
+      <text x="14" y="134" fill="#cbd5e1" font-size="11">• Produces clean text transcription.</text>
+      <text x="14" y="154" fill="#cbd5e1" font-size="11">• <tspan font-weight="700" fill="#38bdf8">Catalogue Keyterms:</tspan> Injects domain vocabulary</text>
+      <text x="22" y="168" fill="#cbd5e1" font-size="11">when configured for bias assistance.</text>
+
+      <!-- Output Transcription Box -->
+      <g transform="translate(14, 196)">
+        <rect width="222" height="84" rx="7" fill="#090f1e" fill-opacity="0.9" stroke="#ffffff" stroke-opacity="0.08"/>
+        <text x="10" y="18" fill="#64748b" font-size="9" font-weight="700" letter-spacing="0.07em">STT OUTPUT TRANSCRIPTION</text>
+        <text x="10" y="38" fill="#7dd3fc" font-size="9.8" font-family="'JetBrains Mono', monospace">"bhaiya do packet maggi ek kilo</text>
+        <text x="10" y="52" fill="#7dd3fc" font-size="9.8" font-family="'JetBrains Mono', monospace">sugar aur aadha litre milk bhej</text>
+        <text x="10" y="66" fill="#7dd3fc" font-size="9.8" font-family="'JetBrains Mono', monospace">dena"</text>
+      </g>
+
+      <!-- Footer Pill -->
+      <line x1="14" y1="418" x2="236" y2="418" stroke="#ffffff" stroke-opacity="0.06"/>
+      <text x="14" y="436" fill="#64748b" font-size="9.5">Speech Model</text>
+      <text x="236" y="436" fill="#38bdf8" font-size="9.5" font-weight="600" text-anchor="end" font-family="'JetBrains Mono', monospace">Prisma v3.0 STT</text>
+    </g>
+
+    <!-- CONNECTOR 2 -> 3 (X: 500, W: 30) -->
+    <g transform="translate(500, 249)">
+      <line x1="2" y1="0" x2="26" y2="0" stroke="#38bdf8" stroke-width="2" marker-end="url(#pipe-arrow)"/>
+      <circle cx="12" cy="0" r="2.5" fill="#38bdf8"/>
+    </g>
+
+    <!-- STEP 3: NLU / ORDER PARSER (X: 530, W: 255, H: 450) -->
+    <g transform="translate(530, 24)">
+      <rect width="255" height="450" rx="12" fill="url(#card-standard-bg)" stroke="#38bdf8" stroke-opacity="0.16" filter="url(#card-shadow)"/>
+      <text x="14" y="24" fill="#38bdf8" font-size="9.5" font-weight="700" font-family="'JetBrains Mono', monospace">STEP 03</text>
+      <!-- NLU Icon -->
+      <rect x="209" y="10" width="32" height="32" rx="8" fill="#14b8a6" fill-opacity="0.1" stroke="#14b8a6" stroke-opacity="0.25"/>
+      <circle cx="225" cy="26" r="6" fill="none" stroke="#14b8a6" stroke-width="1.6"/>
+      <path d="M222 24 a3 3 0 0 1 5 1 c0 1.5-2 2-2 2 M225 30 v0.5" fill="none" stroke="#14b8a6" stroke-width="1.6"/>
+
+      <text x="14" y="52" fill="#ffffff" font-size="15" font-weight="700">Order Parser</text>
+      <text x="14" y="68" fill="#14b8a6" font-size="11" font-weight="600">NLU &amp; Entity Extractor</text>
+
+      <!-- Bullets -->
+      <text x="14" y="94" fill="#cbd5e1" font-size="11">• Processes transcription &amp; strips fillers.</text>
+      <text x="14" y="112" fill="#cbd5e1" font-size="11">• Identifies grocery entities, quantities &amp; units.</text>
+      <text x="14" y="130" fill="#cbd5e1" font-size="11">• Normalizes numerals: <tspan font-style="italic">do</tspan> &rarr; 2, <tspan font-style="italic">aadha</tspan> &rarr; 0.5.</text>
+
+      <!-- JSON Box -->
+      <g transform="translate(14, 146)">
+        <rect width="227" height="258" rx="7" fill="#040813" stroke="#38bdf8" stroke-opacity="0.25"/>
+        <text x="10" y="16" fill="#64748b" font-size="9" font-weight="700" letter-spacing="0.07em">&lt;&gt; STRUCTURED JSON OUTPUT</text>
+        <g transform="translate(10, 30)" font-family="'JetBrains Mono', monospace" font-size="8.8" line-height="1.3">
+          <text y="0" fill="#38bdf8">{</text>
+          <text y="14" fill="#94a3b8">  "items": [</text>
+          <text y="28" fill="#94a3b8">    {</text>
+          <text y="42" fill="#94a3b8">      "product": <tspan fill="#facc15">"Maggi"</tspan>,</text>
+          <text y="56" fill="#94a3b8">      "quantity": <tspan fill="#4ade80">2</tspan>,</text>
+          <text y="70" fill="#94a3b8">      "unit": <tspan fill="#facc15">"packets"</tspan></text>
+          <text y="84" fill="#94a3b8">    },</text>
+          <text y="98" fill="#94a3b8">    {</text>
+          <text y="112" fill="#94a3b8">      "product": <tspan fill="#facc15">"Sugar"</tspan>,</text>
+          <text y="126" fill="#94a3b8">      "quantity": <tspan fill="#4ade80">1</tspan>,</text>
+          <text y="140" fill="#94a3b8">      "unit": <tspan fill="#facc15">"kg"</tspan></text>
+          <text y="154" fill="#94a3b8">    },</text>
+          <text y="168" fill="#94a3b8">    {</text>
+          <text y="182" fill="#94a3b8">      "product": <tspan fill="#facc15">"Milk"</tspan>,</text>
+          <text y="196" fill="#94a3b8">      "quantity": <tspan fill="#4ade80">0.5</tspan>,</text>
+          <text y="210" fill="#94a3b8">      "unit": <tspan fill="#facc15">"litre"</tspan></text>
+          <text y="224" fill="#94a3b8">    }</text>
+          <text y="238" fill="#94a3b8">  ]</text>
+          <text y="250" fill="#38bdf8">}</text>
+        </g>
+      </g>
+
+      <!-- Footer Pill -->
+      <line x1="14" y1="418" x2="241" y2="418" stroke="#ffffff" stroke-opacity="0.06"/>
+      <rect x="14" y="428" width="88" height="15" rx="3" fill="#94a3b8" fill-opacity="0.1" stroke="#94a3b8" stroke-opacity="0.2"/>
+      <text x="58" y="439" fill="#94a3b8" font-size="8.5" font-weight="700" text-anchor="middle">In-House Rule / NLU</text>
+      <text x="241" y="439" fill="#94a3b8" font-size="9.5" font-weight="600" text-anchor="end" font-family="'JetBrains Mono', monospace">Independent</text>
+    </g>
+
+    <!-- CONNECTOR 3 -> 4 (X: 785, W: 30) -->
+    <g transform="translate(785, 249)">
+      <line x1="2" y1="0" x2="26" y2="0" stroke="#38bdf8" stroke-width="2" marker-end="url(#pipe-arrow)"/>
+      <circle cx="12" cy="0" r="2.5" fill="#38bdf8"/>
+    </g>
+
+    <!-- STEP 4: CATALOGUE MATCHER & BRANCHING (X: 815, W: 275, H: 450) -->
+    <g transform="translate(815, 24)">
+      <rect width="275" height="450" rx="12" fill="url(#card-standard-bg)" stroke="#38bdf8" stroke-opacity="0.16" filter="url(#card-shadow)"/>
+      <text x="14" y="24" fill="#38bdf8" font-size="9.5" font-weight="700" font-family="'JetBrains Mono', monospace">STEP 04</text>
+      <!-- DB Icon -->
+      <rect x="229" y="10" width="32" height="32" rx="8" fill="#f59e0b" fill-opacity="0.1" stroke="#f59e0b" stroke-opacity="0.25"/>
+      <ellipse cx="245" cy="20" rx="7" ry="2.5" fill="none" stroke="#f59e0b" stroke-width="1.6"/>
+      <path d="M238 20 v6 c0 1.5 3 2.5 7 2.5 s7-1 7-2.5 v-6 M238 26 v6 c0 1.5 3 2.5 7 2.5 s7-1 7-2.5 v-6" fill="none" stroke="#f59e0b" stroke-width="1.6"/>
+
+      <text x="14" y="52" fill="#ffffff" font-size="15" font-weight="700">Catalogue Matcher</text>
+      <text x="14" y="68" fill="#14b8a6" font-size="11" font-weight="600">Fuzzy Matcher &amp; Decision Gate</text>
+
+      <!-- Bullets -->
+      <text x="14" y="94" fill="#cbd5e1" font-size="11">• RapidFuzz matching vs 35-SKU catalogue.</text>
+      <text x="14" y="112" fill="#cbd5e1" font-size="11">• Handles phonetic variants: <tspan font-style="italic">meggi</tspan>, <tspan font-style="italic">chini</tspan>.</text>
+      <text x="14" y="130" fill="#cbd5e1" font-size="11">• Ambiguity scoring &amp; confidence checks.</text>
+
+      <!-- Branching Decision Box -->
+      <g transform="translate(14, 150)">
+        <rect width="247" height="175" rx="7" fill="#0f172a" fill-opacity="0.92" stroke="#f59e0b" stroke-opacity="0.45" stroke-dasharray="4,3"/>
+        
+        <!-- High Confidence Path -->
+        <rect x="8" y="10" width="231" height="24" rx="4" fill="#10b981" fill-opacity="0.12"/>
+        <line x1="8" y1="10" x2="8" y2="34" stroke="#10b981" stroke-width="2"/>
+        <text x="16" y="26" fill="#34d399" font-size="10" font-weight="600">✔ High-Confidence Match</text>
+        <text x="232" y="26" fill="#34d399" font-size="8.5" text-anchor="end">Direct &rarr; Cart</text>
+
+        <!-- Low Confidence Path -->
+        <rect x="8" y="40" width="231" height="24" rx="4" fill="#f59e0b" fill-opacity="0.14"/>
+        <line x1="8" y1="40" x2="8" y2="64" stroke="#f59e0b" stroke-width="2"/>
+        <text x="16" y="56" fill="#fbbf24" font-size="10" font-weight="600">⚠ Low / Ambiguous Match</text>
+        <text x="232" y="56" fill="#fbbf24" font-size="8.5" text-anchor="end">Clarification Loop</text>
+
+        <!-- Clarification Prompt Example -->
+        <g transform="translate(8, 74)">
+          <rect width="231" height="88" rx="6" fill="#f59e0b" fill-opacity="0.08" stroke="#ffffff" stroke-opacity="0.06"/>
+          <line x1="0" y1="0" x2="0" y2="88" stroke="#f59e0b" stroke-width="3"/>
+          <text x="10" y="20" fill="#f59e0b" font-size="9" font-weight="700" letter-spacing="0.07em">CLARIFICATION PROMPT</text>
+          <text x="10" y="44" fill="#fde68a" font-size="10.5" font-style="italic">"Did you mean Maggi 2-Min</text>
+          <text x="10" y="60" fill="#fde68a" font-size="10.5" font-style="italic">or Magic Masala?"</text>
+        </g>
+      </g>
+
+      <!-- Footer Pill -->
+      <line x1="14" y1="418" x2="261" y2="418" stroke="#ffffff" stroke-opacity="0.06"/>
+      <rect x="14" y="428" width="86" height="15" rx="3" fill="#94a3b8" fill-opacity="0.1" stroke="#94a3b8" stroke-opacity="0.2"/>
+      <text x="57" y="439" fill="#94a3b8" font-size="8.5" font-weight="700" text-anchor="middle">RapidFuzz Engine</text>
+      <text x="261" y="439" fill="#94a3b8" font-size="9.5" font-weight="600" text-anchor="end" font-family="'JetBrains Mono', monospace">Branching Loop</text>
+    </g>
+
+    <!-- CONNECTOR 4 -> 5 (HIGH CONFIDENCE) (X: 1090, W: 30) -->
+    <g transform="translate(1090, 249)">
+      <line x1="2" y1="0" x2="26" y2="0" stroke="#38bdf8" stroke-width="2" marker-end="url(#pipe-arrow)"/>
+      <circle cx="12" cy="0" r="2.5" fill="#38bdf8"/>
+    </g>
+
+    <!-- STEP 5: SHOPPING CART (X: 1120, W: 220, H: 450) -->
+    <g transform="translate(1120, 24)">
+      <rect width="220" height="450" rx="12" fill="url(#card-standard-bg)" stroke="#38bdf8" stroke-opacity="0.16" filter="url(#card-shadow)"/>
+      <text x="14" y="24" fill="#38bdf8" font-size="9.5" font-weight="700" font-family="'JetBrains Mono', monospace">STEP 05</text>
+      <!-- Cart Icon -->
+      <rect x="174" y="10" width="32" height="32" rx="8" fill="#10b981" fill-opacity="0.1" stroke="#10b981" stroke-opacity="0.25"/>
+      <circle cx="184" cy="32" r="1.5" fill="#10b981"/>
+      <circle cx="198" cy="32" r="1.5" fill="#10b981"/>
+      <path d="M178 18 h3 l2.5 9 h8 l2-6 h-12" fill="none" stroke="#10b981" stroke-width="1.6" stroke-linecap="round"/>
+
+      <text x="14" y="52" fill="#ffffff" font-size="15" font-weight="700">Shopping Cart</text>
+      <text x="14" y="68" fill="#14b8a6" font-size="11" font-weight="600">Order State Management</text>
+
+      <!-- Bullets -->
+      <text x="14" y="94" fill="#cbd5e1" font-size="11">• Adds matched SKU products,</text>
+      <text x="22" y="108" fill="#cbd5e1" font-size="11">quantities &amp; units.</text>
+      <text x="14" y="128" fill="#cbd5e1" font-size="11">• Displays structured grocery cart</text>
+      <text x="22" y="142" fill="#cbd5e1" font-size="11">in real time.</text>
+      <text x="14" y="162" fill="#cbd5e1" font-size="11">• Allows customer confirmation or</text>
+      <text x="22" y="176" fill="#cbd5e1" font-size="11">manual edits.</text>
+      <text x="14" y="196" fill="#cbd5e1" font-size="11">• Maintains live item ledger &amp; total.</text>
+
+      <!-- Cart State Box -->
+      <g transform="translate(14, 222)">
+        <rect width="192" height="88" rx="7" fill="#090f1e" stroke="#ffffff" stroke-opacity="0.08"/>
+        <line x1="0" y1="0" x2="0" y2="88" stroke="#10b981" stroke-width="3"/>
+        <text x="10" y="18" fill="#34d399" font-size="9" font-weight="700" letter-spacing="0.07em">STRUCTURED CART STATE</text>
+        <g transform="translate(10, 36)" font-family="'JetBrains Mono', monospace" font-size="10" fill="#cbd5e1">
+          <text y="0">• Maggi 2-Min &times; 2 pkts</text>
+          <text y="16">• Madhur Sugar &times; 1 kg</text>
+          <text y="32">• Amul Taaza &times; 0.5 L</text>
+        </g>
+      </g>
+
+      <!-- Footer Pill -->
+      <line x1="14" y1="418" x2="206" y2="418" stroke="#ffffff" stroke-opacity="0.06"/>
+      <text x="14" y="436" fill="#64748b" font-size="9.5">Cart State</text>
+      <text x="206" y="436" fill="#94a3b8" font-size="9.5" font-weight="600" text-anchor="end" font-family="'JetBrains Mono', monospace">Real-Time Sync</text>
+    </g>
+
+    <!-- CONNECTOR 5 -> 6 (X: 1340, W: 30) -->
+    <g transform="translate(1340, 249)">
+      <line x1="2" y1="0" x2="26" y2="0" stroke="#38bdf8" stroke-width="2" marker-end="url(#pipe-arrow)"/>
+      <circle cx="12" cy="0" r="2.5" fill="#38bdf8"/>
+    </g>
+
+    <!-- STEP 6: VOICE RESPONSE (GNANI AI TIMBRE) (X: 1370, W: 250, H: 450) -->
+    <g transform="translate(1370, 24)">
+      <rect width="250" height="450" rx="12" fill="url(#gnani-card-bg)" stroke="#38bdf8" stroke-opacity="0.5" stroke-width="1.5" filter="url(#gnani-glow-filter)"/>
+      <line x1="40" y1="0" x2="210" y2="0" stroke="#38bdf8" stroke-width="2"/>
+      
+      <!-- Gnani AI Badge -->
+      <rect x="148" y="-9" width="90" height="18" rx="4" fill="url(#gnani-badge-grad)" stroke="#ffffff" stroke-opacity="0.25"/>
+      <text x="193" y="4" fill="#ffffff" font-size="9" font-weight="800" text-anchor="middle" letter-spacing="0.08em">GNANI AI MODEL</text>
+
+      <text x="14" y="24" fill="#38bdf8" font-size="9.5" font-weight="700" font-family="'JetBrains Mono', monospace">STEP 06</text>
+      <!-- Speaker Icon -->
+      <rect x="204" y="10" width="32" height="32" rx="8" fill="#38bdf8" fill-opacity="0.2" stroke="#38bdf8" stroke-opacity="0.5"/>
+      <path d="M214 22 h3 l4-4 v16 l-4-4 h-3 z M225 21 a4 4 0 0 1 0 10 M227 18 a8 8 0 0 1 0 16" fill="none" stroke="#38bdf8" stroke-width="1.6" stroke-linecap="round"/>
+
+      <text x="14" y="52" fill="#ffffff" font-size="15" font-weight="700">Gnani AI Timbre</text>
+      <text x="14" y="68" fill="#38bdf8" font-size="11" font-weight="600">Text-to-Speech (TTS)</text>
+
+      <!-- Bullets -->
+      <text x="14" y="94" fill="#cbd5e1" font-size="11">• Converts confirmation text into natural speech.</text>
+      <text x="14" y="114" fill="#cbd5e1" font-size="11">• Reads complete order summary back to customer.</text>
+      <text x="14" y="134" fill="#cbd5e1" font-size="11">• Low-latency Hinglish colloquial voice synthesis.</text>
+      <text x="14" y="154" fill="#cbd5e1" font-size="11">• Requests final customer voice confirmation.</text>
+
+      <!-- Feedback Speech Box -->
+      <g transform="translate(14, 186)">
+        <rect width="222" height="96" rx="7" fill="#0f172a" fill-opacity="0.9" stroke="#ffffff" stroke-opacity="0.08"/>
+        <line x1="0" y1="0" x2="0" y2="96" stroke="#14b8a6" stroke-width="3"/>
+        <text x="10" y="18" fill="#14b8a6" font-size="9" font-weight="700" letter-spacing="0.07em">SPOKEN FEEDBACK (VOICE)</text>
+        <text x="10" y="38" fill="#a7f3d0" font-size="10">"Aapka order hai do packet</text>
+        <text x="10" y="54" fill="#a7f3d0" font-size="10">Maggi, ek kilo sugar aur aadha</text>
+        <text x="10" y="70" fill="#a7f3d0" font-size="10">litre milk. Kya main confirm</text>
+        <text x="10" y="86" fill="#a7f3d0" font-size="10">kar doon?"</text>
+      </g>
+
+      <!-- Footer Pill -->
+      <line x1="14" y1="418" x2="236" y2="418" stroke="#ffffff" stroke-opacity="0.06"/>
+      <text x="14" y="436" fill="#64748b" font-size="9.5">Speech Model</text>
+      <text x="236" y="436" fill="#38bdf8" font-size="9.5" font-weight="600" text-anchor="end" font-family="'JetBrains Mono', monospace">Timbre v2.5 TTS</text>
+    </g>
+
+    <!-- CONNECTOR 6 -> 7 (X: 1620, W: 30) -->
+    <g transform="translate(1620, 249)">
+      <line x1="2" y1="0" x2="26" y2="0" stroke="#38bdf8" stroke-width="2" marker-end="url(#pipe-arrow)"/>
+      <circle cx="12" cy="0" r="2.5" fill="#38bdf8"/>
+    </g>
+
+    <!-- STEP 7: FINAL OUTPUT (X: 1650, W: 194, H: 450) -->
+    <g transform="translate(1650, 24)">
+      <rect width="194" height="450" rx="12" fill="url(#card-standard-bg)" stroke="#10b981" stroke-opacity="0.45" filter="url(#card-shadow)"/>
+      <text x="14" y="24" fill="#34d399" font-size="9.5" font-weight="700" font-family="'JetBrains Mono', monospace">STEP 07</text>
+      <!-- Check Icon -->
+      <rect x="148" y="10" width="32" height="32" rx="8" fill="#10b981" fill-opacity="0.1" stroke="#10b981" stroke-opacity="0.25"/>
+      <circle cx="164" cy="26" r="6" fill="none" stroke="#10b981" stroke-width="1.6"/>
+      <path d="M161 26 l2 2 l4-4" fill="none" stroke="#10b981" stroke-width="1.6" stroke-linecap="round"/>
+
+      <text x="14" y="52" fill="#ffffff" font-size="15" font-weight="700">Final Output</text>
+      <text x="14" y="68" fill="#34d399" font-size="11" font-weight="600">Confirmed Grocery Order</text>
+
+      <!-- Bullets -->
+      <text x="14" y="94" fill="#cbd5e1" font-size="11">• Structured cart with verified</text>
+      <text x="22" y="108" fill="#cbd5e1" font-size="11">item quantities.</text>
+      <text x="14" y="128" fill="#cbd5e1" font-size="11">• Customer spoken voice</text>
+      <text x="22" y="142" fill="#cbd5e1" font-size="11">confirmation logged.</text>
+      <text x="14" y="162" fill="#cbd5e1" font-size="11">• Final spoken response</text>
+      <text x="22" y="176" fill="#cbd5e1" font-size="11">acknowledgment sent.</text>
+      <text x="14" y="196" fill="#cbd5e1" font-size="11">• Ready for neighbourhood</text>
+      <text x="22" y="210" fill="#cbd5e1" font-size="11">Kirana fulfillment.</text>
+
+      <!-- Order Status Box -->
+      <g transform="translate(14, 236)">
+        <rect width="166" height="64" rx="7" fill="#10b981" fill-opacity="0.1" stroke="#10b981" stroke-opacity="0.35"/>
+        <circle cx="24" cy="32" r="11" fill="#10b981"/>
+        <path d="M20 32 l3 3 l5-6" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+        <text x="44" y="28" fill="#ffffff" font-size="11" font-weight="700">Order Locked</text>
+        <text x="44" y="44" fill="#a7f3d0" font-size="9">Structured + Confirmed</text>
+      </g>
+
+      <!-- Footer Pill -->
+      <line x1="14" y1="418" x2="180" y2="418" stroke="#ffffff" stroke-opacity="0.06"/>
+      <text x="14" y="436" fill="#64748b" font-size="9.5">Order State</text>
+      <text x="180" y="436" fill="#34d399" font-size="9.5" font-weight="600" text-anchor="end" font-family="'JetBrains Mono', monospace">Ready for Delivery</text>
+    </g>
+
+    <!-- CLARIFICATION RETURN LOOP (DEDICATED UNOBSTRUCTED TRACK) -->
+    <!-- Starts at Step 4 (X: 952), curves down to Y: 512, runs left to Step 1 (X: 110), curves up -->
+    <g transform="translate(0, 474)">
+      <path d="M 952 2 
+               L 952 26
+               Q 952 38, 936 38
+               L 126 38
+               Q 110 38, 110 26
+               L 110 4" 
+            fill="none" 
+            stroke="#f59e0b" 
+            stroke-width="2.5" 
+            stroke-dasharray="7,4"
+            marker-end="url(#amber-loop-arrow)"
+            filter="url(#amber-glow)"/>
+
+      <!-- Centered Badge Pill on Loop -->
+      <rect x="315" y="26" width="430" height="24" rx="12" fill="#0d1829" stroke="#f59e0b" stroke-width="1.4"/>
+      <text x="530" y="42" fill="#fbbf24" font-size="11" font-weight="700" text-anchor="middle">
+        ↺ Clarification Question &rarr; Customer Response &rarr; Re-match Loop
+      </text>
+    </g>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- 3. NOISE LAB EVALUATION WORKFLOW                             -->
+  <!-- ============================================================ -->
+  <g transform="translate(38, 715)">
+    <!-- Container -->
+    <rect width="1844" height="310" rx="12" fill="url(#noiselab-bg)" stroke="#38bdf8" stroke-opacity="0.25" filter="url(#card-shadow)"/>
+    
+    <!-- Header -->
+    <g transform="translate(18, 14)">
+      <!-- Beaker Icon -->
+      <rect x="0" y="0" width="26" height="26" rx="6" fill="#f59e0b" fill-opacity="0.15" stroke="#f59e0b" stroke-opacity="0.35"/>
+      <path d="M8 5 h10 M11 5 v6 l-4 8 a1 1 0 0 0 1 1 h10 a1 1 0 0 0 1-1 l-4-8 v-6" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+      
+      <text x="36" y="16" fill="#ffffff" font-size="14.5" font-weight="800">
+        Noise Lab <tspan font-weight="300" fill-opacity="0.5">– </tspan>Speech Robustness Evaluation
+      </text>
+      <text x="36" y="30" fill="#94a3b8" font-size="11">
+        Experimental evaluation framework assessing Gnani AI Prisma STT under harsh retail acoustic noise tiers
+      </text>
+
+      <!-- Right Tags -->
+      <g transform="translate(1200, 0)">
+        <rect x="0" y="2" width="370" height="22" rx="4" fill="#f59e0b" fill-opacity="0.12" stroke="#f59e0b" stroke-opacity="0.3"/>
+        <text x="185" y="16" fill="#f59e0b" font-size="10" font-weight="700" text-anchor="middle" letter-spacing="0.05em">SEPARATE EVALUATION BRANCH • OFFLINE RESEARCH WORKFLOW</text>
+
+        <rect x="382" y="2" width="210" height="22" rx="11" fill="#38bdf8" fill-opacity="0.12" stroke="#38bdf8" stroke-opacity="0.3"/>
+        <circle cx="396" cy="13" r="3" fill="#38bdf8"/>
+        <text x="406" y="17" fill="#38bdf8" font-size="10.5" font-weight="700">Catalogue Keyterms: ON vs OFF</text>
+      </g>
+      <line x1="0" y1="38" x2="1808" y2="38" stroke="#ffffff" stroke-opacity="0.08"/>
+    </g>
+
+    <!-- 5-Stage Flow Cards -->
+    <g transform="translate(18, 66)">
+
+      <!-- STAGE 1: TEST AUDIO DATASET (X: 0, W: 270, H: 228) -->
+      <g transform="translate(0, 0)">
+        <rect width="270" height="228" rx="8" fill="#090f1e" fill-opacity="0.75" stroke="#ffffff" stroke-opacity="0.08"/>
+        <text x="14" y="24" fill="#38bdf8" font-size="12" font-weight="700" font-family="'JetBrains Mono', monospace">01</text>
+        <text x="36" y="24" fill="#f1f5f9" font-size="12" font-weight="700">Test Audio Dataset</text>
+        <text x="14" y="48" fill="#94a3b8" font-size="10.5">Curated domain-specific corpus of</text>
+        <text x="14" y="64" fill="#94a3b8" font-size="10.5">Hinglish grocery audio recordings</text>
+        <text x="14" y="80" fill="#94a3b8" font-size="10.5">representing authentic Kirana orders.</text>
+
+        <rect x="14" y="146" width="242" height="66" rx="6" fill="#0f172a" fill-opacity="0.85" stroke="#ffffff" stroke-opacity="0.06"/>
+        <text x="24" y="172" fill="#94a3b8" font-size="10">• Authenticated Kirana test audio</text>
+        <text x="24" y="192" fill="#94a3b8" font-size="10">• Diverse phonetic &amp; dialect accents</text>
+      </g>
+
+      <!-- CONNECTOR 1 -> 2 (X: 270, W: 28) -->
+      <g transform="translate(270, 114)">
+        <line x1="2" y1="0" x2="24" y2="0" stroke="#f59e0b" stroke-opacity="0.4" stroke-width="2" marker-end="url(#lab-arrow)"/>
+      </g>
+
+      <!-- STAGE 2: AUDIO PREPROCESSING & NOISE SIMULATION (X: 298, W: 330, H: 228) -->
+      <g transform="translate(298, 0)">
+        <rect width="330" height="228" rx="8" fill="#090f1e" fill-opacity="0.75" stroke="#ffffff" stroke-opacity="0.08"/>
+        <text x="14" y="24" fill="#38bdf8" font-size="12" font-weight="700" font-family="'JetBrains Mono', monospace">02</text>
+        <text x="36" y="24" fill="#f1f5f9" font-size="12" font-weight="700">Audio Preprocessing &amp; Noise</text>
+        <text x="14" y="48" fill="#94a3b8" font-size="10.5">Simulates real-world retail acoustic distortion via</text>
+        <text x="14" y="64" fill="#94a3b8" font-size="10.5">calibrated noise injection &amp; telephony transcoding.</text>
+
+        <rect x="14" y="146" width="302" height="66" rx="6" fill="#0f172a" fill-opacity="0.85" stroke="#ffffff" stroke-opacity="0.06"/>
+        <text x="24" y="172" fill="#94a3b8" font-size="10">• ITU-T G.711 &mu;-Law (8 kHz Telephony)</text>
+        <text x="24" y="192" fill="#94a3b8" font-size="10">• ESC-50 Environmental Noise Mixing</text>
+      </g>
+
+      <!-- CONNECTOR 2 -> 3 (X: 628, W: 28) -->
+      <g transform="translate(628, 114)">
+        <line x1="2" y1="0" x2="24" y2="0" stroke="#f59e0b" stroke-opacity="0.4" stroke-width="2" marker-end="url(#lab-arrow)"/>
+      </g>
+
+      <!-- STAGE 3: 5 AUDIO CONDITIONS (X: 656, W: 430, H: 228) -->
+      <g transform="translate(656, 0)">
+        <rect width="430" height="228" rx="8" fill="#0e1628" fill-opacity="0.88" stroke="#38bdf8" stroke-opacity="0.3"/>
+        <text x="14" y="24" fill="#38bdf8" font-size="12" font-weight="700" font-family="'JetBrains Mono', monospace">03</text>
+        <text x="36" y="24" fill="#f1f5f9" font-size="12" font-weight="700">Different Audio Conditions</text>
+        <text x="14" y="48" fill="#94a3b8" font-size="10.5">Graded acoustic stress tiers for systematic robustness profiling:</text>
+
+        <!-- SNR Conditions Grid -->
+        <g transform="translate(14, 62)">
+          <!-- Clean Audio -->
+          <rect x="0" y="0" width="402" height="30" rx="5" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-opacity="0.4"/>
+          <text x="12" y="19" fill="#34d399" font-size="10" font-weight="600">Clean Audio (Studio Reference)</text>
+          <text x="390" y="19" fill="#34d399" font-size="9.5" font-family="'JetBrains Mono', monospace" text-anchor="end">16 kHz Linear</text>
+
+          <!-- 20 dB Telephony -->
+          <rect x="0" y="36" width="196" height="28" rx="5" fill="#0f172a" stroke="#ffffff" stroke-opacity="0.08"/>
+          <text x="10" y="54" fill="#cbd5e1" font-size="9.5">Telephony Line</text>
+          <text x="186" y="54" fill="#e2e8f0" font-size="9.5" font-weight="700" font-family="'JetBrains Mono', monospace" text-anchor="end">20 dB SNR</text>
+
+          <!-- 10 dB Shop Fan -->
+          <rect x="206" y="36" width="196" height="28" rx="5" fill="#0f172a" stroke="#ffffff" stroke-opacity="0.08"/>
+          <text x="216" y="54" fill="#cbd5e1" font-size="9.5">Shop Fan</text>
+          <text x="392" y="54" fill="#e2e8f0" font-size="9.5" font-weight="700" font-family="'JetBrains Mono', monospace" text-anchor="end">10 dB SNR</text>
+
+          <!-- 5 dB Traffic -->
+          <rect x="0" y="70" width="196" height="28" rx="5" fill="#0f172a" stroke="#ffffff" stroke-opacity="0.08"/>
+          <text x="10" y="88" fill="#cbd5e1" font-size="9.5">Street Traffic</text>
+          <text x="186" y="88" fill="#e2e8f0" font-size="9.5" font-weight="700" font-family="'JetBrains Mono', monospace" text-anchor="end">5 dB SNR</text>
+
+          <!-- 0 dB Market Babble -->
+          <rect x="206" y="70" width="196" height="28" rx="5" fill="#0f172a" stroke="#ffffff" stroke-opacity="0.08"/>
+          <text x="216" y="88" fill="#cbd5e1" font-size="9.5">Market Babble</text>
+          <text x="392" y="88" fill="#f87171" font-size="9.5" font-weight="700" font-family="'JetBrains Mono', monospace" text-anchor="end">0 dB SNR</text>
+        </g>
+      </g>
+
+      <!-- CONNECTOR 3 -> 4 (X: 1086, W: 28) -->
+      <g transform="translate(1086, 114)">
+        <line x1="2" y1="0" x2="24" y2="0" stroke="#f59e0b" stroke-opacity="0.4" stroke-width="2" marker-end="url(#lab-arrow)"/>
+      </g>
+
+      <!-- STAGE 4: PRISMA SPEECH RECOGNITION (X: 1114, W: 290, H: 228) -->
+      <g transform="translate(1114, 0)">
+        <rect width="290" height="228" rx="8" fill="#090f1e" fill-opacity="0.75" stroke="#38bdf8" stroke-opacity="0.35"/>
+        <text x="14" y="24" fill="#38bdf8" font-size="12" font-weight="700" font-family="'JetBrains Mono', monospace">04</text>
+        <text x="36" y="24" fill="#38bdf8" font-size="12" font-weight="700">Speech Recognition using Prisma</text>
+        <text x="14" y="48" fill="#94a3b8" font-size="10.5">Inference through Gnani AI Prisma STT across</text>
+        <text x="14" y="64" fill="#94a3b8" font-size="10.5">all noise tiers with comparative keyterm biasing.</text>
+
+        <g transform="translate(14, 126)">
+          <rect width="262" height="86" rx="6" fill="#38bdf8" fill-opacity="0.08" stroke="#38bdf8" stroke-opacity="0.25"/>
+          <text x="12" y="22" fill="#38bdf8" font-size="10" font-weight="700">Evaluation Comparison</text>
+          <text x="12" y="44" fill="#cbd5e1" font-size="9.5">• Baseline STT (Catalogue Keyterms OFF)</text>
+          <text x="12" y="64" fill="#cbd5e1" font-size="9.5">• Biased STT (Catalogue Keyterms ON)</text>
+        </g>
+      </g>
+
+      <!-- CONNECTOR 4 -> 5 (X: 1404, W: 28) -->
+      <g transform="translate(1404, 114)">
+        <line x1="2" y1="0" x2="24" y2="0" stroke="#f59e0b" stroke-opacity="0.4" stroke-width="2" marker-end="url(#lab-arrow)"/>
+      </g>
+
+      <!-- STAGE 5: EVALUATION AND COMPARISON (X: 1432, W: 376, H: 228) -->
+      <g transform="translate(1432, 0)">
+        <rect width="376" height="228" rx="8" fill="#090f1e" fill-opacity="0.75" stroke="#ffffff" stroke-opacity="0.08"/>
+        <text x="14" y="24" fill="#38bdf8" font-size="12" font-weight="700" font-family="'JetBrains Mono', monospace">05</text>
+        <text x="36" y="24" fill="#f1f5f9" font-size="12" font-weight="700">Evaluation and Comparison</text>
+
+        <!-- Metric 1: WER -->
+        <g transform="translate(14, 46)">
+          <rect width="348" height="66" rx="6" fill="#0f172a" fill-opacity="0.85" stroke="#ffffff" stroke-opacity="0.08"/>
+          <line x1="0" y1="0" x2="0" y2="66" stroke="#f87171" stroke-width="3"/>
+          <rect x="10" y="14" width="46" height="38" rx="4" fill="#ffffff" fill-opacity="0.06"/>
+          <text x="33" y="38" fill="#f87171" font-size="13" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">WER</text>
+          <text x="68" y="28" fill="#ffffff" font-size="11" font-weight="700">Word Error Rate (WER)</text>
+          <text x="68" y="44" fill="#94a3b8" font-size="9.5">Measures acoustic &amp; lexical transcription errors</text>
+          <text x="68" y="58" fill="#94a3b8" font-size="9.5">against reference transcripts.</text>
+        </g>
+
+        <!-- Metric 2: Item F1 -->
+        <g transform="translate(14, 126)">
+          <rect width="348" height="66" rx="6" fill="#0f172a" fill-opacity="0.85" stroke="#ffffff" stroke-opacity="0.08"/>
+          <line x1="0" y1="0" x2="0" y2="66" stroke="#34d399" stroke-width="3"/>
+          <rect x="10" y="14" width="46" height="38" rx="4" fill="#ffffff" fill-opacity="0.06"/>
+          <text x="33" y="38" fill="#34d399" font-size="13" font-weight="800" font-family="'JetBrains Mono', monospace" text-anchor="middle">F1</text>
+          <text x="68" y="28" fill="#ffffff" font-size="11" font-weight="700">Item-Level F1-Score</text>
+          <text x="68" y="44" fill="#94a3b8" font-size="9.5">Measures correct grocery product, quantity, and</text>
+          <text x="68" y="58" fill="#94a3b8" font-size="9.5">unit extraction accuracy.</text>
+        </g>
+      </g>
+    </g>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- 4. FOOTER                                                    -->
+  <!-- ============================================================ -->
+  <g transform="translate(38, 1044)">
+    <line x1="0" y1="0" x2="1844" y2="0" stroke="#ffffff" stroke-opacity="0.08"/>
+    
+    <text x="0" y="20" fill="#94a3b8" font-size="10.5" font-weight="700" letter-spacing="0.05em">KIRANAVAANI ARCHITECTURE</text>
+    <circle cx="170" cy="16" r="2" fill="#64748b"/>
+    <text x="180" y="20" fill="#64748b" font-size="10.5">Great Indian AI Internship Challenge</text>
+
+    <!-- Center Motto -->
+    <text x="922" y="20" font-size="11.5" font-weight="700" text-anchor="middle" letter-spacing="0.04em">
+      <tspan fill="#ffffff">Speech AI</tspan> <tspan fill="#38bdf8">+</tspan> 
+      <tspan fill="#ffffff">NLP</tspan> <tspan fill="#38bdf8">+</tspan> 
+      <tspan fill="#ffffff">Catalogue Intelligence</tspan> <tspan fill="#38bdf8">+</tspan> 
+      <tspan fill="#ffffff">Noise Robustness</tspan>
+    </text>
+
+    <!-- Right Specs -->
+    <text x="1844" y="20" fill="#64748b" font-size="9.5" text-anchor="end" font-family="'JetBrains Mono', monospace">
+      Gnani AI Prisma (STT) &amp; Timbre (TTS) • Catalogue: RapidFuzz (35 SKUs) • Slide 1 of 1 (16:9)
+    </text>
+  </g>
+</svg>
