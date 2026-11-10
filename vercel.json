@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "framework": null,
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "rewrites": [
@@ -38,10 +39,6 @@
     {
       "source": "/process-order",
       "destination": "/api/index.py"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
     }
   ]
 }

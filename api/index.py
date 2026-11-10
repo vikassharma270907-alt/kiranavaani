@@ -1,7 +1,18 @@
 """
 Vercel Serverless Function Handler for KiranaVaani FastAPI Backend.
-Exposes the FastAPI app for Vercel Serverless execution.
+Handles path normalization for Vercel's ASGI bridge.
 """
-from backend.app.main import app
+from backend.app.main import app as fastapi_app
 
-# Vercel's Python runtime recognizes 'app' directly as ASGI handler
+
+async def app(scope, receive, send):
+    if scope["type"] == "http":
+        path = scope.get("path", "")
+        # Normalize Vercel internal function path rewrites
+        for prefix in ("/api/index.py", "/api/index"):
+            if path.startswith(prefix):
+                new_path = path[len(prefix):] or "/"
+                scope["path"] = new_path
+                scope["raw_path"] = new_path.encode("utf-8")
+                break
+    await fastapi_app(scope, receive, send)
