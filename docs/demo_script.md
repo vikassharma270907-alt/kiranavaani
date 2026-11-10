@@ -90,5 +90,7 @@ Key Highlights:
 ⚡ Live Cockpit (Vercel): https://kiranavaani.vercel.app
 💻 Open-Source Code: https://github.com/vikassharma270907-alt/kiranavaani
 
+A huge thank you to @Gnani.ai and its founders Ganesh Gopalan and Ananth Nagaraj for hosting the Great Indian AI Internship Challenge and championing frontier Indic voice technology!
+
 #GnaniAI #GreatIndianAIInternshipChallenge #SpeechAI #VoiceAssistant #KiranaStores #NLP #DeepLearning #Python #FastAPI #React
 ```
