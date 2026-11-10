@@ -5,16 +5,17 @@ Reads configuration from environment variables with graceful fallback for local 
 import os
 from pathlib import Path
 from typing import Optional
-from dotenv import load_dotenv
-
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-BACKEND_DIR = Path(__file__).resolve().parent.parent
-
-# Load environment files
-load_dotenv(dotenv_path=BASE_DIR.parent / "backend" / ".env")
-load_dotenv(dotenv_path=BASE_DIR / "backend" / ".env")
-load_dotenv(dotenv_path=BASE_DIR / ".env")
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    BASE_DIR = Path(__file__).resolve().parent.parent.parent
+    BACKEND_DIR = Path(__file__).resolve().parent.parent
+    load_dotenv(dotenv_path=BASE_DIR.parent / "backend" / ".env")
+    load_dotenv(dotenv_path=BASE_DIR / "backend" / ".env")
+    load_dotenv(dotenv_path=BASE_DIR / ".env")
+    load_dotenv()
+except ImportError:
+    BASE_DIR = Path(__file__).resolve().parent.parent.parent
+    BACKEND_DIR = Path(__file__).resolve().parent.parent
 
 DATA_DIR = BASE_DIR / "data"
 CATALOGUE_PATH = DATA_DIR / "catalogue.json"
