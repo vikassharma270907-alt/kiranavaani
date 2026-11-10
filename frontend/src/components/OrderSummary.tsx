@@ -44,6 +44,7 @@ interface OrderSummaryProps {
   onConfirmOrder: () => void;
   isOrderConfirmed: boolean;
   onOpenOndcModal?: () => void;
+  apiBaseUrl?: string;
 }
 
 export const OrderSummary: React.FC<OrderSummaryProps> = ({
@@ -61,6 +62,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
   onConfirmOrder,
   isOrderConfirmed,
   onOpenOndcModal,
+  apiBaseUrl = "",
 }) => {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [selectedPaymentMode, setSelectedPaymentMode] = useState<"cod" | "upi" | "khata">(
@@ -427,6 +429,7 @@ _किरानावाणी (KiranaVaani) वॉयस AI द्वारा
               customerName={khataInfo?.customer_name || "Customer"}
               paymentMode={selectedPaymentMode.toUpperCase()}
               autoPlayTrigger={true}
+              apiBaseUrl={apiBaseUrl}
             />
           </div>
         ) : (

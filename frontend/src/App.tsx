@@ -566,6 +566,7 @@ export const App: React.FC = () => {
               onConfirmOrder={() => setIsOrderConfirmed(true)}
               isOrderConfirmed={isOrderConfirmed}
               onOpenOndcModal={() => setShowOndcModal(true)}
+              apiBaseUrl={getApiBase()}
             />
           </div>
         </div>

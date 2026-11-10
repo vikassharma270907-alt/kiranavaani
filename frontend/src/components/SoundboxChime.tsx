@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Volume2, Play, Sparkles, Radio, CheckCircle2, ShieldCheck } from "lucide-react";
 
 interface SoundboxChimeProps {
@@ -6,24 +6,35 @@ interface SoundboxChimeProps {
   customerName?: string;
   paymentMode?: string;
   autoPlayTrigger?: boolean;
+  apiBaseUrl?: string;
 }
 
 export const SoundboxChime: React.FC<SoundboxChimeProps> = ({
   amount,
   customerName = "Sharma Ji",
   paymentMode = "UPI",
-  autoPlayTrigger = false
+  autoPlayTrigger = false,
+  apiBaseUrl = ""
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [lastChimeText, setLastChimeText] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const hasAutoPlayedRef = useRef(false);
+
+  useEffect(() => {
+    if (autoPlayTrigger && !hasAutoPlayedRef.current && amount > 0) {
+      hasAutoPlayedRef.current = true;
+      playSoundboxAlert();
+    }
+  }, [autoPlayTrigger, amount]);
 
   const playSoundboxAlert = async () => {
     if (isPlaying) return;
     setIsPlaying(true);
 
     try {
-      const res = await fetch("/soundbox-chime", {
+      const endpoint = apiBaseUrl ? `${apiBaseUrl}/soundbox-chime` : "/soundbox-chime";
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
