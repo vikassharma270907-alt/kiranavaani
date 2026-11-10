@@ -21,7 +21,7 @@ GNANI_TTS_MODEL: str = os.getenv("GNANI_TTS_MODEL", "timbre-v2.5").strip()
 
 # Server settings
 HOST: str = os.getenv("BACKEND_HOST", "0.0.0.0")
-PORT: int = int(os.getenv("BACKEND_PORT", "8000"))
+PORT: int = int(os.getenv("PORT", os.getenv("BACKEND_PORT", "8000")))
 DEBUG: bool = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
 
 # Minimum confidence threshold for automatic matching without clarification

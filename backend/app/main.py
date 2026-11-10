@@ -3,9 +3,12 @@ Main FastAPI Application Entrypoint for KiranaVaani.
 """
 from contextlib import asynccontextmanager
 import logging
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from backend.app.config import HOST, PORT, is_live_gnani_configured
 from backend.app.api.routes import api_router
@@ -55,18 +58,30 @@ app.add_middleware(
 app.include_router(api_router)
 app.include_router(api_router, prefix="/api")
 
+# Static frontend mounting (supports unified full-stack serving on Render, Docker, and local)
+frontend_dist = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
 
-@app.get("/")
-async def root():
-    return JSONResponse(
-        content={
-            "app": "KiranaVaani",
-            "version": "2.0.0",
-            "description": "Noise-Robust Hinglish Voice Assistant for Kirana Stores",
-            "docs": "/docs",
-            "health": "/health"
-        }
-    )
+if frontend_dist.exists() and (frontend_dist / "index.html").exists():
+    @app.exception_handler(StarletteHTTPException)
+    async def spa_404_handler(request, exc: StarletteHTTPException):
+        if exc.status_code == 404 and request.method == "GET":
+            if not request.url.path.startswith(("/api", "/docs", "/redoc", "/openapi.json")):
+                return FileResponse(frontend_dist / "index.html")
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
+    app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="frontend")
+else:
+    @app.get("/")
+    async def root():
+        return JSONResponse(
+            content={
+                "app": "KiranaVaani",
+                "version": "2.0.0",
+                "description": "Noise-Robust Hinglish Voice Assistant for Kirana Stores",
+                "docs": "/docs",
+                "health": "/health"
+            }
+        )
 
 
 if __name__ == "__main__":
