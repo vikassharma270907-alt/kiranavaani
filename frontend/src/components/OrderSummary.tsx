@@ -32,6 +32,12 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    // Stop any existing audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlayingAudio(false);
+    }
+
     // When a new voice audio payload arrives, initialize audio element
     if (voiceAudioBase64) {
       const mime = voiceAudioFormat === "mp3" ? "audio/mp3" : "audio/wav";
@@ -47,6 +53,12 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
         setIsPlayingAudio(false);
       };
     }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
   }, [voiceAudioBase64, voiceAudioFormat]);
 
   const togglePlayback = () => {

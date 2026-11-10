@@ -66,4 +66,4 @@ jobs:
 
       - name: Build Frontend Application
         working-directory: frontend
-        run: npm run build
+        run: npm run typecheck && npm run build

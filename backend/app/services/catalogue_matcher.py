@@ -5,6 +5,7 @@ Detects ambiguous product mentions and low-confidence matches to trigger clarifi
 """
 import json
 import logging
+import re
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 from rapidfuzz import fuzz, distance
@@ -126,6 +127,7 @@ class CatalogueMatcher:
                             sku_id=sku.sku_id,
                             name_en=sku.name_en,
                             name_hi=sku.name_hi,
+                            category=sku.category,
                             quantity=item.quantity,
                             unit=sku.unit,
                             price_inr=sku.price_inr
@@ -244,6 +246,7 @@ class CatalogueMatcher:
                             sku_id=top_sku.sku_id,
                             name_en=top_sku.name_en,
                             name_hi=top_sku.name_hi,
+                            category=top_sku.category,
                             quantity=item.quantity,
                             unit=top_sku.unit,
                             price_inr=top_sku.price_inr
@@ -252,6 +255,7 @@ class CatalogueMatcher:
                             sku_id=second_sku.sku_id,
                             name_en=second_sku.name_en,
                             name_hi=second_sku.name_hi,
+                            category=second_sku.category,
                             quantity=item.quantity,
                             unit=second_sku.unit,
                             price_inr=second_sku.price_inr
@@ -288,6 +292,7 @@ class CatalogueMatcher:
                         sku_id=top_sku.sku_id,
                         name_en=top_sku.name_en,
                         name_hi=top_sku.name_hi,
+                        category=top_sku.category,
                         quantity=item.quantity,
                         unit=top_sku.unit,
                         price_inr=top_sku.price_inr
@@ -330,8 +335,6 @@ class CatalogueMatcher:
             unmatched_items=unmatched
         )
 
-
-import re
 
 # Default singleton instance
 catalogue_matcher = CatalogueMatcher()

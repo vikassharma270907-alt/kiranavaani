@@ -10,7 +10,6 @@ router = APIRouter(tags=["Health"])
 
 
 @router.get("/health", response_model=HealthResponse)
-@router.get("/api/health", response_model=HealthResponse)
 async def get_health():
     """Returns the operational status, Gnani AI integration state, and catalogue statistics."""
     skus = catalogue_matcher.get_all_skus()

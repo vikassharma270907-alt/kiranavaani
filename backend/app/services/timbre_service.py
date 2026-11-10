@@ -16,7 +16,8 @@ from backend.app.config import (
     GNANI_API_KEY,
     GNANI_TTS_ENDPOINT,
     GNANI_TTS_MODEL,
-    is_live_gnani_configured
+    is_live_gnani_configured,
+    get_configured_api_keys
 )
 from backend.app.schemas import SynthesizeResponse
 
@@ -76,7 +77,11 @@ class TimbreTTSService:
         Synthesizes text into spoken audio using Gnani AI Timbre REST API.
         Falls back to valid synthetic WAV chime when credentials are not configured.
         """
-        if not self.is_configured():
+        api_keys = get_configured_api_keys()
+        if not api_keys and self.api_key:
+            api_keys = [self.api_key]
+
+        if not api_keys:
             logger.info("Gnani Timbre API key not configured. Generating synthetic playback audio.")
             mock_audio_bytes = generate_mock_wav_chime(duration_sec=1.2)
             mock_b64 = base64.b64encode(mock_audio_bytes).decode("utf-8")
@@ -90,11 +95,6 @@ class TimbreTTSService:
                 model=self.model,
                 note="Demo mode: Configured without live Gnani API key. Set GNANI_API_KEY in .env for live Timbre voice synthesis."
             )
-
-        headers = {
-            "X-API-Key-ID": self.api_key,
-            "Content-Type": "application/json"
-        }
 
         payload = {
             "text": text,
@@ -112,66 +112,63 @@ class TimbreTTSService:
             }
         }
 
-        try:
-            async with httpx.AsyncClient(timeout=15.0) as client:
-                logger.info(f"Dispatching TTS request to Gnani Timbre at {self.endpoint}")
-                response = await client.post(
-                    self.endpoint,
-                    headers=headers,
-                    json=payload
-                )
+        last_status = None
+        for key in api_keys:
+            headers = {
+                "X-API-Key-ID": key,
+                "Content-Type": "application/json"
+            }
+            try:
+                async with httpx.AsyncClient(timeout=15.0) as client:
+                    logger.info(f"Dispatching TTS request to Gnani Timbre at {self.endpoint}")
+                    response = await client.post(
+                        self.endpoint,
+                        headers=headers,
+                        json=payload
+                    )
 
-            if response.status_code == 200:
-                content_type = response.headers.get("content-type", "")
-                if "audio" in content_type or "octet-stream" in content_type:
-                    # Raw audio bytes returned
-                    audio_bytes = response.content
-                    b64 = base64.b64encode(audio_bytes).decode("utf-8")
-                else:
-                    data = response.json()
-                    raw_b64 = data.get("audio_content") or data.get("audio_base64") or ""
-                    b64 = raw_b64
+                last_status = response.status_code
+                if response.status_code == 200:
+                    content_type = response.headers.get("content-type", "")
+                    if "audio" in content_type or "octet-stream" in content_type:
+                        audio_bytes = response.content
+                        b64 = base64.b64encode(audio_bytes).decode("utf-8")
+                    else:
+                        data = response.json()
+                        raw_b64 = data.get("audio_content") or data.get("audio_base64") or ""
+                        b64 = raw_b64
 
-                logger.info("Received synthesized audio from Gnani Timbre API.")
-                return SynthesizeResponse(
-                    text=text,
-                    audio_base64=b64,
-                    audio_format="wav",
-                    duration_sec=max(1.0, len(text) * 0.08),
-                    is_mock=False,
-                    voice=voice,
-                    model=self.model
-                )
-            else:
-                logger.warning(
-                    f"Gnani Timbre returned HTTP {response.status_code}: {response.text}. "
-                    "Using fallback audio."
-                )
-                mock_audio_bytes = generate_mock_wav_chime()
-                return SynthesizeResponse(
-                    text=text,
-                    audio_base64=base64.b64encode(mock_audio_bytes).decode("utf-8"),
-                    audio_format="wav",
-                    duration_sec=1.2,
-                    is_mock=True,
-                    voice=voice,
-                    model=self.model,
-                    note=f"Fallback due to upstream HTTP {response.status_code}"
-                )
+                    logger.info("Received synthesized audio from Gnani Timbre API.")
+                    return SynthesizeResponse(
+                        text=text,
+                        audio_base64=b64,
+                        audio_format="wav",
+                        duration_sec=max(1.0, len(text) * 0.08),
+                        is_mock=False,
+                        voice=voice,
+                        model=self.model
+                    )
+                elif response.status_code in (401, 403, 429) and len(api_keys) > 1:
+                    logger.warning(f"Gnani Timbre returned {response.status_code} with current key, attempting fallback key...")
+                    continue
+            except Exception as exc:
+                logger.warning(f"Error attempting Gnani Timbre call: {exc}")
+                continue
 
-        except Exception as exc:
-            logger.error(f"Error calling Gnani Timbre API: {exc}. Using fallback audio.", exc_info=True)
-            mock_audio_bytes = generate_mock_wav_chime()
-            return SynthesizeResponse(
-                text=text,
-                audio_base64=base64.b64encode(mock_audio_bytes).decode("utf-8"),
-                audio_format="wav",
-                duration_sec=1.2,
-                is_mock=True,
-                voice=voice,
-                model=self.model,
-                note=f"Fallback due to error: {str(exc)}"
-            )
+        logger.warning(
+            f"Gnani Timbre requests exhausted (last HTTP {last_status}). Using fallback audio."
+        )
+        mock_audio_bytes = generate_mock_wav_chime()
+        return SynthesizeResponse(
+            text=text,
+            audio_base64=base64.b64encode(mock_audio_bytes).decode("utf-8"),
+            audio_format="wav",
+            duration_sec=1.2,
+            is_mock=True,
+            voice=voice,
+            model=self.model,
+            note=f"Fallback due to upstream HTTP {last_status}"
+        )
 
 
 # Default singleton instance

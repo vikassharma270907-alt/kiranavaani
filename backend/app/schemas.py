@@ -94,6 +94,7 @@ class ClarificationOption(BaseModel):
     sku_id: str
     name_en: str
     name_hi: str
+    category: Optional[str] = "Groceries"
     quantity: float
     unit: str
     price_inr: float

@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 
 from backend.app.config import HOST, PORT, is_live_gnani_configured
 from backend.app.api.routes import api_router
@@ -53,9 +53,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount all API endpoints at both root and /api prefix for seamless local and Vercel routing
+# Mount all API endpoints at root, and secondary mirror at /api prefix (excluded from schema to avoid duplicate operation IDs)
 app.include_router(api_router)
-app.include_router(api_router, prefix="/api")
+app.include_router(api_router, prefix="/api", include_in_schema=False)
 
 # Static frontend mounting (supports unified full-stack serving on Render, Docker, and local; disabled on Vercel where CDN serves frontend/dist)
 is_vercel = bool(os.getenv("VERCEL"))

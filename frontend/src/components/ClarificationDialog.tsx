@@ -5,6 +5,7 @@ export interface ClarificationOption {
   sku_id: string;
   name_en: string;
   name_hi: string;
+  category?: string;
   quantity: number;
   unit: string;
   price_inr: number;

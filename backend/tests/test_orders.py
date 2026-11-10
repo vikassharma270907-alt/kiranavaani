@@ -135,3 +135,67 @@ def test_process_order_preserves_clarification():
 
     # Voice audio generated
     assert data["voice_audio_base64"] is not None
+
+
+def test_configured_api_keys_helper(monkeypatch):
+    """Verify get_configured_api_keys correctly extracts and prioritizes valid vach_ keys."""
+    from backend.app.config import get_configured_api_keys, is_live_gnani_configured
+
+    monkeypatch.setenv("GNANI_API_KEY", "vach_testkey1")
+    monkeypatch.setenv("GNANI_API_KEY_FALLBACK", "vach_testkey2")
+    monkeypatch.setenv("GNANI_API_KEYS", "vach_testkey3,invalid_key,vach_testkey1")
+
+    keys = get_configured_api_keys()
+    assert keys == ["vach_testkey1", "vach_testkey2", "vach_testkey3"]
+    assert is_live_gnani_configured() is True
+
+
+def test_spa_404_handler_serves_index():
+    """Verify SPA fallback returns 200 without NameError for FileResponse."""
+    response = client.get("/nonexistent-spa-route")
+    assert response.status_code == 200
+    assert "text/html" in response.headers.get("content-type", "")
+
+
+def test_docs_and_openapi():
+    """Verify Swagger docs, Redoc, and OpenAPI JSON are all accessible."""
+    assert client.get("/docs").status_code == 200
+    assert client.get("/redoc").status_code == 200
+    res_oa = client.get("/openapi.json")
+    assert res_oa.status_code == 200
+    data = res_oa.json()
+    assert "/health" in data["paths"]
+    assert "/process-order" in data["paths"]
+
+
+def test_clarification_category_preservation():
+    """Verify that clarification options retain the SKU category."""
+    payload = {
+        "items": [
+            {"product": "chawal", "quantity": 2.0, "unit": "kg"}
+        ],
+        "keyterms_enabled": True
+    }
+    response = client.post("/match-products", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["clarifications_needed"]) >= 1
+    options = data["clarifications_needed"][0]["options"]
+    assert len(options) >= 2
+    for opt in options:
+        assert opt["category"] is not None
+        assert len(opt["category"]) > 0
+
+
+def test_cart_paise_formatting():
+    """Verify that non-integer rupee totals retain fractional paise in Hindi summary."""
+    payload = {
+        "items": [
+            {"sku_id": "SKU-002", "quantity": 0.5, "unit": "kg"}  # ₹95/kg * 0.5 = ₹47.50
+        ]
+    }
+    response = client.post("/cart", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total_inr"] == 47.50
+    assert "47.50" in data["spoken_summary_hi"]

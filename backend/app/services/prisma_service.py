@@ -11,7 +11,8 @@ from backend.app.config import (
     GNANI_API_KEY,
     GNANI_STT_ENDPOINT,
     GNANI_STT_MODEL,
-    is_live_gnani_configured
+    is_live_gnani_configured,
+    get_configured_api_keys
 )
 from backend.app.schemas import TranscriptionResponse
 
@@ -47,7 +48,11 @@ class PrismaSTTService:
         Transcribes audio bytes via Gnani AI Prisma REST API.
         If live credentials are unavailable, operates in clearly labelled mock mode.
         """
-        if not self.is_configured():
+        api_keys = get_configured_api_keys()
+        if not api_keys and self.api_key:
+            api_keys = [self.api_key]
+
+        if not api_keys:
             logger.info("Gnani Prisma API key not configured or demo key used. Using realistic mock transcription.")
             return TranscriptionResponse(
                 transcript=DEFAULT_MOCK_TRANSCRIPT,
@@ -58,10 +63,6 @@ class PrismaSTTService:
                 duration_sec=3.5,
                 note="Demo mode: Configured without live Gnani API key. Set GNANI_API_KEY in .env for live telephony STT."
             )
-
-        headers = {
-            "X-API-Key-ID": self.api_key
-        }
 
         form_data = {
             "model": self.model,
@@ -86,56 +87,55 @@ class PrismaSTTService:
             "audio_file": (filename, audio_bytes, content_type)
         }
 
-        try:
-            async with httpx.AsyncClient(timeout=15.0) as client:
-                logger.info(f"Dispatching STT request to Gnani Prisma at {self.endpoint} with model={self.model}")
-                response = await client.post(
-                    self.endpoint,
-                    headers=headers,
-                    data=form_data,
-                    files=files
-                )
+        last_status = None
+        for key in api_keys:
+            headers = {
+                "X-API-Key-ID": key
+            }
+            try:
+                async with httpx.AsyncClient(timeout=15.0) as client:
+                    logger.info(f"Dispatching STT request to Gnani Prisma at {self.endpoint} with model={self.model}")
+                    response = await client.post(
+                        self.endpoint,
+                        headers=headers,
+                        data=form_data,
+                        files=files
+                    )
 
-            if response.status_code == 200:
-                data = response.json()
-                logger.info("Received successful transcription from Gnani Prisma API.")
-                # Gnani Prisma response typically returns transcript and metadata
-                transcript_text = data.get("transcript") or data.get("text") or data.get("data", {}).get("transcript", "")
-                confidence = float(data.get("confidence", 0.94))
-                lang = data.get("language") or data.get("detected_language") or "indic-auto (Hinglish)"
+                last_status = response.status_code
+                if response.status_code == 200:
+                    data = response.json()
+                    logger.info("Received successful transcription from Gnani Prisma API.")
+                    transcript_text = data.get("transcript") or data.get("text") or data.get("data", {}).get("transcript", "")
+                    confidence = float(data.get("confidence", 0.94))
+                    lang = data.get("language") or data.get("detected_language") or "indic-auto (Hinglish)"
 
-                return TranscriptionResponse(
-                    transcript=transcript_text,
-                    language_detected=lang,
-                    confidence=confidence,
-                    model=self.model,
-                    is_mock=False,
-                    duration_sec=data.get("audio_duration")
-                )
-            else:
-                logger.warning(
-                    f"Gnani Prisma returned HTTP {response.status_code}: {response.text}. "
-                    "Falling back to mock transcription."
-                )
-                return TranscriptionResponse(
-                    transcript=DEFAULT_MOCK_TRANSCRIPT,
-                    language_detected="hi-Latn (Fallback Mock)",
-                    confidence=0.75,
-                    model=self.model,
-                    is_mock=True,
-                    note=f"Fallback due to upstream Gnani API status {response.status_code}"
-                )
+                    return TranscriptionResponse(
+                        transcript=transcript_text,
+                        language_detected=lang,
+                        confidence=confidence,
+                        model=self.model,
+                        is_mock=False,
+                        duration_sec=data.get("audio_duration")
+                    )
+                elif response.status_code in (401, 403, 429) and len(api_keys) > 1:
+                    logger.warning(f"Gnani Prisma returned {response.status_code} with current key, attempting fallback key...")
+                    continue
+            except Exception as exc:
+                logger.warning(f"Error attempting Gnani Prisma call: {exc}")
+                continue
 
-        except Exception as exc:
-            logger.error(f"Error calling Gnani Prisma API: {exc}. Using fallback transcription.", exc_info=True)
-            return TranscriptionResponse(
-                transcript=DEFAULT_MOCK_TRANSCRIPT,
-                language_detected="hi-Latn (Fallback Mock)",
-                confidence=0.70,
-                model=self.model,
-                is_mock=True,
-                note=f"Fallback due to network/client error: {str(exc)}"
-            )
+        logger.warning(
+            f"Gnani Prisma requests exhausted (last HTTP {last_status}). Falling back to mock transcription."
+        )
+        return TranscriptionResponse(
+            transcript=DEFAULT_MOCK_TRANSCRIPT,
+            language_detected="hi-Latn (Fallback Mock)",
+            confidence=0.75,
+            model=self.model,
+            is_mock=True,
+            note=f"Fallback due to upstream Gnani API status {last_status}"
+        )
 
 
 # Default singleton instance

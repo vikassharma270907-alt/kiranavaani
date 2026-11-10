@@ -105,7 +105,8 @@ class CartService:
         hi_items_str = ", ".join(hi_phrases)
         en_items_str = ", ".join(en_phrases)
 
-        hi_summary = f"आपके ऑर्डर में {hi_items_str} शामिल है। कुल बिल {int(total)} रुपये हुआ है। ऑर्डर कन्फर्म करें?"
+        hi_total_str = f"{int(total)}" if total == int(total) else f"{total:.2f}"
+        hi_summary = f"आपके ऑर्डर में {hi_items_str} शामिल है। कुल बिल {hi_total_str} रुपये हुआ है। ऑर्डर कन्फर्म करें?"
         en_summary = f"Your order includes {en_items_str}. Total bill is ₹{total:g}. Would you like to confirm?"
 
         return hi_summary, en_summary

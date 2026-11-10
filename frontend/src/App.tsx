@@ -199,7 +199,7 @@ export const App: React.FC = () => {
       sku_id: option.sku_id,
       name_en: option.name_en,
       name_hi: option.name_hi,
-      category: "Snacks & Groceries",
+      category: option.category || "Groceries",
       quantity: option.quantity,
       unit: option.unit,
       unit_price: option.price_inr,
@@ -215,13 +215,44 @@ export const App: React.FC = () => {
     // Remove this clarification question from state
     setClarifications((prev) => prev.filter((q) => !q.options.some((o) => o.sku_id === option.sku_id)));
 
-    // Update confirmation spoken text
-    setSpokenReplyHi(`${option.name_hi} (${option.quantity} ${option.unit}) कार्ट में जोड़ दिया गया है।`);
-    setSpokenReplyEn(`${option.name_en} (${option.quantity} ${option.unit}) added to cart.`);
+    // Update confirmation spoken text and trigger live voice synthesis
+    const confirmationHi = `${option.name_hi} (${option.quantity} ${option.unit}) कार्ट में जोड़ दिया गया है।`;
+    const confirmationEn = `${option.name_en} (${option.quantity} ${option.unit}) added to cart.`;
+    setSpokenReplyHi(confirmationHi);
+    setSpokenReplyEn(confirmationEn);
+
+    // Asynchronously synthesize voice confirmation via Timbre TTS
+    const apiBase = getApiBase();
+    fetch(`${apiBase}/synthesize`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: confirmationHi,
+        voice: "Nalini",
+        language: "hi-IN"
+      })
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.audio_base64) {
+          setVoiceAudioBase64(data.audio_base64);
+          setVoiceAudioFormat(data.audio_format || "wav");
+          setIsMockTts(data.is_mock ?? false);
+        }
+      })
+      .catch((e) => console.warn("Could not synthesize clarification confirmation audio:", e));
   };
 
   const handleRemoveItem = (skuId: string) => {
-    setCartItems((prev) => prev.filter((it) => it.sku_id !== skuId));
+    setCartItems((prev) => {
+      const updated = prev.filter((it) => it.sku_id !== skuId);
+      if (updated.length === 0) {
+        setSpokenReplyHi("आपका कार्ट खाली है। कृपया बताएं आपको क्या चाहिए?");
+        setSpokenReplyEn("Your cart is empty. Please state what groceries you need.");
+        setVoiceAudioBase64(undefined);
+      }
+      return updated;
+    });
   };
 
   const handleResetOrder = () => {

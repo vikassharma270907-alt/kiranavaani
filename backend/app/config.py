@@ -38,10 +38,27 @@ CONFIDENCE_THRESHOLD: float = float(os.getenv("CONFIDENCE_THRESHOLD", "0.78"))
 AMBIGUITY_DELTA_THRESHOLD: float = float(os.getenv("AMBIGUITY_DELTA_THRESHOLD", "0.12"))
 
 
+def get_configured_api_keys() -> list[str]:
+    """Returns all configured Gnani API keys in order of precedence."""
+    keys: list[str] = []
+    primary = (os.getenv("GNANI_API_KEY") or GNANI_API_KEY or "").strip()
+    if primary and primary not in keys:
+        keys.append(primary)
+    fallback = (os.getenv("GNANI_API_KEY_FALLBACK") or os.getenv("GNANI_API_KEY_SECONDARY") or "").strip()
+    if fallback and fallback not in keys:
+        keys.append(fallback)
+    raw_keys = os.getenv("GNANI_API_KEYS", "")
+    if raw_keys:
+        for k in raw_keys.split(","):
+            k = k.strip()
+            if k and k not in keys:
+                keys.append(k)
+    return [k for k in keys if k.startswith("vach_")]
+
+
 def is_live_gnani_configured() -> bool:
     """Returns True only if a valid Gnani API key starting with vach_ is configured."""
-    key = os.getenv("GNANI_API_KEY", "") or GNANI_API_KEY or ""
-    return bool(key and key.startswith("vach_"))
+    return len(get_configured_api_keys()) > 0
 
 
 def get_catalogue_path() -> Path:
