@@ -86,7 +86,9 @@ Key Highlights:
 ✨ **Gnani Timbre v2.5 Text-to-Speech**: Natural Indian voice confirmation readbacks.
 ✨ **Noise Lab Benchmark**: Evaluated across 8 kHz telephony codecs & 0 dB SNR market noise. 200 catalog keyterms lifted Item-F1 from 59.4% to 84.6%!
 
-Check out the repository and video demo on GitHub!
+🌐 Live Cockpit (Render): https://kiranavaani.onrender.com
+⚡ Live Cockpit (Vercel): https://kiranavaani.vercel.app
+💻 Open-Source Code: https://github.com/vikassharma270907-alt/kiranavaani
 
 #GnaniAI #GreatIndianAIInternshipChallenge #SpeechAI #VoiceAssistant #KiranaStores #NLP #DeepLearning #Python #FastAPI #React
 ```

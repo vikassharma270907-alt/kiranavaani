@@ -4,6 +4,8 @@
 [![Models](https://img.shields.io/badge/Speech%20Models-Prisma%20v3.0%20%7C%20Timbre%20v2.5-sky.svg)](https://gnani.ai)
 [![Target Awards](https://img.shields.io/badge/Awards-Mixed%20Vibes%20%7C%20Real%20Deal%20%7C%20Noise%20Canceller%20%7C%20Demo%20Day%20Drop-amber.svg)](#target-award-categories)
 [![Synthetic Data](https://img.shields.io/badge/Data%20Compliance-100%25%20Synthetic%20(Zero%20PII)-blue.svg)](#15-synthetic-data-compliance-declaration)
+[![Live on Render](https://img.shields.io/badge/Render-Live%20Cockpit-success?logo=render&logoColor=white)](https://kiranavaani.onrender.com)
+[![Live on Vercel](https://img.shields.io/badge/Vercel-Live%20Cockpit-black?logo=vercel&logoColor=white)](https://kiranavaani.vercel.app)
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/vikassharma270907-alt/kiranavaani)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -291,8 +293,19 @@ npm run dev
 ```
 Open `http://localhost:5173` in your browser.
 
-### 8.3. Deploy to Render (Cloud Full-Stack)
-Deploy KiranaVaani as a live full-stack service on [Render](https://render.com):
+### 8.3. Live Cloud Deployments
+
+KiranaVaani is deployed and accessible across multiple cloud environments:
+
+- **Render Production Cockpit**: [https://kiranavaani.onrender.com](https://kiranavaani.onrender.com)
+  - Full-stack unified Docker service serving React frontend + FastAPI backend.
+  - Health endpoint: [https://kiranavaani.onrender.com/health](https://kiranavaani.onrender.com/health)
+- **Vercel Production Cockpit**: [https://kiranavaani.vercel.app](https://kiranavaani.vercel.app)
+  - Edge CDN frontend + serverless Python ASGI runtime.
+  - Health endpoint: [https://kiranavaani.vercel.app/health](https://kiranavaani.vercel.app/health)
+
+#### 1-Click Deploy to Render
+Deploy your own instance of KiranaVaani on [Render](https://render.com):
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/vikassharma270907-alt/kiranavaani)
 

@@ -1,5 +1,8 @@
 # Deploying KiranaVaani to Render (render.com)
 
+**Live Production Deployment**: [https://kiranavaani.onrender.com](https://kiranavaani.onrender.com)  
+**Live Health Endpoint**: [https://kiranavaani.onrender.com/health](https://kiranavaani.onrender.com/health)
+
 This guide walks you through deploying **KiranaVaani (किरानावाणी)** as a full-stack web service on [Render](https://render.com) in under 3 minutes.
 
 ---
