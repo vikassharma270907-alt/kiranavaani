@@ -10,28 +10,28 @@
         "v25_no_key": {
           "wer": 0.26,
           "precision": 100.0,
-          "recall": 44.71,
-          "item_f1": 61.79,
+          "recall": 49.52,
+          "item_f1": 66.24,
           "quantity_accuracy": 20.8,
-          "ambiguities_flagged": 130,
+          "ambiguities_flagged": 105,
           "total_orders_evaluated": 80
         },
         "v30_key_off": {
           "wer": 0.26,
           "precision": 100.0,
-          "recall": 44.71,
-          "item_f1": 61.79,
+          "recall": 49.52,
+          "item_f1": 66.24,
           "quantity_accuracy": 20.8,
-          "ambiguities_flagged": 130,
+          "ambiguities_flagged": 105,
           "total_orders_evaluated": 80
         },
         "v30_key_on": {
           "wer": 0.0,
           "precision": 100.0,
-          "recall": 76.44,
-          "item_f1": 86.65,
+          "recall": 78.37,
+          "item_f1": 87.87,
           "quantity_accuracy": 21.99,
-          "ambiguities_flagged": 64,
+          "ambiguities_flagged": 45,
           "total_orders_evaluated": 80
         }
       }
@@ -44,28 +44,28 @@
         "v25_no_key": {
           "wer": 0.26,
           "precision": 100.0,
-          "recall": 44.71,
-          "item_f1": 61.79,
+          "recall": 49.52,
+          "item_f1": 66.24,
           "quantity_accuracy": 20.8,
-          "ambiguities_flagged": 130,
+          "ambiguities_flagged": 105,
           "total_orders_evaluated": 80
         },
         "v30_key_off": {
           "wer": 0.26,
           "precision": 100.0,
-          "recall": 44.71,
-          "item_f1": 61.79,
+          "recall": 49.52,
+          "item_f1": 66.24,
           "quantity_accuracy": 20.8,
-          "ambiguities_flagged": 130,
+          "ambiguities_flagged": 105,
           "total_orders_evaluated": 80
         },
         "v30_key_on": {
           "wer": 0.0,
           "precision": 100.0,
-          "recall": 76.44,
-          "item_f1": 86.65,
+          "recall": 78.37,
+          "item_f1": 87.87,
           "quantity_accuracy": 21.99,
-          "ambiguities_flagged": 64,
+          "ambiguities_flagged": 45,
           "total_orders_evaluated": 80
         }
       }
@@ -78,28 +78,28 @@
         "v25_no_key": {
           "wer": 0.26,
           "precision": 100.0,
-          "recall": 44.71,
-          "item_f1": 61.79,
+          "recall": 49.52,
+          "item_f1": 66.24,
           "quantity_accuracy": 20.8,
-          "ambiguities_flagged": 130,
+          "ambiguities_flagged": 105,
           "total_orders_evaluated": 80
         },
         "v30_key_off": {
           "wer": 0.26,
           "precision": 100.0,
-          "recall": 44.71,
-          "item_f1": 61.79,
+          "recall": 49.52,
+          "item_f1": 66.24,
           "quantity_accuracy": 20.8,
-          "ambiguities_flagged": 130,
+          "ambiguities_flagged": 105,
           "total_orders_evaluated": 80
         },
         "v30_key_on": {
           "wer": 0.0,
           "precision": 100.0,
-          "recall": 76.44,
-          "item_f1": 86.65,
+          "recall": 78.37,
+          "item_f1": 87.87,
           "quantity_accuracy": 21.99,
-          "ambiguities_flagged": 64,
+          "ambiguities_flagged": 45,
           "total_orders_evaluated": 80
         }
       }
@@ -112,28 +112,28 @@
         "v25_no_key": {
           "wer": 0.26,
           "precision": 100.0,
-          "recall": 44.71,
-          "item_f1": 61.79,
+          "recall": 49.52,
+          "item_f1": 66.24,
           "quantity_accuracy": 20.8,
-          "ambiguities_flagged": 130,
+          "ambiguities_flagged": 105,
           "total_orders_evaluated": 80
         },
         "v30_key_off": {
           "wer": 0.26,
           "precision": 100.0,
-          "recall": 44.71,
-          "item_f1": 61.79,
+          "recall": 49.52,
+          "item_f1": 66.24,
           "quantity_accuracy": 20.8,
-          "ambiguities_flagged": 130,
+          "ambiguities_flagged": 105,
           "total_orders_evaluated": 80
         },
         "v30_key_on": {
           "wer": 0.26,
           "precision": 100.0,
-          "recall": 74.04,
-          "item_f1": 85.08,
+          "recall": 75.96,
+          "item_f1": 86.34,
           "quantity_accuracy": 21.99,
-          "ambiguities_flagged": 69,
+          "ambiguities_flagged": 50,
           "total_orders_evaluated": 80
         }
       }
@@ -146,28 +146,28 @@
         "v25_no_key": {
           "wer": 0.69,
           "precision": 100.0,
-          "recall": 44.71,
-          "item_f1": 61.79,
+          "recall": 49.52,
+          "item_f1": 66.24,
           "quantity_accuracy": 20.8,
-          "ambiguities_flagged": 130,
+          "ambiguities_flagged": 105,
           "total_orders_evaluated": 80
         },
         "v30_key_off": {
           "wer": 0.69,
           "precision": 100.0,
-          "recall": 44.71,
-          "item_f1": 61.79,
+          "recall": 49.52,
+          "item_f1": 66.24,
           "quantity_accuracy": 20.8,
-          "ambiguities_flagged": 130,
+          "ambiguities_flagged": 105,
           "total_orders_evaluated": 80
         },
         "v30_key_on": {
           "wer": 0.69,
           "precision": 100.0,
-          "recall": 74.04,
-          "item_f1": 85.08,
+          "recall": 75.96,
+          "item_f1": 86.34,
           "quantity_accuracy": 21.99,
-          "ambiguities_flagged": 69,
+          "ambiguities_flagged": 50,
           "total_orders_evaluated": 80
         }
       }
