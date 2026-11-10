@@ -12,7 +12,6 @@ venv
 env
 frontend/node_modules
 frontend/dist
-audio_samples
 video_production
 *.mp4
 *.svg
