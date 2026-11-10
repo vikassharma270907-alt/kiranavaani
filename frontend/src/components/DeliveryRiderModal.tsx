@@ -11,7 +11,8 @@ import {
   Send, 
   ShieldCheck, 
   FileText,
-  Navigation
+  Navigation,
+  Zap
 } from "lucide-react";
 import { CartItem } from "./ShoppingCart";
 
@@ -24,6 +25,8 @@ interface DeliveryRiderModalProps {
   customerName?: string;
   transcript?: string;
   landmarkInfo?: any;
+  isTatkal?: boolean;
+  jazbaatInfo?: any;
 }
 
 export const DeliveryRiderModal: React.FC<DeliveryRiderModalProps> = ({
@@ -34,7 +37,9 @@ export const DeliveryRiderModal: React.FC<DeliveryRiderModalProps> = ({
   totalAmount,
   customerName = "Sharma Ji (शर्मा जी)",
   transcript = "",
-  landmarkInfo
+  landmarkInfo,
+  isTatkal = false,
+  jazbaatInfo
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [dispatchData, setDispatchData] = useState<any | null>(null);
@@ -126,6 +131,31 @@ export const DeliveryRiderModal: React.FC<DeliveryRiderModalProps> = ({
 
         {/* Content */}
         <div className="p-5 space-y-4 overflow-y-auto">
+          {/* Tatkal 10-Minute Urgency Priority Banner (call360 Awaaz-e-Jazbaat) */}
+          {(isTatkal || jazbaatInfo?.is_tatkal_priority) && (
+            <div className="p-3 rounded-xl bg-gradient-to-r from-amber-950/60 via-slate-900 to-amber-950/40 border border-amber-500/50 shadow-lg shadow-amber-500/10 flex items-center justify-between gap-3 animate-pulse">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+                  <Zap className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                    <span>⚡ TATKAL 10-MIN EXPRESS DISPATCH</span>
+                    <span className="text-[9px] bg-amber-500/20 px-1.5 py-0.2 rounded font-mono">
+                      call360 URGENCY DETECTED
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-amber-200/90 font-hindi">
+                    {jazbaatInfo?.merchant_action_hint_hi || "ग्राहक जल्दी में है, तुरंत पैक करके 10 मिनट में डिलीवर करें!"}
+                  </div>
+                </div>
+              </div>
+              <span className="text-[10px] font-mono px-2 py-1 rounded bg-amber-500 text-slate-950 font-black whitespace-nowrap">
+                PRIORITY #1
+              </span>
+            </div>
+          )}
+
           {/* Live Delivery Status Timeline */}
           <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2">
             <div className="flex items-center justify-between text-xs">

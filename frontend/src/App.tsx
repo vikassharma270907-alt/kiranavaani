@@ -21,7 +21,8 @@ import {
   WifiOff,
   Tag,
   Truck,
-  Trophy
+  Trophy,
+  MessageSquare
 } from "lucide-react";
 
 import { VoiceRecorder } from "./components/VoiceRecorder";
@@ -41,6 +42,7 @@ import { JudgeTourBanner } from "./components/JudgeTourBanner";
 import { BhaavTaalDrawer } from "./components/BhaavTaalDrawer";
 import { DeliveryRiderModal } from "./components/DeliveryRiderModal";
 import { KiranaClearSandboxModal } from "./components/KiranaClearSandboxModal";
+import { WhatsAppVoiceModal } from "./components/WhatsAppVoiceModal";
 
 interface BackendHealth {
   status: string;
@@ -71,9 +73,12 @@ export const App: React.FC = () => {
   const [showBhaavTaalDrawer, setShowBhaavTaalDrawer] = useState(false);
   const [showDeliveryRiderModal, setShowDeliveryRiderModal] = useState(false);
   const [showKiranaClearModal, setShowKiranaClearModal] = useState(false);
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [landmarkInfo, setLandmarkInfo] = useState<any | null>(null);
   const [bhaavTaalInfo, setBhaavTaalInfo] = useState<any | null>(null);
   const [recipeInfo, setRecipeInfo] = useState<any | null>(null);
+  const [jazbaatInfo, setJazbaatInfo] = useState<any | null>(null);
+  const [livenessInfo, setLivenessInfo] = useState<any | null>(null);
   const [bargainDiscount, setBargainDiscount] = useState<number>(0);
 
   // Order state
@@ -202,6 +207,8 @@ export const App: React.FC = () => {
       setLandmarkInfo(data.landmark_info || null);
       setBhaavTaalInfo(data.bhaav_taal_info || null);
       setRecipeInfo(data.recipe_info || null);
+      setJazbaatInfo(data.jazbaat_info || null);
+      setLivenessInfo(data.liveness_info || null);
 
       // Auto-trigger corresponding modal when explicit intent is classified
       if (data.detected_intent === "BARGAIN" && data.bhaav_taal_info) {
@@ -457,6 +464,15 @@ export const App: React.FC = () => {
             >
               <Truck className="w-3.5 h-3.5 text-emerald-400" />
               <span>छोटू राइडर</span>
+            </button>
+
+            {/* WhatsApp Voice Note Bot Trigger */}
+            <button
+              onClick={() => setShowWhatsAppModal(true)}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-600/30 flex items-center gap-1.5 transition-colors shadow-sm"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+              <span>वॉट्सऐप वॉइस</span>
             </button>
 
             {/* KiranaClear Telephony DSP Noise Gate Trigger */}
@@ -724,6 +740,34 @@ export const App: React.FC = () => {
               </div>
             )}
 
+            {/* Awaaz-e-Jazbaat: Tatkal 10-Minute Express Dispatch Alert */}
+            {jazbaatInfo?.is_tatkal_priority && (
+              <div className="p-3 rounded-xl bg-gradient-to-r from-amber-950/40 via-amber-900/20 to-slate-900 border border-amber-500/40 flex items-center justify-between gap-3 shadow-md animate-pulse">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+                    <Zap className="w-4 h-4 fill-current" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                      <span>⚡ Tatkal 10-Minute Priority Packing</span>
+                      <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-mono">
+                        call360 URGENCY
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-amber-200/90 font-hindi">
+                      {jazbaatInfo.merchant_action_hint_hi}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDeliveryRiderModal(true)}
+                  className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold whitespace-nowrap transition-colors"
+                >
+                  Dispatch Rider
+                </button>
+              </div>
+            )}
+
             <ShoppingCart
               items={cartItems}
               onRemoveItem={handleRemoveItem}
@@ -833,6 +877,21 @@ export const App: React.FC = () => {
         customerName={khataInfo?.customer_name || "Sharma Ji (शर्मा जी)"}
         transcript={transcript}
         landmarkInfo={landmarkInfo}
+        isTatkal={jazbaatInfo?.is_tatkal_priority}
+        jazbaatInfo={jazbaatInfo}
+      />
+
+      {/* WhatsApp Voice Note Ingestion & Interactive Slip Modal */}
+      <WhatsAppVoiceModal
+        isOpen={showWhatsAppModal}
+        onClose={() => setShowWhatsAppModal(false)}
+        apiBaseUrl={getApiBase()}
+        onImportToLiveCart={(txt) => {
+          setTranscript(txt);
+          setClarifications([]);
+          setSubstitutions([]);
+          processOrderUtterance(txt);
+        }}
       />
 
       {/* KiranaClear Telephony DSP Noise Gate Sandbox Modal */}

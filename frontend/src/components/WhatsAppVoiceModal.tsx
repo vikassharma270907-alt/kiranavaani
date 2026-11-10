@@ -38,12 +38,14 @@ interface WhatsAppVoiceModalProps {
   isOpen: boolean;
   onClose: () => void;
   apiBaseUrl: string;
+  onImportToLiveCart?: (transcript: string) => void;
 }
 
 export const WhatsAppVoiceModal: React.FC<WhatsAppVoiceModalProps> = ({
   isOpen,
   onClose,
-  apiBaseUrl
+  apiBaseUrl,
+  onImportToLiveCart
 }) => {
   const [selectedPreset, setSelectedPreset] = useState<string>("snack_rush");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -341,15 +343,32 @@ export const WhatsAppVoiceModal: React.FC<WhatsAppVoiceModalProps> = ({
                       <span>{isPlayingReply ? "Playing Voice Note..." : "Listen Timbre Voice Reply"}</span>
                     </button>
 
-                    <a
-                      href={`https://api.whatsapp.com/send?phone=919820112345&text=${encodeURIComponent(result.whatsapp_auto_reply_text)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-900 text-emerald-300 text-xs font-semibold flex items-center gap-1 transition-colors"
-                    >
-                      <span>Share on WhatsApp</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
+                    <div className="flex items-center gap-2">
+                      {onImportToLiveCart && (
+                        <button
+                          onClick={() => {
+                            if (result?.transcript) {
+                              onImportToLiveCart(result.transcript);
+                              onClose();
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-teal-600/30 hover:bg-teal-600/50 text-teal-200 border border-teal-500/40 text-xs font-semibold flex items-center gap-1 transition-colors"
+                        >
+                          <ShoppingBag className="w-3.5 h-3.5 text-teal-300" />
+                          <span>Import to Counter</span>
+                        </button>
+                      )}
+
+                      <a
+                        href={`https://api.whatsapp.com/send?phone=919820112345&text=${encodeURIComponent(result.whatsapp_auto_reply_text)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-900 text-emerald-300 text-xs font-semibold flex items-center gap-1 transition-colors"
+                      >
+                        <span>Share on WhatsApp</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
                   </div>
 
                   <div className="text-right text-[10px] text-emerald-200/70 flex items-center justify-end gap-1">
