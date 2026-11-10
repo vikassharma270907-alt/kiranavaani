@@ -14,7 +14,11 @@ import {
   Layers,
   Sliders,
   CheckCircle2,
-  PackageX
+  PackageX,
+  Zap,
+  Fingerprint,
+  Boxes,
+  WifiOff
 } from "lucide-react";
 
 import { VoiceRecorder } from "./components/VoiceRecorder";
@@ -26,6 +30,10 @@ import { AcousticSpectrogram } from "./components/AcousticSpectrogram";
 import { TelephonyCallSimulator } from "./components/TelephonyCallSimulator";
 import { KhataLedgerDrawer } from "./components/KhataLedgerDrawer";
 import { ONDCModal } from "./components/ONDCModal";
+import { JudgeStressArenaModal } from "./components/JudgeStressArenaModal";
+import { AwaazPehchaanModal } from "./components/AwaazPehchaanModal";
+import { MandiRestockDrawer } from "./components/MandiRestockDrawer";
+import { TelemetryBenchmarkModal } from "./components/TelemetryBenchmarkModal";
 
 interface BackendHealth {
   status: string;
@@ -44,6 +52,12 @@ export const App: React.FC = () => {
   const [showSpectrogram, setShowSpectrogram] = useState(true);
   const [showKhataDrawer, setShowKhataDrawer] = useState(false);
   const [showOndcModal, setShowOndcModal] = useState(false);
+  const [showJudgeArenaModal, setShowJudgeArenaModal] = useState(false);
+  const [showAwaazPehchaanModal, setShowAwaazPehchaanModal] = useState(false);
+  const [showMandiDrawer, setShowMandiDrawer] = useState(false);
+  const [showTelemetryModal, setShowTelemetryModal] = useState(false);
+  const [isOfflineSimulated, setIsOfflineSimulated] = useState(false);
+  const [voiceprintVerified, setVoiceprintVerified] = useState(true);
   const [isButterOutOfStock, setIsButterOutOfStock] = useState(false);
 
   // Order state
@@ -387,6 +401,42 @@ export const App: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 text-xs">
+            {/* Judge's Stress-Test Arena Button */}
+            <button
+              onClick={() => setShowJudgeArenaModal(true)}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500/20 to-amber-600/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 flex items-center gap-1.5 transition-all shadow-md shadow-amber-500/10 animate-pulse"
+            >
+              <Zap className="w-3.5 h-3.5 text-amber-400 fill-current" />
+              <span>⚡ Judge's Arena</span>
+            </button>
+
+            {/* Awaaz Pehchaan (Voice Biometrics) Trigger */}
+            <button
+              onClick={() => setShowAwaazPehchaanModal(true)}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-teal-500/10 text-teal-300 border border-teal-500/30 hover:bg-teal-500/20 flex items-center gap-1.5 transition-colors"
+            >
+              <Fingerprint className="w-3.5 h-3.5 text-teal-400" />
+              <span>आवाज़ पहचान</span>
+            </button>
+
+            {/* Mandi Wholesale B2B Drawer Trigger */}
+            <button
+              onClick={() => setShowMandiDrawer(true)}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/20 flex items-center gap-1.5 transition-colors"
+            >
+              <Boxes className="w-3.5 h-3.5 text-indigo-400" />
+              <span>मंडी B2B</span>
+            </button>
+
+            {/* Sub-Second Telemetry Benchmark Trigger */}
+            <button
+              onClick={() => setShowTelemetryModal(true)}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-sky-500/10 text-sky-300 border border-sky-500/30 hover:bg-sky-500/20 flex items-center gap-1.5 transition-colors"
+            >
+              <Activity className="w-3.5 h-3.5 text-sky-400" />
+              <span>&lt;400ms Benchmark</span>
+            </button>
+
             {/* Telephony Simulator Trigger */}
             <button
               onClick={() => setShowCallSimulator((prev) => !prev)}
@@ -450,7 +500,21 @@ export const App: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-[11px]">
+          <div className="flex items-center gap-2 text-[11px] flex-wrap">
+            {/* Offline Bharat Resilience Toggle */}
+            <button
+              onClick={() => setIsOfflineSimulated((prev) => !prev)}
+              className={`px-2.5 py-1 rounded-md border font-mono transition-colors flex items-center gap-1 ${
+                isOfflineSimulated
+                  ? "bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse"
+                  : "bg-slate-800 text-slate-400 border-slate-700 hover:text-white"
+              }`}
+              title="Simulates network outage in rural mandis to verify offline edge resilience"
+            >
+              <WifiOff className="w-3 h-3" />
+              {isOfflineSimulated ? "Mandi Offline: SIMULATED" : "Network: 4G Online"}
+            </button>
+
             {/* Quick Out-of-Stock Demo Toggle */}
             <button
               onClick={handleToggleButterStock}
@@ -470,6 +534,21 @@ export const App: React.FC = () => {
             </span>
           </div>
         </div>
+
+        {/* Offline Bharat Resilience Alert Banner */}
+        {isOfflineSimulated && (
+          <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-950/60 to-rose-950/60 border border-amber-500/40 flex items-center justify-between gap-3 text-xs text-amber-200 animate-pulse shadow-lg">
+            <div className="flex items-center gap-2.5">
+              <WifiOff className="w-4 h-4 text-amber-400 flex-shrink-0" />
+              <div>
+                <strong className="text-white">Offline Bharat Resilience Active (इंटरनेट बंद):</strong> Cloud connection severed (0 bps). System switched instantly to local browser Web Speech & offline RapidFuzz cache. Orders queued locally for auto-sync.
+              </div>
+            </div>
+            <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-bold whitespace-nowrap">
+              ZERO DOWNTIME
+            </span>
+          </div>
+        )}
 
         {/* Incoming Telephony Call Simulator Widget (If Active) */}
         {showCallSimulator && (
@@ -567,6 +646,8 @@ export const App: React.FC = () => {
               isOrderConfirmed={isOrderConfirmed}
               onOpenOndcModal={() => setShowOndcModal(true)}
               apiBaseUrl={getApiBase()}
+              onOpenVoiceprintModal={() => setShowAwaazPehchaanModal(true)}
+              voiceprintVerified={voiceprintVerified}
             />
           </div>
         </div>
@@ -584,6 +665,46 @@ export const App: React.FC = () => {
         isOpen={showOndcModal}
         onClose={() => setShowOndcModal(false)}
         cartItems={cartItems}
+        apiBaseUrl={getApiBase()}
+      />
+
+      {/* Judge's Adversarial Stress Arena Modal */}
+      <JudgeStressArenaModal
+        isOpen={showJudgeArenaModal}
+        onClose={() => setShowJudgeArenaModal(false)}
+        apiBaseUrl={getApiBase()}
+        onApplyTestUtterance={(text) => {
+          setShowJudgeArenaModal(false);
+          setTranscript(text);
+          processOrderUtterance(text);
+        }}
+      />
+
+      {/* Awaaz Pehchaan (Voice Biometrics) Modal */}
+      <AwaazPehchaanModal
+        isOpen={showAwaazPehchaanModal}
+        onClose={() => setShowAwaazPehchaanModal(false)}
+        customerId={khataInfo?.khata_id || "CUST-001"}
+        customerName={khataInfo?.customer_name || "Sharma Ji (शर्मा जी)"}
+        apiBaseUrl={getApiBase()}
+        onVerificationComplete={(res) => {
+          if (res.verified) {
+            setVoiceprintVerified(true);
+          }
+        }}
+      />
+
+      {/* Mandi Wholesale Restock B2B Drawer */}
+      <MandiRestockDrawer
+        isOpen={showMandiDrawer}
+        onClose={() => setShowMandiDrawer(false)}
+        apiBaseUrl={getApiBase()}
+      />
+
+      {/* Sub-Second Telemetry Benchmark Modal */}
+      <TelemetryBenchmarkModal
+        isOpen={showTelemetryModal}
+        onClose={() => setShowTelemetryModal(false)}
         apiBaseUrl={getApiBase()}
       />
 

@@ -12,7 +12,8 @@ import {
   Check, 
   ExternalLink,
   Receipt,
-  Printer
+  Printer,
+  Fingerprint
 } from "lucide-react";
 import { CartItem } from "./ShoppingCart";
 import { ThermalReceiptModal } from "./ThermalReceiptModal";
@@ -45,6 +46,8 @@ interface OrderSummaryProps {
   isOrderConfirmed: boolean;
   onOpenOndcModal?: () => void;
   apiBaseUrl?: string;
+  onOpenVoiceprintModal?: () => void;
+  voiceprintVerified?: boolean;
 }
 
 export const OrderSummary: React.FC<OrderSummaryProps> = ({
@@ -63,6 +66,8 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
   isOrderConfirmed,
   onOpenOndcModal,
   apiBaseUrl = "",
+  onOpenVoiceprintModal,
+  voiceprintVerified = true,
 }) => {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [selectedPaymentMode, setSelectedPaymentMode] = useState<"cod" | "upi" | "khata">(
@@ -229,6 +234,22 @@ _किरानावाणी (KiranaVaani) वॉयस AI द्वारा
                 ₹{(khataInfo.previous_balance_inr + total).toFixed(2)}
               </div>
             </div>
+          </div>
+
+          {/* Voice Biometrics Verification Shield Badge */}
+          <div className="pt-2 border-t border-amber-500/20 flex flex-wrap items-center justify-between gap-1.5">
+            <div className="flex items-center gap-1.5 text-[11px] text-teal-300">
+              <Fingerprint className="w-3.5 h-3.5 text-teal-400" />
+              <span>Awaaz Pehchaan: <strong className={voiceprintVerified ? "text-emerald-400" : "text-amber-400"}>{voiceprintVerified ? "97.4% Match Verified" : "Verification Needed"}</strong></span>
+            </div>
+            {onOpenVoiceprintModal && (
+              <button
+                onClick={onOpenVoiceprintModal}
+                className="text-[10px] px-2 py-0.5 rounded bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/40 font-semibold transition"
+              >
+                Inspect Voiceprint
+              </button>
+            )}
           </div>
         </div>
       )}

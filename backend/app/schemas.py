@@ -89,7 +89,7 @@ class RepairedItemEvent(BaseModel):
 
 
 class ParseOrderRequest(BaseModel):
-    transcript: str = Field(..., examples=["Bhaiya do packet Maggi, ek kilo sugar aur aadha litre milk bhej dena."])
+    transcript: str = Field(..., max_length=1000, examples=["Bhaiya do packet Maggi, ek kilo sugar aur aadha litre milk bhej dena."])
     keyterms_enabled: bool = Field(True, description="Enable catalogue keyterms biasing")
 
 
@@ -260,7 +260,7 @@ class AudioSampleClip(BaseModel):
 # Combined End-to-End Pipeline Schemas
 # ---------------------------------------------------------
 class ProcessOrderRequest(BaseModel):
-    transcript: Optional[str] = None
+    transcript: Optional[str] = Field(None, max_length=1000, description="Raw transcription text")
     audio_base64: Optional[str] = None
     keyterms_enabled: bool = True
     synthesize_voice: bool = True
@@ -363,6 +363,7 @@ class ONDCBecknExportRequest(BaseModel):
     bap_uri: str = "https://buyer-app.ondc.org"
     customer_name: Optional[str] = "Sharma Ji"
     delivery_address: Optional[str] = "Flat 402, Shanti Kunj, Delhi - 110001"
+    cart_items: Optional[List[CartItemInput]] = Field(default=None, description="Active confirmed cart items to export to ONDC Beckn")
 
 
 class ONDCBecknExportResponse(BaseModel):
@@ -466,4 +467,153 @@ class ThermalReceiptData(BaseModel):
     total_inr: float
     savings_inr: float
     payment_mode: str
-    upi_qr_string: str
+    upi_qr_string: str = ""
+
+
+# ---------------------------------------------------------
+# Voice Biometrics ("Awaaz Pehchaan") Schemas — Inspired by Gnani Armour360
+# ---------------------------------------------------------
+class VoiceprintVerificationRequest(BaseModel):
+    customer_id: str = Field(..., examples=["CUST-001"], description="Customer ID in Khata Ledger")
+    caller_phone: Optional[str] = Field("+91 98111-23456", description="Caller phone number")
+    audio_base64: Optional[str] = Field(None, description="Audio payload for acoustic feature extraction")
+    test_imposter_mode: bool = Field(False, description="Simulate an imposter trying to fraudulently charge this Khata")
+
+
+class VoiceprintVerificationResponse(BaseModel):
+    verified: bool
+    customer_id: str
+    customer_name: str
+    match_score: float = Field(..., ge=0.0, le=1.0, description="Biometric acoustic similarity match (0.0 to 1.0)")
+    confidence_tier: str = Field(..., description="'HIGH_CONFIDENCE_MATCH', 'SUSPICIOUS_REVIEW', or 'IMPOSTER_REJECTED'")
+    voiceprint_hash: str = Field(..., description="Encrypted voiceprint biometric fingerprint hash")
+    fundamental_freq_f0_hz: float = Field(..., description="Estimated fundamental vocal pitch frequency")
+    formant_dispersion_hz: float = Field(..., description="Acoustic formant vocal tract resonance profile")
+    spectral_centroid_hz: float = Field(..., description="Vocal timbre brightness centroid")
+    jitter_percent: float = Field(..., description="Acoustic pitch stability index")
+    shimmer_db: float = Field(..., description="Vocal amplitude perturbation index")
+    auth_badge_text: str
+    auth_message_hi: str
+    auth_message_en: str
+    khata_debit_permitted: bool
+    voice_audio_base64: Optional[str] = None
+    voice_audio_format: str = "wav"
+
+
+# ---------------------------------------------------------
+# B2B Mandi Wholesale Replenishment Schemas
+# ---------------------------------------------------------
+class MandiReorderTrigger(BaseModel):
+    sku_id: str
+    name_en: str
+    name_hi: str
+    current_stock: float
+    unit: str
+    reorder_threshold: float
+    suggested_reorder_qty: float
+    wholesale_rate_inr: float
+    total_wholesale_cost_inr: float
+    wholesaler_name: str = "Radhe Shyam Agro Mandi Wholesalers"
+    wholesaler_phone: str = "+91 98765-43210"
+    mandi_location: str = "APMC Yard, Grain Mandi, New Delhi"
+    spoken_alert_hi: str
+    spoken_alert_en: str
+    whatsapp_po_text: str
+
+
+class InventoryDepleteRequest(BaseModel):
+    items: List[CartItemInput]
+    order_id: Optional[str] = None
+
+
+class InventoryStatusResponse(BaseModel):
+    store_name: str
+    total_skus: int
+    low_stock_count: int
+    reorder_triggers: List[MandiReorderTrigger]
+    inventory_items: List[Dict[str, Any]]
+    spoken_restock_prompt: Optional[str] = None
+
+
+class MandiOrderDispatchRequest(BaseModel):
+    sku_id: str
+    reorder_quantity: float
+    wholesaler_name: Optional[str] = "Radhe Shyam Agro Mandi Wholesalers"
+    wholesaler_phone: Optional[str] = "+91 98765-43210"
+    notes: Optional[str] = "Urgent Kirana morning delivery dispatch"
+
+
+class MandiOrderDispatchResponse(BaseModel):
+    po_id: str
+    sku_id: str
+    item_name: str
+    quantity: float
+    unit: str
+    wholesale_rate_inr: float
+    total_cost_inr: float
+    wholesaler_name: str
+    wholesaler_phone: str
+    dispatch_status: str
+    whatsapp_url: str
+    spoken_confirmation_hi: str
+    voice_audio_base64: Optional[str] = None
+    voice_audio_format: str = "wav"
+
+
+# ---------------------------------------------------------
+# Telemetry Benchmark & Indic Stack vs US Cloud Schemas
+# ---------------------------------------------------------
+class TelemetryStage(BaseModel):
+    stage_name: str
+    latency_ms: float
+    description: str
+
+
+class StackComparisonItem(BaseModel):
+    metric_name: str
+    gnani_stack_val: str
+    generic_us_cloud_val: str
+    delta_advantage: str
+    technical_reason: str
+
+
+class TelemetryBenchmarkResponse(BaseModel):
+    pipeline_total_latency_ms: float
+    stages: List[TelemetryStage]
+    comparisons: List[StackComparisonItem]
+    indic_fraction_accuracy_pct: float
+    zero_db_telephony_f1_pct: float
+    cost_per_order_inr: float
+    us_cost_per_order_inr: float
+    savings_pct: float
+
+
+# ---------------------------------------------------------
+# Judge's Stress-Test Arena Schemas
+# ---------------------------------------------------------
+class JudgeStressTestCase(BaseModel):
+    test_id: str
+    title: str
+    category: str
+    difficulty_badge: str
+    prompt_utterance: str
+    audio_sample_url: Optional[str] = None
+    adversarial_challenge: str
+    why_naive_models_fail: str
+    key_features_tested: List[str]
+
+
+class JudgeStressTestResponse(BaseModel):
+    test_id: str
+    title: str
+    utterance: str
+    normalized_transcript: str
+    latency_ms: float
+    item_f1_score: float
+    detected_intent: str
+    parsed_items: List[ParsedItem]
+    rules_applied: List[str]
+    repairs: List[RepairedItemEvent] = Field(default_factory=list)
+    voiceprint_status: Optional[str] = None
+    explanation: str
+    spoken_reply_hi: str

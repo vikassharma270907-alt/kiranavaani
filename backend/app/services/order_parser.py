@@ -29,7 +29,6 @@ NUMERAL_RULES: List[Tuple[List[str], str]] = [
     (["saadhe teen", "साढ़े तीन", "sadhe teen"], "3.5"),
     (["saadhe chaar", "साढ़े चार", "sadhe chaar"], "4.5"),
     (["saadhe paanch", "साढ़े पांच", "sadhe paanch"], "5.5"),
-    (["sawa kilo", "सवा किलो"], "1.25"),
     (["aadha paav", "adha paav", "आधा पाव", "aadha pao"], "0.125"),
     (["dedh paav", "deydh paav", "डेढ़ पाव", "dedh pao"], "0.375"),
     (["sawa paav", "सवा पाव", "sawa pao"], "0.3125"),
@@ -39,8 +38,8 @@ NUMERAL_RULES: List[Tuple[List[str], str]] = [
     (["darjan", "दर्जन", "dozen"], "12"),
 
     # Kannada Multi-word & Fractions
-    (["ondavare", "ಒಂದೂವರೆ", "ondavare kilo"], "1.5"),
-    (["eradavare", "ಎರಡೂವರೆ", "eradavare kilo"], "2.5"),
+    (["ondavare", "ಒಂದೂವರೆ"], "1.5"),
+    (["eradavare", "ಎರಡೂವರೆ"], "2.5"),
     (["mooruvare", "mooravare", "ಮೂರಾವರೆ"], "3.5"),
     (["ondu mukkaal", "ondmukkaal", "ಒಂದು ಮುಕ್ಕಾಲು"], "1.75"),
     (["mukkaal", "mukaalu", "ಮುಕ್ಕಾಲು"], "0.75"),
@@ -138,6 +137,9 @@ CONVERSATIONAL_FILLERS = [
     "chahiye", "चाहिए",
     "dena", "देना",
     "dijiye", "दीजिए",
+    "de do", "दे दो",
+    "kar do", "कर दो",
+    "de dena", "दे देना",
     "daal dena", "daal do", "daal dijiye",
     "डाल देना", "डाल दो", "डाल दीजिए",
     "please", "zarra",
@@ -475,9 +477,9 @@ class HinglishOrderParser:
         cleaned_normalized = self.normalize_numerals(cleaned_text)
         normalized_transcript = self.normalize_numerals(raw_transcript)
 
-        # 3. Split clauses by multilingual delimiters (Hindi, English, Kannada, Tamil)
+        # 3. Split clauses by multilingual delimiters (Hindi, English, Kannada, Tamil) and quantity transitions
         clauses = re.split(
-            r",|\baur\b|\bऔर\b|\band\b|\btatha\b|\bतथा\b|;|\+|&|\bsaath me\b|\bसाथ में\b|\bmatthe\b|\bmattu\b|\bಮತ್ತು\b|\bmattum\b|\bமற்றும்\b|\baparam\b|\bkooda\b",
+            r",|\baur\b|\bऔर\b|\band\b|\btatha\b|\bतथा\b|;|\+|&|\bsaath me\b|\bसाथ में\b|\bmatthe\b|\bmattu\b|\bಮತ್ತು\b|\bmattum\b|\bமற்றும்\b|\baparam\b|\bkooda\b|(?<=[a-zA-Z\u0900-\u097F])\s+(?=\d+(?:\.\d+)?\s*(?:kg|kilo|litre|liter|ltr|packet|pkt|pack|gram|gm|bottle|dabba|box))",
             cleaned_normalized,
             flags=re.IGNORECASE
         )

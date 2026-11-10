@@ -45,6 +45,12 @@ COPY audio_samples/ ./audio_samples/
 # Copy compiled frontend distribution from Stage 1 for unified serving
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
+# Create non-privileged user and group for container isolation
+RUN adduser --disabled-password --gecos "" --home /app appuser \
+    && chown -R appuser:appuser /app
+
+USER appuser
+
 # Expose Render default port
 EXPOSE 10000
 

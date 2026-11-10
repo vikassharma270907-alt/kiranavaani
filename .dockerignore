@@ -10,6 +10,14 @@ __pycache__
 .venv
 venv
 env
+.env
+.env.*
+backend/.env
+backend/.env.*
+*.env
+*.pem
+*.key
+*.token
 frontend/node_modules
 frontend/dist
 video_production

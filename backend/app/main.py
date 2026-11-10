@@ -45,14 +45,35 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Enable CORS for frontend integration
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Enable spec-compliant CORS (wildcard cannot be paired with allow_credentials=True)
+cors_origins_env = os.getenv("ALLOWED_ORIGINS", "")
+if cors_origins_env:
+    allowed_origins = [o.strip() for o in cors_origins_env.split(",") if o.strip()]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+
+# Standard HTTP security headers
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    return response
 
 # Mount all API endpoints at root, and secondary mirror at /api prefix (excluded from schema to avoid duplicate operation IDs)
 app.include_router(api_router)
@@ -76,7 +97,9 @@ if not is_vercel and frontend_dist.exists() and (frontend_dist / "index.html").e
                 api_prefixes = (
                     "/api", "/docs", "/redoc", "/openapi.json", "/health", "/catalogue",
                     "/khata", "/ondc", "/audio-samples", "/transcribe", "/parse-order",
-                    "/match-products", "/cart", "/synthesize", "/process-order"
+                    "/match-products", "/cart", "/synthesize", "/process-order",
+                    "/price-check", "/budget-order", "/soundbox-chime", "/receipt",
+                    "/voiceprint", "/inventory", "/mandi", "/telemetry", "/judge"
                 )
                 if not path.startswith(api_prefixes) and not is_system_path and not has_extension:
                     return FileResponse(frontend_dist / "index.html")

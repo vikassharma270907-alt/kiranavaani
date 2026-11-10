@@ -40,7 +40,8 @@ export const ONDCModal: React.FC<ONDCModalProps> = ({
         body: JSON.stringify({
           bap_id: "nic2004:52110",
           customer_name: "Sharma Ji",
-          delivery_address: "402 Shanti Kunj, Main Market, Delhi - 110001"
+          delivery_address: "402 Shanti Kunj, Main Market, Delhi - 110001",
+          cart_items: inputs
         })
       });
 

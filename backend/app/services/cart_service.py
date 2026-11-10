@@ -219,13 +219,14 @@ class CartService:
         hi_total_str = f"{int(total)}" if total == int(total) else f"{total:.2f}"
         
         if khata_info and hasattr(khata_info, "is_khata") and khata_info.is_khata:
+            hi_bal_str = f"{int(khata_info.new_balance_inr)}" if khata_info.new_balance_inr == int(khata_info.new_balance_inr) else f"{khata_info.new_balance_inr:.2f}"
             hi_summary = (
                 f"आपके ऑर्डर में {hi_items_str} शामिल है। यह ₹{hi_total_str} {khata_info.customer_name} के खाते में दर्ज किया गया है। "
-                f"कुल बकाया ₹{int(khata_info.new_balance_inr)} हुआ।"
+                f"कुल बकाया ₹{hi_bal_str} हुआ।"
             )
             en_summary = (
                 f"Your order of {en_items_str} totaling ₹{total:g} is booked under {khata_info.customer_name}'s ledger. "
-                f"New outstanding balance is ₹{khata_info.new_balance_inr:g}."
+                f"New outstanding balance is ₹{hi_bal_str}."
             )
         else:
             hi_summary = f"आपके ऑर्डर में {hi_items_str} शामिल है। कुल बिल {hi_total_str} रुपये हुआ है। ऑर्डर कन्फर्म करें?"
