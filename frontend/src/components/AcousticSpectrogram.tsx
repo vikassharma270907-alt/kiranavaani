@@ -185,3 +185,4 @@ export const AcousticSpectrogram: React.FC<AcousticSpectrogramProps> = ({
     </div>
   );
 };
+

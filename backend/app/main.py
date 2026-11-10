@@ -69,7 +69,7 @@ if not is_vercel and frontend_dist.exists() and (frontend_dist / "index.html").e
         @app.exception_handler(StarletteHTTPException)
         async def spa_404_handler(request, exc: StarletteHTTPException):
             if exc.status_code == 404 and request.method == "GET":
-                if not request.url.path.startswith(("/api", "/docs", "/redoc", "/openapi.json", "/health", "/catalogue")):
+                if not request.url.path.startswith(("/api", "/docs", "/redoc", "/openapi.json", "/health", "/catalogue", "/khata", "/ondc", "/audio-samples")):
                     return FileResponse(frontend_dist / "index.html")
             return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 

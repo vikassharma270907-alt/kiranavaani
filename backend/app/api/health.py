@@ -23,5 +23,5 @@ async def get_health():
         gnani_stt_model=GNANI_STT_MODEL,
         gnani_tts_model=GNANI_TTS_MODEL,
         catalogue_sku_count=len(skus),
-        supported_languages=["hi-IN", "en-IN", "Hinglish (Code-Mixed)"]
+        supported_languages=["hi-IN", "en-IN", "kn-IN (Kannada)", "ta-IN (Tamil)", "Hinglish (Code-Mixed)"]
     )

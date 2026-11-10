@@ -268,3 +268,4 @@ export const TelephonyCallSimulator: React.FC<TelephonyCallSimulatorProps> = ({
     </div>
   );
 };
+
