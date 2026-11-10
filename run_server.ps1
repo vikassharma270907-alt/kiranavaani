@@ -2,4 +2,4 @@ Write-Host "==========================================================" -Foregro
 Write-Host "Starting KiranaVaani Voice-Ordering Server & Web Cockpit" -ForegroundColor Green
 Write-Host "Open your browser at: http://127.0.0.1:8000" -ForegroundColor Yellow
 Write-Host "==========================================================" -ForegroundColor Cyan
-python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
+python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
