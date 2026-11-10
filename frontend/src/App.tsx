@@ -18,7 +18,10 @@ import {
   Zap,
   Fingerprint,
   Boxes,
-  WifiOff
+  WifiOff,
+  Tag,
+  Truck,
+  Trophy
 } from "lucide-react";
 
 import { VoiceRecorder } from "./components/VoiceRecorder";
@@ -34,6 +37,10 @@ import { JudgeStressArenaModal } from "./components/JudgeStressArenaModal";
 import { AwaazPehchaanModal } from "./components/AwaazPehchaanModal";
 import { MandiRestockDrawer } from "./components/MandiRestockDrawer";
 import { TelemetryBenchmarkModal } from "./components/TelemetryBenchmarkModal";
+import { JudgeTourBanner } from "./components/JudgeTourBanner";
+import { BhaavTaalDrawer } from "./components/BhaavTaalDrawer";
+import { DeliveryRiderModal } from "./components/DeliveryRiderModal";
+import { KiranaClearSandboxModal } from "./components/KiranaClearSandboxModal";
 
 interface BackendHealth {
   status: string;
@@ -59,6 +66,14 @@ export const App: React.FC = () => {
   const [isOfflineSimulated, setIsOfflineSimulated] = useState(false);
   const [voiceprintVerified, setVoiceprintVerified] = useState(true);
   const [isButterOutOfStock, setIsButterOutOfStock] = useState(false);
+
+  // Advanced Indic Feature Drawers & Modals
+  const [showBhaavTaalDrawer, setShowBhaavTaalDrawer] = useState(false);
+  const [showDeliveryRiderModal, setShowDeliveryRiderModal] = useState(false);
+  const [showKiranaClearModal, setShowKiranaClearModal] = useState(false);
+  const [landmarkInfo, setLandmarkInfo] = useState<any | null>(null);
+  const [bhaavTaalInfo, setBhaavTaalInfo] = useState<any | null>(null);
+  const [recipeInfo, setRecipeInfo] = useState<any | null>(null);
 
   // Order state
   const [transcript, setTranscript] = useState("");
@@ -183,6 +198,17 @@ export const App: React.FC = () => {
       setRepairsApplied(data.repairs_applied || []);
       setTokenConfidenceScores(data.token_confidence_scores || []);
       setDetectedIntent(data.detected_intent || "ORDER");
+      setLandmarkInfo(data.landmark_info || null);
+      setBhaavTaalInfo(data.bhaav_taal_info || null);
+      setRecipeInfo(data.recipe_info || null);
+
+      // Auto-trigger corresponding modal when explicit intent is classified
+      if (data.detected_intent === "BARGAIN" && data.bhaav_taal_info) {
+        setShowBhaavTaalDrawer(true);
+      }
+      if (data.detected_intent === "DELIVERY_DISPATCH" && data.landmark_info) {
+        setShowDeliveryRiderModal(true);
+      }
 
       // Merge confirmed items into cart
       if (data.confirmed_cart && data.confirmed_cart.items) {
@@ -369,6 +395,9 @@ export const App: React.FC = () => {
     setRepairsApplied([]);
     setTokenConfidenceScores([]);
     setDetectedIntent("ORDER");
+    setLandmarkInfo(null);
+    setBhaavTaalInfo(null);
+    setRecipeInfo(null);
   };
 
   // Compute bill totals
@@ -408,6 +437,33 @@ export const App: React.FC = () => {
             >
               <Zap className="w-3.5 h-3.5 text-amber-400 fill-current" />
               <span>⚡ Judge's Arena</span>
+            </button>
+
+            {/* Bhaav-Taal (Voice Bargaining) Trigger */}
+            <button
+              onClick={() => setShowBhaavTaalDrawer(true)}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 flex items-center gap-1.5 transition-colors"
+            >
+              <Tag className="w-3.5 h-3.5 text-amber-400" />
+              <span>भाव-तोल</span>
+            </button>
+
+            {/* Chhotu Delivery Landmark Dispatch Trigger */}
+            <button
+              onClick={() => setShowDeliveryRiderModal(true)}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20 flex items-center gap-1.5 transition-colors"
+            >
+              <Truck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>छोटू राइडर</span>
+            </button>
+
+            {/* KiranaClear Telephony DSP Noise Gate Trigger */}
+            <button
+              onClick={() => setShowKiranaClearModal(true)}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/10 text-rose-300 border border-rose-500/30 hover:bg-rose-500/20 flex items-center gap-1.5 transition-colors"
+            >
+              <Activity className="w-3.5 h-3.5 text-rose-400" />
+              <span>DSP Noise Gate</span>
             </button>
 
             {/* Awaaz Pehchaan (Voice Biometrics) Trigger */}
@@ -490,6 +546,21 @@ export const App: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+        {/* Judges' Guided 4-Award Evaluation Tour Banner */}
+        <JudgeTourBanner
+          apiBaseUrl={getApiBase()}
+          onApplyUtterance={(text) => {
+            setTranscript(text);
+            setClarifications([]);
+            setSubstitutions([]);
+            processOrderUtterance(text);
+          }}
+          onOpenBhaavTaal={() => setShowBhaavTaalDrawer(true)}
+          onOpenDeliveryRider={() => setShowDeliveryRiderModal(true)}
+          onOpenKiranaClear={() => setShowKiranaClearModal(true)}
+          onOpenJudgeArena={() => setShowJudgeArenaModal(true)}
+        />
+
         {/* Banner with Feature Chips */}
         <div className="p-4 rounded-xl bg-gradient-to-r from-teal-950/40 to-sky-950/40 border border-teal-500/20 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
@@ -706,6 +777,39 @@ export const App: React.FC = () => {
         isOpen={showTelemetryModal}
         onClose={() => setShowTelemetryModal(false)}
         apiBaseUrl={getApiBase()}
+      />
+
+      {/* Bhaav-Taal (Kirana Voice Bargaining) Drawer */}
+      <BhaavTaalDrawer
+        isOpen={showBhaavTaalDrawer}
+        onClose={() => setShowBhaavTaalDrawer(false)}
+        apiBaseUrl={getApiBase()}
+        cartItems={cartItems}
+        customerName={khataInfo?.customer_name || "Sharma Ji (शर्मा जी)"}
+        onApplyDiscountedTotal={(discTotal, savings) => {
+          setSpokenReplyHi(`₹${savings} की विशेष छूट लागू कर दी गई है। कुल बिल ₹${discTotal} हुआ।`);
+        }}
+      />
+
+      {/* Chhotu Delivery Landmark Dispatch Modal */}
+      <DeliveryRiderModal
+        isOpen={showDeliveryRiderModal}
+        onClose={() => setShowDeliveryRiderModal(false)}
+        apiBaseUrl={getApiBase()}
+        cartItems={cartItems}
+        totalAmount={grandTotal}
+        customerName={khataInfo?.customer_name || "Sharma Ji (शर्मा जी)"}
+        transcript={transcript}
+        landmarkInfo={landmarkInfo}
+      />
+
+      {/* KiranaClear Telephony DSP Noise Gate Sandbox Modal */}
+      <KiranaClearSandboxModal
+        isOpen={showKiranaClearModal}
+        onClose={() => setShowKiranaClearModal(false)}
+        onRunFilteredAudioTest={() => {
+          processOrderUtterance("भैया 2 किलो बासमती चावल, 1 Maggi masala, 2 Kurkure और 1 litre Arogyam oil लिख लो, बस इतना ही।");
+        }}
       />
 
       {/* Footer */}

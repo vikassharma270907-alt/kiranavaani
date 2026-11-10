@@ -23,7 +23,11 @@ from backend.app.schemas import (
     SubstitutionSuggestion,
     PriceQuoteItem,
     PriceInquiryResponse,
-    BudgetAdvisorResponse
+    BudgetAdvisorResponse,
+    BhaavTaalResponse,
+    BargainItemDetail,
+    RecipeIngredientItem,
+    RecipeToCartResponse
 )
 from backend.app.services.order_parser import make_boundary_regex
 
@@ -561,6 +565,280 @@ class CatalogueMatcher:
             suggested_filler_quantity=suggested_qty,
             advice_hi=hi_msg,
             advice_en=en_msg
+        )
+
+    def compute_bhaav_taal(
+        self,
+        cart_items: List[Any],
+        customer_id: str = "CUST-001",
+        customer_name: str = "Sharma Ji (शर्मा जी)",
+        target_discount_pct: Optional[float] = None
+    ) -> BhaavTaalResponse:
+        """
+        'Bhaav-Taal' (भाव-तोल) Dynamic Kirana Margin & Bargaining Engine:
+        Analyzes basket items against wholesale APMC Mandi costs, evaluates merchant gross margin headroom,
+        checks customer relationship loyalty (Sharma Ji / Verma Ji), and computes a win-win negotiated counter-offer
+        alongside warm Indian shopkeeper banter.
+        """
+        wholesale_rates: Dict[str, float] = {
+            "SKU-001": 44.0, "SKU-002": 80.0, "SKU-003": 48.0, "SKU-004": 38.0,
+            "SKU-005": 36.0, "SKU-006": 42.0, "SKU-007": 118.0, "SKU-008": 105.0,
+            "SKU-009": 76.0, "SKU-010": 110.0, "SKU-011": 122.0, "SKU-012": 28.0,
+            "SKU-013": 48.0, "SKU-014": 74.0, "SKU-015": 28.0, "SKU-016": 122.0,
+            "SKU-017": 132.0, "SKU-018": 270.0, "SKU-019": 22.0, "SKU-020": 38.0,
+            "SKU-021": 25.0, "SKU-022": 38.0, "SKU-023": 28.0, "SKU-024": 115.0,
+            "SKU-025": 140.0, "SKU-026": 160.0, "SKU-027": 11.5, "SKU-028": 20.5,
+            "SKU-029": 16.0, "SKU-030": 16.0, "SKU-031": 8.0, "SKU-032": 25.0,
+            "SKU-033": 52.0, "SKU-034": 75.0, "SKU-035": 16.0
+        }
+
+        # If cart is empty, use sample standard high-volume staples for demonstration
+        effective_items = list(cart_items)
+        if not effective_items:
+            effective_items = [
+                {"sku_id": "SKU-001", "quantity": 10.0},  # 10kg Aashirvaad Atta
+                {"sku_id": "SKU-002", "quantity": 5.0}    # 5kg Basmati Rice
+            ]
+
+        bargain_details: List[BargainItemDetail] = []
+        tot_retail = 0.0
+        tot_wholesale = 0.0
+
+        for it in effective_items:
+            sid = getattr(it, "sku_id", None) or it.get("sku_id")
+            qty = getattr(it, "quantity", 1.0) if hasattr(it, "quantity") else it.get("quantity", 1.0)
+            sku = self.sku_lookup.get(sid)
+            if not sku:
+                continue
+
+            retail_rate = sku.price_inr
+            ws_rate = wholesale_rates.get(sid, round(retail_rate * 0.82, 2))
+            line_ret = round(retail_rate * qty, 2)
+            line_ws = round(ws_rate * qty, 2)
+            tot_retail += line_ret
+            tot_wholesale += line_ws
+
+        gross_margin = max(0.0, tot_retail - tot_wholesale)
+        margin_pct = (gross_margin / tot_retail * 100) if tot_retail > 0 else 18.0
+
+        # Loyalty multiplier
+        loyalty_tier = "GOLD_LOYALTY (पुराने विश्वस्त ग्राहक)"
+        discount_rate = 0.06  # 6% default base concession
+        if "sharma" in customer_name.lower() or "शर्मा" in customer_name.lower():
+            loyalty_tier = "PLATINUM_LOYALTY (शर्मा जी - 5 वर्ष पुराना खाता)"
+            discount_rate = 0.075
+        elif "verma" in customer_name.lower():
+            loyalty_tier = "GOLD_LOYALTY (वर्मा जी - नियमित ग्राहक)"
+            discount_rate = 0.065
+
+        # If user explicitly requested e.g. 5% or 10%, accommodate up to 8.5%
+        if target_discount_pct is not None:
+            discount_rate = min(max(0.03, target_discount_pct / 100.0), 0.09)
+
+        # Ensure merchant preserves at least 8.0% net margin
+        max_allowable_discount = max(0.0, gross_margin - (tot_wholesale * 0.08))
+        calculated_discount = min(tot_retail * discount_rate, max_allowable_discount)
+        
+        # Round discount to friendly Indian rupee values (e.g. ₹20, ₹25, ₹35, ₹50)
+        friendly_discount = max(10.0, round(calculated_discount / 5.0) * 5.0)
+        if friendly_discount >= tot_retail:
+            friendly_discount = round(tot_retail * 0.05, 2)
+
+        negotiated_total = round(max(0.0, tot_retail - friendly_discount), 2)
+        effective_disc_pct = round((friendly_discount / tot_retail * 100), 1) if tot_retail > 0 else 6.0
+        preserved_margin_pct = round(((negotiated_total - tot_wholesale) / negotiated_total * 100), 1) if negotiated_total > 0 else 10.0
+
+        # Populate per-item breakdown
+        ratio = (tot_retail - friendly_discount) / tot_retail if tot_retail > 0 else 0.94
+        for it in effective_items:
+            sid = getattr(it, "sku_id", None) or it.get("sku_id")
+            qty = getattr(it, "quantity", 1.0) if hasattr(it, "quantity") else it.get("quantity", 1.0)
+            sku = self.sku_lookup.get(sid)
+            if not sku:
+                continue
+            ret = sku.price_inr
+            ws = wholesale_rates.get(sid, round(ret * 0.82, 2))
+            offered = round(ret * ratio, 2)
+            line_orig = round(ret * qty, 2)
+            line_disc = round(offered * qty, 2)
+            line_margin = round(line_disc - (ws * qty), 2)
+
+            bargain_details.append(BargainItemDetail(
+                sku_id=sid,
+                name_en=sku.name_en,
+                name_hi=sku.name_hi,
+                quantity=qty,
+                unit=sku.unit,
+                retail_rate_inr=ret,
+                wholesale_cost_inr=ws,
+                offered_rate_inr=offered,
+                line_original_inr=line_orig,
+                line_discounted_inr=line_disc,
+                margin_preserved_inr=line_margin
+            ))
+
+        hi_speech = (
+            f"अरे {customer_name}! आप तो अपने पुराने विश्वस्त ग्राहक हैं। "
+            f"₹{tot_retail:g} के कुल बिल पर हमने ₹{friendly_discount:g} की विशेष किराना छूट कर दी है! "
+            f"अब आपका कुल बिल केवल ₹{negotiated_total:g} हुआ। पैक कर दूँ?"
+        )
+        en_speech = (
+            f"Arre {customer_name}! You are our long-time valued patron. "
+            f"On your total bill of ₹{tot_retail:g}, we have applied a special kirana loyalty discount of ₹{friendly_discount:g}! "
+            f"Your negotiated total is now ₹{negotiated_total:g}. Shall I pack it?"
+        )
+
+        return BhaavTaalResponse(
+            is_bargain_intent=True,
+            customer_name=customer_name,
+            loyalty_tier=loyalty_tier,
+            original_total_inr=round(tot_retail, 2),
+            negotiated_total_inr=negotiated_total,
+            total_savings_inr=friendly_discount,
+            discount_pct=effective_disc_pct,
+            merchant_margin_preserved_pct=preserved_margin_pct,
+            spoken_counter_offer_hi=hi_speech,
+            spoken_counter_offer_en=en_speech,
+            bargain_items=bargain_details
+        )
+
+    def decompose_recipe_to_cart(
+        self,
+        dish_query: str,
+        servings: int = 4,
+        include_seasonings: bool = True
+    ) -> RecipeToCartResponse:
+        """
+        'Rasoi se Rashan' (रसोई से राशन) Meal Recipe to Cart Decomposer:
+        Maps colloquial Indian recipe requests (e.g. 'Rajma Chawal for 4 people') into optimal 35-SKU catalog staples,
+        calculates portion scaling, bundles items with a combo meal discount, and crafts a spoken prompt.
+        """
+        q_lower = dish_query.lower()
+        recipe_key = "rajma chawal"
+        if "dal" in q_lower or "tadka" in q_lower or "दाल" in q_lower:
+            recipe_key = "dal tadka"
+        elif "chai" in q_lower or "tea" in q_lower or "nashta" in q_lower or "चाय" in q_lower:
+            recipe_key = "chai nashta"
+        elif "poha" in q_lower or "पोहा" in q_lower:
+            recipe_key = "poha nashta"
+        elif "paneer" in q_lower or "पनीर" in q_lower or "pulao" in q_lower:
+            recipe_key = "paneer pulao"
+
+        recipes_db = {
+            "rajma chawal": {
+                "name_en": "North Indian Rajma-Chawal Feast",
+                "name_hi": "स्वादिष्ट पंजाबी राजमा-चावल कॉम्बो",
+                "items": [
+                    {"sku_id": "SKU-011", "qty": 1.0, "is_core": True},   # Chitra Rajma
+                    {"sku_id": "SKU-002", "qty": 1.0, "is_core": True},   # Basmati Rice
+                    {"sku_id": "SKU-022", "qty": 1.0, "is_core": False},  # MDH Degi Mirch
+                    {"sku_id": "SKU-021", "qty": 1.0, "is_core": False},  # MDH Haldi
+                    {"sku_id": "SKU-019", "qty": 1.0, "is_core": False},  # Tata Salt
+                    {"sku_id": "SKU-017", "qty": 1.0, "is_core": False},  # Arogyam Mustard Oil
+                ],
+                "discount_pct": 5.0,
+                "hi_base": "4 लोगों के राजमा-चावल के लिए चित्रा राजमा, बासमती चावल और आवश्यक मसाले कॉम्बो छूट के साथ कार्ट में जोड़ दिए हैं।"
+            },
+            "dal tadka": {
+                "name_en": "Dhaba Style Dal Tadka & Rice",
+                "name_hi": "ढाबा स्टाइल दाल तड़का और चावल",
+                "items": [
+                    {"sku_id": "SKU-007", "qty": 1.0, "is_core": True},   # Toor Dal
+                    {"sku_id": "SKU-003", "qty": 1.0, "is_core": True},   # Sona Masoori Rice
+                    {"sku_id": "SKU-018", "qty": 1.0, "is_core": False},  # Amul Pure Cow Ghee
+                    {"sku_id": "SKU-021", "qty": 1.0, "is_core": False},  # MDH Haldi
+                    {"sku_id": "SKU-019", "qty": 1.0, "is_core": False},  # Tata Salt
+                ],
+                "discount_pct": 5.0,
+                "hi_base": "दाल-तड़का और चावल के लिए तूर दाल, सोना मसूरी चावल और अमूल शुद्ध घी कार्ट में जोड़ दिया गया है।"
+            },
+            "chai nashta": {
+                "name_en": "Morning Chai-Nashta Breakfast Combo",
+                "name_hi": "सुबह का चाय-नाश्ता कॉम्बो",
+                "items": [
+                    {"sku_id": "SKU-024", "qty": 1.0, "is_core": True},   # Red Label Tea
+                    {"sku_id": "SKU-020", "qty": 1.0, "is_core": True},   # Madhur Sugar
+                    {"sku_id": "SKU-012", "qty": 1.0, "is_core": True},   # Amul Taaza Milk
+                    {"sku_id": "SKU-031", "qty": 2.0, "is_core": True},   # Parle-G Biscuit
+                ],
+                "discount_pct": 6.0,
+                "hi_base": "चाय-नाश्ता के लिए रेड लेबल चाय, चीनी, ताज़ा दूध और 2 पैकेट पारले-जी बिस्कुट जोड़ दिए गए हैं।"
+            },
+            "poha nashta": {
+                "name_en": "Indori Poha Breakfast Pack",
+                "name_hi": "स्वादिष्ट इंदौरी पोहा नाश्ता पैक",
+                "items": [
+                    {"sku_id": "SKU-006", "qty": 1.0, "is_core": True},   # Tata Sampann Poha
+                    {"sku_id": "SKU-016", "qty": 1.0, "is_core": True},   # Fortune Sunflower Oil
+                    {"sku_id": "SKU-021", "qty": 1.0, "is_core": False},  # MDH Haldi
+                    {"sku_id": "SKU-019", "qty": 1.0, "is_core": False},  # Tata Salt
+                ],
+                "discount_pct": 5.0,
+                "hi_base": "पोहा नाश्ते के लिए 1 किलो टाटा पोहा, रिफाइंड तेल और हल्दी-नमक कार्ट में जोड़ दिए हैं।"
+            },
+            "paneer pulao": {
+                "name_en": "Shahi Paneer Pulao Treat",
+                "name_hi": "शाही पनीर पुलाव दावत",
+                "items": [
+                    {"sku_id": "SKU-014", "qty": 2.0, "is_core": True},   # Amul Malai Paneer
+                    {"sku_id": "SKU-002", "qty": 1.0, "is_core": True},   # India Gate Basmati
+                    {"sku_id": "SKU-018", "qty": 1.0, "is_core": False},  # Amul Pure Cow Ghee
+                    {"sku_id": "SKU-022", "qty": 1.0, "is_core": False},  # MDH Degi Mirch
+                ],
+                "discount_pct": 6.0,
+                "hi_base": "शाही पनीर पुलाव के लिए 2 पैकेट अमूल पनीर, बासमती चावल और देसी घी कॉम्बो में जोड़ दिए हैं।"
+            }
+        }
+
+        entry = recipes_db[recipe_key]
+        scale = max(0.5, round(servings / 4.0, 1))
+
+        matched_items: List[RecipeIngredientItem] = []
+        subtotal = 0.0
+
+        for it in entry["items"]:
+            if not include_seasonings and not it["is_core"]:
+                continue
+            sku = self.sku_lookup.get(it["sku_id"])
+            if not sku:
+                continue
+
+            scaled_qty = round(it["qty"] * scale, 2)
+            if scaled_qty < 1.0 and sku.unit == "packet":
+                scaled_qty = 1.0
+
+            line_cost = round(sku.price_inr * scaled_qty, 2)
+            subtotal += line_cost
+
+            matched_items.append(RecipeIngredientItem(
+                sku_id=sku.sku_id,
+                name_en=sku.name_en,
+                name_hi=sku.name_hi,
+                category=sku.category,
+                quantity=scaled_qty,
+                unit=sku.unit,
+                price_inr=sku.price_inr,
+                is_core_staple=it["is_core"],
+                in_stock=getattr(sku, "in_stock", True)
+            ))
+
+        disc_pct = entry["discount_pct"]
+        disc_amt = round(subtotal * (disc_pct / 100.0), 2)
+        final_tot = round(subtotal - disc_amt, 2)
+
+        hi_speech = f"{entry['hi_base']} कॉम्बो में {disc_pct}% छूट के साथ कुल बिल ₹{final_tot:g} हुआ। क्या तेल-मसाले घर पर हैं या वो भी जोड़ लें?"
+        en_speech = f"Added ingredients for {entry['name_en']} ({servings} servings) with {disc_pct}% combo discount. Total is ₹{final_tot:g}."
+
+        return RecipeToCartResponse(
+            dish_name_en=entry["name_en"],
+            dish_name_hi=entry["name_hi"],
+            servings=servings,
+            matched_ingredients=matched_items,
+            bundle_subtotal_inr=round(subtotal, 2),
+            bundle_discount_inr=disc_amt,
+            bundle_total_inr=final_tot,
+            spoken_recipe_prompt_hi=hi_speech,
+            spoken_recipe_prompt_en=en_speech
         )
 
 

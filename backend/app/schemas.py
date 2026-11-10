@@ -288,6 +288,9 @@ class ProcessOrderResponse(BaseModel):
     repairs_applied: List[RepairedItemEvent] = Field(default_factory=list)
     token_confidence_scores: List[Dict[str, Any]] = Field(default_factory=list)
     detected_intent: str = Field("ORDER", description="'ORDER', 'PRICE_INQUIRY', or 'BUDGET_QUERY'")
+    landmark_info: Optional["DeliveryLandmarkInfo"] = None
+    bhaav_taal_info: Optional["BhaavTaalResponse"] = None
+    recipe_info: Optional["RecipeToCartResponse"] = None
 
 
 # ---------------------------------------------------------
@@ -618,3 +621,124 @@ class JudgeStressTestResponse(BaseModel):
     voiceprint_status: Optional[str] = None
     explanation: str
     spoken_reply_hi: str
+
+
+# ---------------------------------------------------------
+# Bhaav-Taal (भाव-तोल) Kirana Bargaining Schemas
+# ---------------------------------------------------------
+class BargainItemDetail(BaseModel):
+    sku_id: str
+    name_en: str
+    name_hi: str
+    quantity: float
+    unit: str
+    retail_rate_inr: float
+    wholesale_cost_inr: float
+    offered_rate_inr: float
+    line_original_inr: float
+    line_discounted_inr: float
+    margin_preserved_inr: float
+
+
+class BhaavTaalRequest(BaseModel):
+    transcript: Optional[str] = None
+    customer_id: Optional[str] = "CUST-001"
+    customer_name: Optional[str] = "Sharma Ji (शर्मा जी)"
+    cart_items: Optional[List[CartItemInput]] = None
+    target_discount_pct: Optional[float] = None
+
+
+class BhaavTaalResponse(BaseModel):
+    is_bargain_intent: bool
+    customer_name: str
+    loyalty_tier: str
+    original_total_inr: float
+    negotiated_total_inr: float
+    total_savings_inr: float
+    discount_pct: float
+    merchant_margin_preserved_pct: float
+    spoken_counter_offer_hi: str
+    spoken_counter_offer_en: str
+    bargain_items: List[BargainItemDetail]
+    voice_audio_base64: Optional[str] = None
+    voice_audio_format: str = "wav"
+
+
+# ---------------------------------------------------------
+# Chhotu Dispatch (किराना डिलीवरी राइडर) Schemas
+# ---------------------------------------------------------
+class DeliveryLandmarkInfo(BaseModel):
+    has_delivery_intent: bool = False
+    recipient_name: Optional[str] = None
+    primary_landmark: Optional[str] = None
+    house_or_floor_marker: Optional[str] = None
+    delivery_time_window: Optional[str] = None
+    payment_terms: str = "CASH_ON_DELIVERY"
+    special_instructions: Optional[str] = None
+    full_vernacular_address: str = ""
+
+
+class RiderDispatchSlipRequest(BaseModel):
+    order_id: Optional[str] = None
+    customer_name: Optional[str] = "Sharma Ji (शर्मा जी)"
+    transcript: Optional[str] = None
+    landmark_info: Optional[DeliveryLandmarkInfo] = None
+    cart_items: Optional[List[CartItemInput]] = None
+    total_amount_inr: Optional[float] = None
+    rider_name: str = "Chhotu (छोटू)"
+    rider_phone: str = "+91 98111-22334"
+
+
+class RiderDispatchSlipResponse(BaseModel):
+    dispatch_id: str
+    order_id: str
+    rider_name: str
+    customer_name: str
+    vernacular_route_directions: str
+    delivery_window: str
+    payment_collection_directive: str
+    order_items_summary: str
+    whatsapp_rider_text: str
+    whatsapp_url: str
+    rider_voice_note_hi: str
+    voice_audio_base64: Optional[str] = None
+    voice_audio_format: str = "wav"
+
+
+# ---------------------------------------------------------
+# Rasoi se Rashan (रसोई से राशन) Schemas
+# ---------------------------------------------------------
+class RecipeIngredientItem(BaseModel):
+    sku_id: str
+    name_en: str
+    name_hi: str
+    category: str
+    quantity: float
+    unit: str
+    price_inr: float
+    is_core_staple: bool = True
+    in_stock: bool = True
+
+
+class RecipeToCartRequest(BaseModel):
+    dish_query: str = Field(..., examples=["Rajma Chawal for 4 people", "आज 4 लोगों के लिए राजमा चावल बनाना है"])
+    servings: Optional[int] = 4
+    include_seasonings: bool = True
+
+
+class RecipeToCartResponse(BaseModel):
+    dish_name_en: str
+    dish_name_hi: str
+    servings: int
+    matched_ingredients: List[RecipeIngredientItem]
+    bundle_subtotal_inr: float
+    bundle_discount_inr: float
+    bundle_total_inr: float
+    spoken_recipe_prompt_hi: str
+    spoken_recipe_prompt_en: str
+    voice_audio_base64: Optional[str] = None
+    voice_audio_format: str = "wav"
+
+
+ProcessOrderResponse.model_rebuild()
+

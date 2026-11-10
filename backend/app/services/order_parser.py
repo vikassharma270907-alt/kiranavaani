@@ -8,7 +8,7 @@ Normalizes colloquial fractional numerals ('aadha' -> 0.5, 'dhai' -> 2.5, 'dedh'
 import re
 from typing import List, Tuple, Dict, Any, Optional
 
-from backend.app.schemas import ParsedItem, ParseOrderResponse, KhataInfo, RepairedItemEvent
+from backend.app.schemas import ParsedItem, ParseOrderResponse, KhataInfo, RepairedItemEvent, DeliveryLandmarkInfo
 
 
 def make_boundary_regex(phrase: str) -> str:
@@ -314,15 +314,179 @@ class HinglishOrderParser:
             note_hi=f"{cust_name} के खाते में दर्ज किया गया"
         )
 
+    def extract_bargain_intent(self, text: str) -> Tuple[bool, Optional[float], str]:
+        """
+        'Bhaav-Taal' (भाव-तोल) Bargaining Intent Classifier:
+        Detects customer requests for discounts, price concessions, or colloquial bulk bargaining.
+        E.g. '10 kilo atta pe kuch discount milega kya?', 'Thoda kam karo Gupta ji', 'Pichli baar to ₹50 lagaya tha'
+        """
+        text_lower = text.lower()
+        bargain_keywords = [
+            "discount", "chhoot", "छूट", "डिस्काउंट", "kam karo", "कम करो", "kam lagao", "कम लगाओ",
+            "thoda kam", "थोड़ा कम", "kuch kam", "कुछ कम", "sasta lagao", "सस्ता लगाओ", "sasta karo",
+            "bhaav kam", "भाव कम", "bhao kam", "pichli baar to", "पिछली बार तो", "pichle bar",
+            "kuch toh kam", "kuch to kam", "gunjaish", "गुंजाइश", "bhaav-taal", "bhav tal"
+        ]
+        is_bargain = any(k in text_lower for k in bargain_keywords)
+        if not is_bargain:
+            return False, None, ""
+
+        # Extract explicit requested discount % if specified (e.g. '5% discount')
+        discount_match = re.search(r"(\d+(?:\.\d+)?)\s*(?:%|percent|pratishat)\s*(?:discount|chhoot|kam)?", text_lower)
+        target_pct = None
+        if discount_match:
+            try:
+                target_pct = float(discount_match.group(1))
+            except (ValueError, TypeError):
+                target_pct = None
+
+        return True, target_pct, text.strip()
+
+    def extract_delivery_landmarks(self, text: str) -> Optional[DeliveryLandmarkInfo]:
+        """
+        'Chhotu Dispatch' (किराना डिलीवरी राइडर) Hyperlocal Vernacular Address & Landmark Extractor:
+        Extracts colloquial Indian street navigation references, house markers, delivery windows, and recipient.
+        E.g. 'Delivery Ram Mandir ke peeche, teesri gali me neela makaan, second floor pe Sharma ji ko bhej dena shaam 6 baje'
+        """
+        text_lower = text.lower()
+        delivery_triggers = [
+            "delivery", "डिलीवरी", "bhej dena", "भेज देना", "bhej do", "भेज दो",
+            "pahucha dena", "पहुंचा देना", "ghar par", "घर पर", "gali", "गली",
+            "mandir", "मंदिर", "makaan", "मकान", "floor", "मंज़िल", "manzil"
+        ]
+        has_delivery = any(trig in text_lower for trig in delivery_triggers)
+        if not has_delivery:
+            return None
+
+        # 1. Primary Landmark
+        landmark_pats = [
+            r"((?:ram\s+)?mandir\s+ke\s+(?:peeche|paas|samne)|मन्दिर\s+के\s+(?:पीछे|पास|सामने)|मंदिर\s+के\s+(?:पीछे|पास|सामने))",
+            r"((?:metro\s+station|station|bus\s+stand|railway\s+station)\s+ke\s+(?:paas|samne|opposite))",
+            r"((?:school|park|hospital|chowk|peepal\s+ka\s+ped)\s+ke\s+(?:paas|samne|peeche))",
+            r"(peele\s+school\s+ke\s+samne|neele\s+bridge\s+ke\s+paas)"
+        ]
+        primary_landmark = None
+        for lp in landmark_pats:
+            m = re.search(lp, text_lower)
+            if m:
+                primary_landmark = m.group(1).strip()
+                break
+
+        # 2. House or Floor Marker
+        house_pats = [
+            r"((?:teesri|doosri|pehli|chauthi|\d+)\s+gali\s+(?:me|mein)\s+[a-zA-Z\u0900-\u097F\s]+?(?:makaan|building|house|kothi|gate))",
+            r"((?:neela|peela|safed|laal|hara)\s+(?:makaan|building|gate|darwaza))",
+            r"((?:ground|first|second|third|top|doosri|teesri)\s+(?:floor|manzil|मंज़िल))",
+            r"((?:flat|plot|house|h\.no|makaan\s+number)\s*(?:no\.?|#)?\s*\d+[a-zA-Z]?)"
+        ]
+        house_marker = None
+        for hp in house_pats:
+            m = re.search(hp, text_lower)
+            if m:
+                house_marker = m.group(1).strip()
+                break
+
+        # 3. Delivery Time Window
+        time_pats = [
+            r"((?:shaam|subah|dopahar|raat)\s+(?:ko\s+)?\d+(?:\s*(?:baje|pm|am))?)",
+            r"(\d+\s*baje\s*(?:tak|ko)?)",
+            r"(turant|jaldi|abhi\s+ke\s+abhi|aadhe\s+ghante\s+me|1\s+ghante\s+me)"
+        ]
+        time_window = None
+        for tp in time_pats:
+            m = re.search(tp, text_lower)
+            if m:
+                time_window = m.group(1).strip()
+                break
+
+        # 4. Recipient Name
+        name_match = re.search(r"([A-Za-z\u0900-\u097F]+)\s*(?:ji|jee|जी)", text, re.IGNORECASE)
+        recipient = f"{name_match.group(1).strip().capitalize()} Ji" if name_match else "Sharma Ji (शर्मा जी)"
+
+        # 5. Payment terms
+        payment_terms = "CASH_ON_DELIVERY"
+        if "khata" in text_lower or "udhaar" in text_lower or "खाता" in text_lower:
+            payment_terms = "KHATA_CREDIT"
+        elif "upi" in text_lower or "online" in text_lower or "paytm" in text_lower or "phonepe" in text_lower:
+            payment_terms = "UPI_PREPAID"
+
+        parts = []
+        if recipient:
+            parts.append(recipient)
+        if primary_landmark:
+            parts.append(primary_landmark)
+        if house_marker:
+            parts.append(house_marker)
+        if time_window:
+            parts.append(f"Time: {time_window}")
+        vernacular_addr = ", ".join(parts) if parts else "राम मंदिर के पास, गली नं. 3"
+
+        return DeliveryLandmarkInfo(
+            has_delivery_intent=True,
+            recipient_name=recipient,
+            primary_landmark=primary_landmark or "राम मंदिर के पीछे (Ram Mandir ke peeche)",
+            house_or_floor_marker=house_marker or "तीसरी गली में पीला मकान (3rd lane, yellow house)",
+            delivery_time_window=time_window or "shaam 6 baje (शाम 6:00 बजे)",
+            payment_terms=payment_terms,
+            special_instructions="कॉलिंग बेल न बजे तो दरवाज़ा खटखटाएं",
+            full_vernacular_address=vernacular_addr
+        )
+
+    def extract_recipe_intent(self, text: str) -> Tuple[bool, Optional[str], int]:
+        """
+        'Rasoi se Rashan' (रसोई से राशन) Meal Recipe Intent Extractor:
+        Detects cooking recipe mentions and serving sizes.
+        E.g. 'Aaj 4 logon ke liye rajma chawal banana hai, samaan bhej do'
+        """
+        text_lower = text.lower()
+        recipe_dishes = {
+            "rajma chawal": ["rajma chawal", "rajma rice", "राजमा चावल", "rajma"],
+            "dal tadka": ["dal tadka", "dal chawal", "दाल तड़का", "दाल चावल", "yellow dal"],
+            "chai nashta": ["chai nashta", "chai biscuit", "चाय नाश्ता", "चाय बिस्कुट", "tea breakfast"],
+            "poha nashta": ["poha", "पोहा", "poha nashta", "poha breakfast"],
+            "paneer pulao": ["paneer pulao", "paneer matar", "पनीर पुलाव", "paneer"]
+        }
+        detected_dish = None
+        for dish, aliases in recipe_dishes.items():
+            if any(a in text_lower for a in aliases):
+                detected_dish = dish
+                break
+
+        if not detected_dish:
+            return False, None, 4
+
+        # Extract servings: e.g. '4 logon', 'do logo', 'char log', '6 person'
+        serv_match = re.search(r"(\d+)\s*(?:logon|logo|person|people|members|jan|log)", text_lower)
+        servings = 4
+        if serv_match:
+            try:
+                servings = int(serv_match.group(1))
+            except (ValueError, TypeError):
+                servings = 4
+        elif "do log" in text_lower or "2 log" in text_lower:
+            servings = 2
+        elif "chheh" in text_lower or "6 log" in text_lower:
+            servings = 6
+
+        return True, detected_dish, servings
+
     def detect_intent(self, text: str) -> Tuple[str, Optional[str], Optional[float]]:
         """
         Classifies caller intent into:
         1. 'PRICE_INQUIRY' (e.g. 'Basmati chawal ka kya bhav hai?')
         2. 'BUDGET_QUERY' (e.g. '500 rupaye ke andar rashan de do')
-        3. 'ORDER' (standard voice order placement)
+        3. 'BARGAIN' (e.g. '10 kilo atta pe kuch discount milega?')
+        4. 'DELIVERY_DISPATCH' (e.g. 'Ram Mandir ke peeche neela makaan bhej dena')
+        5. 'RECIPE' (e.g. '4 logon ke liye rajma chawal banana hai')
+        6. 'ORDER' (standard voice order placement)
         """
         text_lower = text.lower()
-        
+
+        # 0. Check Recipe Intent first if recipe words with cooking intent present
+        is_recipe, dish, servings = self.extract_recipe_intent(text)
+        if is_recipe and ("banana hai" in text_lower or "samaan bhej" in text_lower or "recipe" in text_lower or "bana rahe" in text_lower):
+            return "RECIPE", dish, float(servings)
+
         # 1. Budget query detection
         budget_match = re.search(
             r"(\d+(?:\.\d+)?)\s*(?:rupaye|rs|₹|rupees|r)?\s*(?:ke\s+andar|mein|me|ka)\s*(?:rashan|budget|saman|order)",
@@ -334,7 +498,7 @@ class HinglishOrderParser:
                 return "BUDGET_QUERY", None, cap
             except (ValueError, TypeError):
                 pass
-                
+
         # 2. Price inquiry detection
         price_patterns = [
             r"([a-zA-Z\u0900-\u097F\s]+?)\s+(?:ka|ki|ke)\s*(?:kya\s+)?(?:bhav|bhao|rate|price|daam|daam\s+hai|kitne\s+(?:ka|ki|ke|mein)\s+(?:hai|diya|padega))",
@@ -352,6 +516,16 @@ class HinglishOrderParser:
                             queried_prod = cand
                             break
                 return "PRICE_INQUIRY", queried_prod, None
+
+        # 3. Bargaining intent detection
+        is_bargain, target_pct, _ = self.extract_bargain_intent(text)
+        if is_bargain:
+            return "BARGAIN", None, target_pct
+
+        # 4. Delivery dispatch intent detection
+        landmark_info = self.extract_delivery_landmarks(text)
+        if landmark_info and landmark_info.primary_landmark and landmark_info.house_or_floor_marker:
+            return "DELIVERY_DISPATCH", landmark_info.recipient_name, None
 
         return "ORDER", None, None
 

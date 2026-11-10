@@ -143,6 +143,24 @@ const PRESET_UTTERANCES = [
     text: "Bhaiya paav bhar paneer, aadha darjan Good Day biscuit aur ek litre Fortune tel dena.",
     desc: "Pao (0.25 kg) + Half Dozen (6 pcs) + 1 L Oil",
     tag: "Traditional Units"
+  },
+  {
+    label: "Bhaav-Taal (Bargaining & Margin)",
+    text: "गुप्ता जी 10 किलो आशीर्वाद आटा और 5 किलो बासमती चावल ले रहे हैं, कुछ तो डिस्काउंट लगाओ, पिछली बार तो ₹50 में दिया था!",
+    desc: "Bargaining intent: APMC wholesale spread & loyalty discount counter-offer",
+    tag: "भाव-तोल Bhaav-Taal"
+  },
+  {
+    label: "Chhotu Delivery (Spoken Landmarks)",
+    text: "भैया डिलीवरी राम मंदिर के पीछे, तीसरी गली में पीला मकान, ऊपर सेकंड फ्लोर पे शर्मा जी के घर भिजवा देना शाम 6 बजे, पैसे नकद देंगे।",
+    desc: "Extracts informal Indian landmarks, time window, and rider WhatsApp task slip",
+    tag: "छोटू डिलीवरी Chhotu"
+  },
+  {
+    label: "Rasoi se Rashan (Rajma-Chawal Feast)",
+    text: "भैया आज घर पर 4 लोगों के लिए राजमा-चावल बनाना है, जो जो सामान और मसाला लगेगा सब भेज दो!",
+    desc: "Decomposes meal into 6 exact catalog staples + portion scaling + combo discount",
+    tag: "रसोई से राशन Recipe"
   }
 ];
 

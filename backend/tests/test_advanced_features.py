@@ -173,3 +173,69 @@ def test_judge_stress_arena_invalid_test_id_404():
     res = client.post("/judge-arena/execute", json={"test_id": "TEST-INVALID-99"})
     assert res.status_code == 404
     assert "not found" in res.json()["detail"]
+
+
+def test_bhaav_taal_bargaining_endpoint():
+    """Verify Bhaav-Taal voice bargaining calculates dynamic wholesale margin and counter-offer."""
+    res = client.post("/negotiate-bhav", json={
+        "customer_name": "Sharma Ji (शर्मा जी)",
+        "cart_items": [
+            {"sku_id": "SKU-001", "quantity": 10.0},
+            {"sku_id": "SKU-002", "quantity": 5.0}
+        ],
+        "target_discount_pct": 5.0
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["is_bargain_intent"] is True
+    assert data["original_total_inr"] > data["negotiated_total_inr"]
+    assert data["total_savings_inr"] > 0
+    assert "शर्मा जी" in data["spoken_counter_offer_hi"]
+    assert len(data["bargain_items"]) == 2
+    assert data["merchant_margin_preserved_pct"] > 0
+
+
+def test_delivery_rider_dispatch_endpoint():
+    """Verify Chhotu Delivery Landmark dispatch generates vernacular directions and rider voice note."""
+    res = client.post("/delivery/dispatch-rider", json={
+        "customer_name": "Sharma Ji",
+        "transcript": "Bhaiya delivery Ram Mandir ke peeche, teesri gali me peela makaan, second floor pe bhej dena shaam 6 baje",
+        "total_amount_inr": 500.0,
+        "cart_items": [{"sku_id": "SKU-001", "quantity": 2.0}]
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert "RIDER-" in data["dispatch_id"]
+    assert ("ram mandir ke peeche" in data["vernacular_route_directions"].lower() or "राम मंदिर के पीछे" in data["vernacular_route_directions"])
+    assert "shaam 6 baje" in data["delivery_window"]
+    assert "whatsapp_url" in data
+    assert "Chhotu" in data["rider_name"]
+    assert len(data["rider_voice_note_hi"]) > 10
+
+
+def test_recipe_to_cart_decomposition_endpoint():
+    """Verify Rasoi se Rashan meal recipe decomposer extracts constituents with combo discount."""
+    res = client.post("/recipe-to-cart", json={
+        "dish_query": "4 logon ke liye rajma chawal",
+        "servings": 4,
+        "include_seasonings": True
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert "Rajma" in data["dish_name_en"]
+    assert len(data["matched_ingredients"]) >= 4
+    assert data["bundle_discount_inr"] > 0
+    assert data["bundle_total_inr"] < data["bundle_subtotal_inr"]
+    assert "राजमा" in data["spoken_recipe_prompt_hi"]
+
+
+def test_judge_stress_arena_test_06_07_08():
+    """Verify that newly added Judge Test Cases 06 (Bargaining), 07 (Landmark), and 08 (Recipe) pass."""
+    for test_id in ["TEST-06", "TEST-07", "TEST-08"]:
+        res = client.post("/judge-arena/execute", json={"test_id": test_id})
+        assert res.status_code == 200
+        data = res.json()
+        assert data["test_id"] == test_id
+        assert data["item_f1_score"] == 100.0
+        assert len(data["rules_applied"]) >= 2
+

@@ -19,9 +19,9 @@
 | Award | How KiranaVaani Qualifies |
 | :--- | :--- |
 | **Mixed Vibes** | Seamlessly ingests code-mixed Hindi-English (*Hinglish*) and **Dravidian Code-Switching (Namma Bengaluru Kannada + Tamil)** with **Prisma v3.0 Auto-LID** (~$98.4\%$ accuracy) and native code-mix mode (e.g. *"ondu kilo godhi hittu matthe 2 packet Maggi kodi, aste"*). Features **"Bhasha-Sudhaar" (भाषा-सुधार)** mid-utterance conversational repair & negation rollback (*"5 kilo atta... arre nahi 5 nahi 2 kilo karna, aur Maggi mat bhejna cancel kar do"*), authentic colloquial honorifics (*"Sharma Ji"*, *"Gupta Ji"*, *"Anna"*), and vernacular units (*"पाव भर"*, *"चटांक"*, *"दर्जन"*). |
-| **Real Deal** | Solves high-frequency phone orders with traditional Indian market fractions (*"सवा दो किलो"*, *"ढाई किलो"*, *"आधा पाव"* $=0.125\text{ kg}$), authentic **Kirana Khata 2.0 (खाता उधार) Credit Ledger** with settlement and WhatsApp audio reminders, **"Awaaz Pehchaan" (आवाज़ पहचान) Voice Biometrics Authentication** inspired by Gnani.ai's enterprise **Armour360** (F0 pitch, formant dispersion, and 97.4% voiceprint match preventing imposter credit disputes), **Mandi Wholesale B2B Auto-Replenishment Engine** with automated purchase orders for low stock, **"Bhav Pucho" (भाव पूछो)** price discovery intent classification, **"Dukandar ki Salah" (दुकानदार की सलाह)** smart cross-sell upsell, and **Missed Call to AI Voice-Callback Engine**. |
-| **Noise Canceller** | Evaluates telephony channel degradation across an **ITU-T G.711 $\mu$-law $8\text{ kHz}$ codec** and **environmental noise** down to $0\text{ dB}$ SNR. Demonstrates that 200 catalog keyterms bias lifts Item-F1 from $59.4\%$ to $91.07\%$ under extreme noise. Features **"KiranaClear" Real-Time Client-Side Telephony DSP Noise Gate** (300 Hz High-Pass + 50 Hz ceiling fan hum notch filter + dynamic spectral floor subtraction providing $+17\text{ dB}$ SNR boost), alongside a **Live In-Browser FFT Spectrogram & $4\text{ kHz}$ Nyquist Cutoff Inspector**, a **Token-Level Acoustic Confidence Heatmap**, and an **Interactive Ambiguity Audio Slicer**. |
-| **Demo Day Drop** | Includes an interactive full-stack cockpit with live recording, **⚡ Judge's Stress-Test Arena** (adversarial testing playground with 5 pre-packaged extreme Indian speech challenges), **Sub-Second Telemetry & Indic vs. US Cloud Benchmark** ($376\text{ ms}$ turnaround, $94.3\%$ cost reduction over Whisper+GPT-4o), **Offline Bharat Resilience Mode** (simulated 0 bps rural network blackout with local edge speech & fuzzy cache fallback), **Simulated Incoming PSTN Phone Call Cockpit** with caller ID and live phone audio streaming, **Paytm/PhonePe style Kirana Soundbox 2.0 Audio Chime**, **58mm Retro Thermal POS Printer Receipt** with jagged tear edges, **1-click WhatsApp Kirana Order Slip generator**, **dynamic scanable UPI QR Code**, and **ONDC (Open Network for Digital Commerce) Beckn Protocol v1.2.0 payload export**. |
+| **Real Deal** | Solves true Bharat retail realities: **"Bhaav-Taal" (भाव-तोल) Kirana Voice Bargaining & APMC Wholesale Margin Headroom Engine** with loyal customer tier concessions and natural Hindi shopkeeper banter (*"Arre Sharma Ji, 10 kilo pe itna nahi ho payega..."*); **"Chhotu Dispatch" (किराना डिलीवरी राइडर) Hyperlocal Spoken Indian Landmark Extraction** (*"Ram Mandir ke peeche, teesri gali mein peela makaan, 2nd floor"*), delivery windows, and 1-click WhatsApp delivery task slip; **"Rasoi se Rashan" (रसोई से राशन) Meal Recipe to Cart Decomposer** (decomposes *"4 logon ke liye Rajma Chawal"* into exact staples with combo discounts); traditional Indian market fractions (*"सवा दो किलो"*, *"ढाई किलो"*, *"आधा पाव"* $=0.125\text{ kg}$); authentic **Kirana Khata 2.0 (खाता उधार) Credit Ledger** with settlement and WhatsApp audio reminders; **"Awaaz Pehchaan" (आवाज़ पहचान) Voice Biometrics Authentication** inspired by Gnani.ai's enterprise **Armour360** (F0 pitch, formant dispersion, and 97.4% voiceprint match preventing imposter credit disputes); **Mandi Wholesale B2B Auto-Replenishment Engine** with automated purchase orders for low stock; **"Bhav Pucho" (भाव पूछो)** price discovery intent classification; **"Dukandar ki Salah" (दुकानदार की सलाह)** smart cross-sell upsell; and **Missed Call to AI Voice-Callback Engine**. |
+| **Noise Canceller** | Evaluates telephony channel degradation across an **ITU-T G.711 $\mu$-law $8\text{ kHz}$ codec** and **environmental noise** down to $0\text{ dB}$ SNR. Demonstrates that 200 catalog keyterms bias lifts Item-F1 from $59.4\%$ to $91.07\%$ under extreme noise. Features **"KiranaClear" Real-Time Client-Side Telephony DSP Noise Gate Sandbox** (300 Hz High-Pass + 50 Hz ceiling fan hum notch filter + dynamic spectral floor subtraction providing $+17\text{ dB}$ SNR boost with interactive audio simulation), alongside a **Live In-Browser FFT Spectrogram & $4\text{ kHz}$ Nyquist Cutoff Inspector**, a **Token-Level Acoustic Confidence Heatmap**, and an **Interactive Ambiguity Audio Slicer**. |
+| **Demo Day Drop** | Includes an interactive full-stack cockpit with live recording, **Judges' Guided 4-Award Evaluation Tour** (sticky 1-click evaluation banner providing instant end-to-end verification of Mixed Vibes, Real Deal, Noise Canceller, and Demo Day Drop criteria), **⚡ Judge's Adversarial Stress Arena (8 Edge-Case Test Scenarios)** covering 0 dB market chatter, Dravidian switching, negations, voice bargaining, and landmark dispatch, **Sub-Second Telemetry & Indic vs. US Cloud Benchmark** ($376\text{ ms}$ turnaround, $94.3\%$ cost reduction over Whisper+GPT-4o), **Offline Bharat Resilience Mode** (simulated 0 bps rural network blackout with local edge speech & fuzzy cache fallback), **Simulated Incoming PSTN Phone Call Cockpit** with caller ID and live phone audio streaming, **Paytm/PhonePe style Kirana Soundbox 2.0 Audio Chime**, **58mm Retro Thermal POS Printer Receipt** with jagged tear edges, **1-click WhatsApp Kirana Order Slip generator**, **dynamic scanable UPI QR Code**, and **ONDC (Open Network for Digital Commerce) Beckn Protocol v1.2.0 payload export**. |
 
 ---
 
@@ -228,38 +228,62 @@ kiranavaani/
 
 ## 6. Flagship Deep-Tech Innovations
 
-KiranaVaani extends standard conversational voice commerce into an enterprise-grade Indic AI retail operating system through 9 purpose-built features:
+KiranaVaani extends standard conversational voice commerce into an enterprise-grade Indic AI retail operating system through 13 purpose-built innovations:
 
-1. **"Bhasha-Sudhaar" (भाषा-सुधार) — Mid-Utterance Conversational Repair & Negation Engine**
+1. **"Bhaav-Taal" (भाव-तोल) — Kirana Voice Bargaining & APMC Wholesale Margin Engine**
+   - Implements authentic Indian kirana wholesale-to-retail margin calculations across all 35 SKUs.
+   - Computes APMC wholesale benchmark costs, minimum acceptable margins, and customer loyalty tier multipliers (e.g. *Sharma Ji* = Platinum loyalty, getting higher counter-offer concessions).
+   - Generates natural Hindi shopkeeper counter-offer dialogue synthesised via Gnani Timbre TTS: *"Arre Sharma ji, 10 kilo pe itna nahi ho payega, par aapke liye ₹43 lagwa denge!"*, backed by interactive per-SKU profit spread breakdowns.
+
+2. **"Chhotu Dispatch" (किराना डिलीवरी राइडर) — Hyperlocal Spoken Indian Landmark Navigation & Task Slip**
+   - Recognizes and parses authentic vernacular street landmarks (*"Ram Mandir ke peeche, teesri gali mein peela makaan, 2nd floor"*), delivery urgency windows, and cash handling instructions.
+   - Generates 1-click WhatsApp delivery task slips formatted for neighborhood delivery boys ("Chhotu") and synthesizes turn-by-turn spoken audio navigation notes via Gnani Timbre TTS.
+
+3. **"Rasoi se Rashan" (रसोई से राशन) — Meal Recipe to Cart Decomposer**
+   - Automatically understands spoken culinary intentions (*"4 logon ke liye Rajma Chawal banana hai"*, *"Chai Nashta"*, *"Dal Tadka"*, *"Poha"*, *"Paneer Pulao"*).
+   - Maps culinary dishes to exact recipe ingredients in the 35-SKU catalogue, scales quantities proportionally to guest count, and applies combo bundle discounts.
+
+4. **"KiranaClear" Real-Time Telephony DSP Noise Gate Sandbox (+17 dB SNR Boost)**
+   - Client-side Web Audio DSP pipeline featuring a 50 Hz ceiling fan hum notch filter, a 300 Hz - 3400 Hz ITU-T telephony bandpass filter, and dynamic spectral floor subtraction.
+   - Provides live visual and acoustic verification with real-time audio playback, ambient noise injection, and an interactive $+17\text{ dB}$ SNR improvement meter.
+
+5. **Judges' Guided 4-Award Evaluation Tour**
+   - A sticky 1-click evaluation tour banner docked at the top of the cockpit allowing hackathon judges to verify all 4 prize categories in 60 seconds:
+     - 🏆 **Mixed Vibes**: Dravidian Kannada/Tamil code-mixing + Bhasha-Sudhaar conversational repair.
+     - 🏆 **Real Deal**: Bhaav-Taal voice bargaining, Khata voice biometrics, and Chhotu landmark dispatch.
+     - 🏆 **Noise Canceller**: 0 dB SNR market babble + KiranaClear DSP audio gate + 200 catalog keyterms.
+     - 🏆 **Demo Day Drop**: Sub-400ms Indic pipeline telemetry vs US Cloud, 58mm thermal receipt, and Soundbox chime.
+
+6. **"Bhasha-Sudhaar" (भाषा-सुधार) — Mid-Utterance Conversational Repair & Negation Engine**
    - Corrects real-time human conversational slips and backtracks: *"5 kilo atta... arre nahi 5 nahi 2 kilo karna, aur Maggi mat bhejna cancel kar do"*.
    - Automatically cancels negated items and rolls quantities back to the intended value before cart creation.
 
-2. **"Bhav Pucho" (भाव पूछो) & Budget Advisor Engine**
-   - Classifies customer intent between `ORDER`, `PRICE_INQUIRY`, and `BUDGET_QUERY`.
+7. **"Bhav Pucho" (भाव पूछो) & Budget Advisor Engine**
+   - Classifies customer intent between `ORDER`, `PRICE_INQUIRY`, `BUDGET_QUERY`, `BARGAIN`, `DELIVERY_DISPATCH`, and `RECIPE`.
    - Inquiring *"Basmati chawal ka kya bhav hai?"* returns spoken pricing without blindly adding to cart.
    - For budget caps (*"₹500 ke andar rashan"*), it optimizes staple quantities to stay strictly within budget.
 
-3. **Kirana Soundbox 2.0 (ऑडियो साउंडबॉक्स)**
+8. **Kirana Soundbox 2.0 (ऑडियो साउंडबॉक्स)**
    - Authentic Paytm/PhonePe style voice chimes synthesised via Gnani Timbre v2.5: *"Gupta Kirana par ₹106 prapt hue"*.
    - Built for busy merchant counters where audible reassurance prevents payment fraud.
 
-4. **58mm Retro Thermal POS Printer Receipt Engine**
+9. **58mm Retro Thermal POS Printer Receipt Engine**
    - Instant receipt generator formatted for standard 58mm ESC/POS thermal printers with jagged tear edges, bilingual item names, synthetic FSSAI & GSTIN compliance, and scanable dynamic UPI QR code.
 
-5. **Token-Level Acoustic Confidence Heatmap & Interactive Audio Slicer**
-   - Real-time confidence heatmaps per recognized token with 1-click degraded audio scrubbing across the 4 kHz Nyquist cutoff and ITU-T G.711 μ-law companded waveforms.
+10. **Token-Level Acoustic Confidence Heatmap & Interactive Audio Slicer**
+    - Real-time confidence heatmaps per recognized token with 1-click degraded audio scrubbing across the 4 kHz Nyquist cutoff and ITU-T G.711 μ-law companded waveforms.
 
-6. **"Awaaz Pehchaan" (आवाज़ पहचान) — Voice Biometrics Authentication (Gnani Armour360 Inspired)**
-   - Extracts acoustic vocal features ($F_0$ pitch, formant dispersion, spectral centroid, jitter %, shimmer dB) to verify caller identity before approving Khata (credit ledger) debits, blocking fraud attempts.
+11. **"Awaaz Pehchaan" (आवाज़ पहचान) — Voice Biometrics Authentication (Gnani Armour360 Inspired)**
+    - Extracts acoustic vocal features ($F_0$ pitch, formant dispersion, spectral centroid, jitter %, shimmer dB) to verify caller identity before approving Khata (credit ledger) debits, blocking fraud attempts.
 
-7. **Mandi Re-Stock (मंडी B2B Auto-Dispatch Engine)**
-   - Tracks stock depletion against minimum thresholds. When inventory runs low, generates 1-click WhatsApp purchase orders with wholesale pricing dispatched to regional mandi suppliers.
+12. **Mandi Re-Stock (मंडी B2B Auto-Dispatch Engine)**
+    - Tracks stock depletion against minimum thresholds. When inventory runs low, generates 1-click WhatsApp purchase orders with wholesale pricing dispatched to regional mandi suppliers.
 
-8. **Sub-Second Telemetry Benchmark (Indic Stack vs US Cloud Telemetry)**
-   - Real-time side-by-side comparison illustrating a <400ms end-to-end pipeline latency and an 83% cost advantage over US generic hyperscalers (AWS/Azure/GCP).
+13. **Sub-Second Telemetry Benchmark (Indic Stack vs US Cloud Telemetry)**
+    - Real-time side-by-side comparison illustrating a <400ms end-to-end pipeline latency and an 83% cost advantage over US generic hyperscalers (AWS/Azure/GCP).
 
-9. **Judges' Adversarial Stress Arena (8 Edge-Case Test Scenarios)**
-   - A dedicated interactive testing suite allowing judges to stress-test 8 challenging real-world scenarios: 0 dB market noise, Dravidian code-mixing, colloquial market fractions, mid-sentence negations, and imposter khata attempts.
+14. **Judges' Adversarial Stress Arena (8 Edge-Case Test Scenarios)**
+    - A dedicated interactive testing suite allowing judges to stress-test 8 challenging real-world scenarios: 0 dB market noise, Dravidian code-mixing, colloquial market fractions, mid-sentence negations, imposter khata attempts, voice bargaining, landmark delivery dispatch, and recipe decomposition.
 
 ---
 
