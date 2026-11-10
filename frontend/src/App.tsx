@@ -8,14 +8,24 @@ import {
   HelpCircle,
   ShieldCheck,
   RotateCcw,
-  ShoppingBag
+  ShoppingBag,
+  PhoneCall,
+  BookOpen,
+  Layers,
+  Sliders,
+  CheckCircle2,
+  PackageX
 } from "lucide-react";
 
 import { VoiceRecorder } from "./components/VoiceRecorder";
 import { TranscriptPanel } from "./components/TranscriptPanel";
-import { ShoppingCart, CartItem } from "./components/ShoppingCart";
-import { ClarificationDialog, ClarificationQuestion, ClarificationOption } from "./components/ClarificationDialog";
+import { ShoppingCart, CartItem, UpsellSuggestion } from "./components/ShoppingCart";
+import { ClarificationDialog, ClarificationQuestion, ClarificationOption, SubstitutionSuggestion } from "./components/ClarificationDialog";
 import { OrderSummary } from "./components/OrderSummary";
+import { AcousticSpectrogram } from "./components/AcousticSpectrogram";
+import { TelephonyCallSimulator } from "./components/TelephonyCallSimulator";
+import { KhataLedgerDrawer } from "./components/KhataLedgerDrawer";
+import { ONDCModal } from "./components/ONDCModal";
 
 interface BackendHealth {
   status: string;
@@ -29,6 +39,13 @@ export const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [keytermsEnabled, setKeytermsEnabled] = useState(true);
 
+  // Advanced Mode Toggles
+  const [showCallSimulator, setShowCallSimulator] = useState(false);
+  const [showSpectrogram, setShowSpectrogram] = useState(true);
+  const [showKhataDrawer, setShowKhataDrawer] = useState(false);
+  const [showOndcModal, setShowOndcModal] = useState(false);
+  const [isButterOutOfStock, setIsButterOutOfStock] = useState(false);
+
   // Order state
   const [transcript, setTranscript] = useState("");
   const [normalizedTranscript, setNormalizedTranscript] = useState("");
@@ -37,6 +54,8 @@ export const App: React.FC = () => {
   const [isOrderComplete, setIsOrderComplete] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [clarifications, setClarifications] = useState<ClarificationQuestion[]>([]);
+  const [substitutions, setSubstitutions] = useState<SubstitutionSuggestion[]>([]);
+  const [upsellSuggestion, setUpsellSuggestion] = useState<UpsellSuggestion | null>(null);
   const [spokenReplyHi, setSpokenReplyHi] = useState("");
   const [spokenReplyEn, setSpokenReplyEn] = useState("");
   const [voiceAudioBase64, setVoiceAudioBase64] = useState<string | undefined>(undefined);
@@ -136,12 +155,14 @@ export const App: React.FC = () => {
       setParsedItems(data.parsed_items || []);
       setIsOrderComplete(data.is_order_complete);
       setClarifications(data.clarifications_needed || []);
+      setSubstitutions(data.substitutions_needed || []);
       setSpokenReplyHi(data.spoken_reply_hi);
       setSpokenReplyEn(data.spoken_reply_en);
       setVoiceAudioBase64(data.voice_audio_base64);
       setVoiceAudioFormat(data.voice_audio_format || "wav");
       setIsMockTts(data.is_mock_tts);
       setKhataInfo(data.khata_info || null);
+      setUpsellSuggestion(data.upsell_suggestion || null);
 
       // Merge confirmed items into cart
       if (data.confirmed_cart && data.confirmed_cart.items) {
@@ -213,15 +234,12 @@ export const App: React.FC = () => {
     };
 
     setCartItems((prev) => {
-      // Remove any existing duplicate SKU
       const filtered = prev.filter((it) => it.sku_id !== option.sku_id);
       return [...filtered, newItem];
     });
 
-    // Remove this clarification question from state
     setClarifications((prev) => prev.filter((q) => !q.options.some((o) => o.sku_id === option.sku_id)));
 
-    // Update confirmation spoken text and trigger live voice synthesis
     const confirmationHi = `${option.name_hi} (${option.quantity} ${option.unit}) कार्ट में जोड़ दिया गया है।`;
     const confirmationEn = `${option.name_en} (${option.quantity} ${option.unit}) added to cart.`;
     setSpokenReplyHi(confirmationHi);
@@ -246,7 +264,61 @@ export const App: React.FC = () => {
           setIsMockTts(data.is_mock ?? false);
         }
       })
-      .catch((e) => console.warn("Could not synthesize clarification confirmation audio:", e));
+      .catch((e) => console.warn("Could not synthesize clarification audio:", e));
+  };
+
+  const handleAcceptSubstitution = (sub: SubstitutionSuggestion) => {
+    const newItem: CartItem = {
+      sku_id: sub.substitute_sku.sku_id,
+      name_en: sub.substitute_sku.name_en,
+      name_hi: sub.substitute_sku.name_hi,
+      category: sub.substitute_sku.category || "Dairy",
+      quantity: 1.0,
+      unit: sub.substitute_sku.unit,
+      unit_price: sub.substitute_sku.price_inr,
+      line_total: sub.substitute_sku.price_inr
+    };
+
+    setCartItems((prev) => [...prev, newItem]);
+    setSubstitutions((prev) => prev.filter((s) => s.out_of_stock_sku.sku_id !== sub.out_of_stock_sku.sku_id));
+
+    const confirmationHi = `${sub.substitute_sku.name_hi} विकल्प के रूप में जोड़ दिया गया है।`;
+    setSpokenReplyHi(confirmationHi);
+  };
+
+  const handleAddUpsellItem = (upsell: UpsellSuggestion) => {
+    const newItem: CartItem = {
+      sku_id: upsell.sku_id,
+      name_en: upsell.name_en,
+      name_hi: upsell.name_hi,
+      category: upsell.category,
+      quantity: upsell.quantity,
+      unit: upsell.unit,
+      unit_price: upsell.price_inr,
+      line_total: Number((upsell.quantity * upsell.price_inr).toFixed(2))
+    };
+
+    setCartItems((prev) => [...prev, newItem]);
+    setUpsellSuggestion(null);
+
+    const confirmationHi = `${upsell.name_hi} कार्ट में जोड़ दिया गया है। कुल बिल अपडेट हो गया।`;
+    setSpokenReplyHi(confirmationHi);
+  };
+
+  const handleToggleButterStock = async () => {
+    const newStock = !isButterOutOfStock;
+    try {
+      const apiBase = getApiBase();
+      await fetch(`${apiBase}/catalogue/toggle-stock`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sku_id: "SKU-013", in_stock: !newStock })
+      });
+      setIsButterOutOfStock(newStock);
+    } catch (e) {
+      console.warn("Stock toggle error:", e);
+      setIsButterOutOfStock(newStock);
+    }
   };
 
   const handleRemoveItem = (skuId: string) => {
@@ -267,6 +339,8 @@ export const App: React.FC = () => {
     setParsedItems([]);
     setCartItems([]);
     setClarifications([]);
+    setSubstitutions([]);
+    setUpsellSuggestion(null);
     setSpokenReplyHi("");
     setSpokenReplyEn("");
     setVoiceAudioBase64(undefined);
@@ -303,19 +377,44 @@ export const App: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 text-xs">
+          <div className="flex flex-wrap items-center gap-2.5 text-xs">
+            {/* Telephony Simulator Trigger */}
+            <button
+              onClick={() => setShowCallSimulator((prev) => !prev)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+                showCallSimulator
+                  ? "bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/30"
+                  : "bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20"
+              }`}
+            >
+              <PhoneCall className="w-3.5 h-3.5" />
+              <span>{showCallSimulator ? "Hide Call Simulator" : "📞 Incoming Call Sim"}</span>
+            </button>
+
+            {/* Kirana Khata Drawer Trigger */}
+            <button
+              onClick={() => setShowKhataDrawer(true)}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 flex items-center gap-1.5 transition-colors"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+              <span>खाता बही (₹2,390)</span>
+            </button>
+
+            {/* ONDC Export Button */}
+            <button
+              onClick={() => setShowOndcModal(true)}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-sky-500/10 text-sky-300 border border-sky-500/30 hover:bg-sky-500/20 flex items-center gap-1.5 transition-colors"
+            >
+              <span className="text-sm">🇮🇳</span>
+              <span>ONDC Rail</span>
+            </button>
+
             {/* Live API vs Mock Mode Status */}
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 border border-slate-700">
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700">
               <span className={`w-2 h-2 rounded-full ${health?.gnani_live_configured ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`}></span>
               <span className="text-slate-300">
-                Gnani AI: {health?.gnani_live_configured ? "Live API" : "Demo Mock Mode"}
+                Gnani AI: {health?.gnani_live_configured ? "Live API" : "Demo Mode"}
               </span>
-            </div>
-
-            {/* Catalogue SKU count */}
-            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300">
-              <ShoppingBag className="w-3.5 h-3.5 text-sky-400" />
-              <span>{health?.catalogue_sku_count || 35} SKUs Loaded</span>
             </div>
 
             {/* Reset button */}
@@ -331,9 +430,9 @@ export const App: React.FC = () => {
       </header>
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
-        {/* Banner */}
-        <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-teal-950/40 to-sky-950/40 border border-teal-500/20 flex flex-wrap items-center justify-between gap-3">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+        {/* Banner with Feature Chips */}
+        <div className="p-4 rounded-xl bg-gradient-to-r from-teal-950/40 to-sky-950/40 border border-teal-500/20 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <Sparkles className="w-5 h-5 text-teal-400 flex-shrink-0" />
             <div className="text-xs text-slate-300">
@@ -341,14 +440,41 @@ export const App: React.FC = () => {
               <span className="text-teal-300 italic">"Bhaiya do packet Maggi, ek kilo sugar aur aadha litre milk bhej dena."</span>
             </div>
           </div>
-          <div className="text-[11px] text-slate-400">
-            Powered by <strong className="text-sky-300">Prisma v3.0</strong> + <strong className="text-sky-300">Timbre v2.5</strong>
+
+          <div className="flex items-center gap-2 text-[11px]">
+            {/* Quick Out-of-Stock Demo Toggle */}
+            <button
+              onClick={handleToggleButterStock}
+              className={`px-2.5 py-1 rounded-md border font-mono transition-colors flex items-center gap-1 ${
+                isButterOutOfStock
+                  ? "bg-rose-500/20 text-rose-300 border-rose-500/40"
+                  : "bg-slate-800 text-slate-400 border-slate-700 hover:text-white"
+              }`}
+              title="Toggles Amul Butter stock status to demonstrate voice substitution in live judge demos"
+            >
+              <PackageX className="w-3 h-3" />
+              {isButterOutOfStock ? "Butter Stockout: SIMULATED" : "Stockout Demo: OFF"}
+            </button>
+
+            <span className="text-slate-400">
+              Powered by <strong className="text-sky-300">Prisma v3.0</strong> + <strong className="text-sky-300">Timbre v2.5</strong>
+            </span>
           </div>
         </div>
 
+        {/* Incoming Telephony Call Simulator Widget (If Active) */}
+        {showCallSimulator && (
+          <TelephonyCallSimulator
+            onProcessCallUtterance={(text) => processOrderUtterance(text)}
+            isLoading={isLoading}
+            activeClarification={clarifications.length > 0}
+            onClose={() => setShowCallSimulator(false)}
+          />
+        )}
+
         {/* 2-Column Responsive Cockpit */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left Column: Voice Input, Transcription, Clarification */}
+          {/* Left Column: Voice Input, Spectrogram, Clarification, Transcription */}
           <div className="lg:col-span-7 space-y-6">
             <VoiceRecorder
               onAudioRecorded={(blob) => processOrderUtterance(undefined, blob)}
@@ -359,10 +485,34 @@ export const App: React.FC = () => {
               apiBaseUrl={getApiBase()}
             />
 
-            {/* Clarification Gate (Alerts when ambiguous match detected) */}
+            {/* Live In-Browser Web Audio FFT Spectrogram & Telephony 8 kHz Inspector */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Activity className="w-3.5 h-3.5 text-rose-400" />
+                  Real-Time Telephony Nyquist Acoustic Inspector
+                </span>
+                <button
+                  onClick={() => setShowSpectrogram((prev) => !prev)}
+                  className="text-[11px] text-slate-500 hover:text-slate-300 font-mono"
+                >
+                  {showSpectrogram ? "Collapse ▲" : "Expand ▼"}
+                </button>
+              </div>
+
+              {showSpectrogram && (
+                <AcousticSpectrogram
+                  isActive={isLoading || !!voiceAudioBase64}
+                />
+              )}
+            </div>
+
+            {/* Clarification Gate & Out-of-Stock Substitutions */}
             <ClarificationDialog
               clarifications={clarifications}
               onResolveOption={handleResolveClarification}
+              substitutions={substitutions}
+              onAcceptSubstitution={handleAcceptSubstitution}
             />
 
             <TranscriptPanel
@@ -380,6 +530,8 @@ export const App: React.FC = () => {
             <ShoppingCart
               items={cartItems}
               onRemoveItem={handleRemoveItem}
+              upsellSuggestion={upsellSuggestion}
+              onAddUpsellItem={handleAddUpsellItem}
             />
 
             <OrderSummary
@@ -396,10 +548,26 @@ export const App: React.FC = () => {
               isMockTts={isMockTts}
               onConfirmOrder={() => setIsOrderConfirmed(true)}
               isOrderConfirmed={isOrderConfirmed}
+              onOpenOndcModal={() => setShowOndcModal(true)}
             />
           </div>
         </div>
       </main>
+
+      {/* Kirana Khata 2.0 Drawer Modal */}
+      <KhataLedgerDrawer
+        isOpen={showKhataDrawer}
+        onClose={() => setShowKhataDrawer(false)}
+        apiBaseUrl={getApiBase()}
+      />
+
+      {/* ONDC Beckn Protocol Export Modal */}
+      <ONDCModal
+        isOpen={showOndcModal}
+        onClose={() => setShowOndcModal(false)}
+        cartItems={cartItems}
+        apiBaseUrl={getApiBase()}
+      />
 
       {/* Footer */}
       <footer className="border-t border-slate-800 bg-slate-950 py-4 text-center text-xs text-slate-500">

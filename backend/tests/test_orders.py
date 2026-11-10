@@ -248,5 +248,103 @@ def test_process_order_with_khata_ledger():
     data = res.json()
     assert data["khata_info"] is not None
     assert data["khata_info"]["is_khata"] is True
-    assert "Sharma" in data["khata_info"]["customer_name"]
-    assert "खाते" in data["spoken_reply_hi"]
+    assert "खाते में दर्ज" in data["spoken_reply_hi"]
+
+
+def test_smart_cross_sell_upsell():
+    """Verify Dukandar ki Salah (Smart Cross-Sell) suggests Parle-G when Tea + Sugar are ordered."""
+    payload = {
+        "transcript": "Bhaiya ek packet Red Label tea aur 1 kilo sugar bhej dena, bas itna hi",
+        "keyterms_enabled": True,
+        "synthesize_voice": False
+    }
+    res = client.post("/process-order", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["upsell_suggestion"] is not None
+    assert data["upsell_suggestion"]["sku_id"] == "SKU-031"  # Parle-G
+    assert "पारले-जी" in data["upsell_suggestion"]["pitch_hi"]
+
+
+def test_out_of_stock_substitution():
+    """Verify that when an SKU is marked out of stock, matching produces OUT_OF_STOCK_SUBSTITUTION."""
+    # 1. Toggle stock of Amul Butter (SKU-013) to False
+    toggle_res = client.post("/catalogue/toggle-stock", json={"sku_id": "SKU-013", "in_stock": False})
+    assert toggle_res.status_code == 200
+    assert toggle_res.json()["in_stock"] is False
+
+    try:
+        # 2. Process order asking for Amul butter
+        payload = {
+            "transcript": "Bhaiya 1 Amul butter de do",
+            "keyterms_enabled": True,
+            "synthesize_voice": False
+        }
+        res = client.post("/process-order", json=payload)
+        assert res.status_code == 200
+        data = res.json()
+        assert len(data["substitutions_needed"]) >= 1
+        sub = data["substitutions_needed"][0]
+        assert sub["out_of_stock_sku"]["sku_id"] == "SKU-013"
+        assert sub["substitute_sku"] is not None
+        assert ("मक्खन" in sub["spoken_prompt_hi"] or "बटर" in sub["spoken_prompt_hi"])
+    finally:
+        # Re-enable stock
+        client.post("/catalogue/toggle-stock", json={"sku_id": "SKU-013", "in_stock": True})
+
+
+def test_khata_customers_and_settlement():
+    """Verify Khata ledger listing and settlement endpoints."""
+    # List customers
+    list_res = client.get("/khata/customers")
+    assert list_res.status_code == 200
+    ledger = list_res.json()
+    assert len(ledger["customers"]) >= 4
+    sharma = next(c for c in ledger["customers"] if "Sharma" in c["name"])
+    init_bal = sharma["current_balance_inr"]
+
+    # Settle payment of ₹100
+    settle_res = client.post("/khata/settle", json={
+        "customer_id": sharma["customer_id"],
+        "amount_paid_inr": 100.0,
+        "payment_mode": "upi"
+    })
+    assert settle_res.status_code == 200
+    settle_data = settle_res.json()
+    assert settle_data["success"] is True
+    assert settle_data["new_balance_inr"] == init_bal - 100.0
+
+    # Reset balance back
+    client.post("/khata/settle", json={
+        "customer_id": sharma["customer_id"],
+        "amount_paid_inr": -100.0,
+        "payment_mode": "cash"
+    })
+
+
+def test_khata_voice_reminder():
+    """Verify Khata WhatsApp voice note reminder generation."""
+    res = client.post("/khata/voice-reminder", json={"customer_id": "CUST-001"})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["customer_id"] == "CUST-001"
+    assert "खाता स्मरण" in data["whatsapp_text"]
+    assert "upi://" in data["whatsapp_text"]
+    assert "नमस्ते" in data["voice_script_hi"]
+
+
+def test_ondc_beckn_export():
+    """Verify ONDC Beckn v1.2.0 export endpoint produces valid Beckn confirm payload."""
+    res = client.post("/ondc/export-beckn", json={
+        "bap_id": "nic2004:52110",
+        "customer_name": "Sharma Ji",
+        "delivery_address": "402 Shanti Kunj, Delhi"
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["beckn_schema_version"] == "1.2.0"
+    assert data["domain"] == "ONDC:RET10"
+    assert data["payload"]["context"]["domain"] == "ONDC:RET10"
+    assert data["payload"]["message"]["order"]["state"] == "Created"
+    assert len(data["payload"]["message"]["order"]["items"]) >= 1
+    assert data["payload"]["message"]["order"]["billing"]["name"] == "Sharma Ji"

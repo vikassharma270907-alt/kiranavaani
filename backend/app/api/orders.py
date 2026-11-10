@@ -30,7 +30,19 @@ from backend.app.schemas import (
     ProcessOrderRequest,
     ProcessOrderResponse,
     AudioSampleClip,
-    KhataInfo
+    KhataInfo,
+    ToggleStockRequest,
+    ToggleStockResponse,
+    KhataCustomer,
+    KhataLedgerResponse,
+    SettleKhataRequest,
+    SettleKhataResponse,
+    KhataReminderRequest,
+    KhataReminderResponse,
+    ONDCBecknExportRequest,
+    ONDCBecknExportResponse,
+    SubstitutionSuggestion,
+    UpsellSuggestion
 )
 from backend.app.services.prisma_service import prisma_service
 from backend.app.services.timbre_service import timbre_service
@@ -319,7 +331,7 @@ async def process_order(request: ProcessOrderRequest):
     # 5. Build confirmed cart with Khata balance calculation
     cart = cart_service.build_cart(confirmed_inputs, parsed_res.khata_info)
 
-    # 6. Determine conversational reply and clarification priority
+    # 6. Determine conversational reply, clarification priority, and smart upsell
     if resolved_clarification_sku:
         spoken_reply_hi = f"{resolved_clarification_sku.name_hi} कार्ट में जोड़ दिया गया है। क्या कुछ और चाहिए?"
         spoken_reply_en = f"{resolved_clarification_sku.name_en} added to cart. Anything else?"
@@ -328,9 +340,19 @@ async def process_order(request: ProcessOrderRequest):
         top_clarification = match_res.clarifications_needed[0]
         spoken_reply_hi = top_clarification.question_hi
         spoken_reply_en = top_clarification.question_en
+    elif match_res.substitutions_needed:
+        # Prioritize out-of-stock substitution suggestion
+        top_sub = match_res.substitutions_needed[0]
+        spoken_reply_hi = top_sub.spoken_prompt_hi
+        spoken_reply_en = top_sub.spoken_prompt_en
     elif cart.items:
-        spoken_reply_hi = cart.spoken_summary_hi
-        spoken_reply_en = cart.spoken_summary_en
+        # If order completed and an upsell suggestion is present, naturally voice-prompt the cross-sell
+        if cart.upsell_suggestion and parsed_res.is_order_complete:
+            spoken_reply_hi = f"{cart.spoken_summary_hi} {cart.upsell_suggestion.pitch_hi}"
+            spoken_reply_en = f"{cart.spoken_summary_en} {cart.upsell_suggestion.pitch_en}"
+        else:
+            spoken_reply_hi = cart.spoken_summary_hi
+            spoken_reply_en = cart.spoken_summary_en
     else:
         spoken_reply_hi = "क्षमा करें, कोई किराना सामान पहचाना नहीं जा सका। कृपया दोबारा बोलें।"
         spoken_reply_en = "Sorry, no grocery items were recognized. Please repeat your order."
@@ -357,11 +379,287 @@ async def process_order(request: ProcessOrderRequest):
         is_order_complete=parsed_res.is_order_complete,
         confirmed_cart=cart,
         clarifications_needed=match_res.clarifications_needed,
+        substitutions_needed=match_res.substitutions_needed,
         unmatched_items=match_res.unmatched_items,
         spoken_reply_hi=spoken_reply_hi,
         spoken_reply_en=spoken_reply_en,
         voice_audio_base64=voice_audio_b64,
         voice_audio_format=voice_audio_fmt,
         is_mock_tts=is_mock_tts,
-        khata_info=parsed_res.khata_info
+        khata_info=parsed_res.khata_info,
+        upsell_suggestion=cart.upsell_suggestion
+    )
+
+
+# ---------------------------------------------------------
+# Dynamic Merchant Stock & Inventory Control
+# ---------------------------------------------------------
+@router.post("/catalogue/toggle-stock", response_model=ToggleStockResponse)
+async def toggle_catalogue_stock(request: ToggleStockRequest):
+    """
+    Toggles an SKU's in-stock status (merchant stock control).
+    Enables demonstrating out-of-stock voice substitution in live judge demos.
+    """
+    sku = catalogue_matcher.get_sku(request.sku_id)
+    if not sku:
+        raise HTTPException(status_code=404, detail=f"SKU '{request.sku_id}' not found.")
+    
+    catalogue_matcher.set_sku_stock(request.sku_id, request.in_stock)
+    status_str = "In Stock (उपलब्ध)" if request.in_stock else "Out of Stock (खत्म/अनुपलब्ध)"
+    return ToggleStockResponse(
+        sku_id=sku.sku_id,
+        name_en=sku.name_en,
+        in_stock=request.in_stock,
+        message=f"{sku.name_en} marked as {status_str}."
+    )
+
+
+# ---------------------------------------------------------
+# Kirana Khata 2.0 Ledger Management Endpoints
+# ---------------------------------------------------------
+KHATA_CUSTOMERS_DB: Dict[str, Dict[str, Any]] = {
+    "CUST-001": {
+        "customer_id": "CUST-001",
+        "name": "Sharma Ji (शर्मा जी)",
+        "phone": "+91 98111-23456",
+        "current_balance_inr": 420.0,
+        "last_order_date": "10-Nov-2026",
+        "orders_count": 14,
+        "trust_tier": "A (अति-विश्वसनीय)",
+        "recent_items": ["Aashirvaad Atta (5kg)", "Tata Salt (1kg)", "Fortune Oil (1L)"]
+    },
+    "CUST-002": {
+        "customer_id": "CUST-002",
+        "name": "Verma Ji (वर्मा जी)",
+        "phone": "+91 98222-34567",
+        "current_balance_inr": 1150.0,
+        "last_order_date": "06-Nov-2026",
+        "orders_count": 8,
+        "trust_tier": "B (साप्ताहिक हिसाब)",
+        "recent_items": ["India Gate Basmati (5kg)", "Amul Pure Cow Ghee (500ml)"]
+    },
+    "CUST-003": {
+        "customer_id": "CUST-003",
+        "name": "Patel Sahab (पटेल साहब)",
+        "phone": "+91 98333-45678",
+        "current_balance_inr": 280.0,
+        "last_order_date": "09-Nov-2026",
+        "orders_count": 22,
+        "trust_tier": "A (अति-विश्वसनीय)",
+        "recent_items": ["Tata Tea Gold (250g)", "Madhur Sugar (1kg)"]
+    },
+    "CUST-004": {
+        "customer_id": "CUST-004",
+        "name": "Sunita Devi (सुनीता देवी)",
+        "phone": "+91 98444-56789",
+        "current_balance_inr": 540.0,
+        "last_order_date": "08-Nov-2026",
+        "orders_count": 11,
+        "trust_tier": "A (समय पर भुगतान)",
+        "recent_items": ["Toor Dal (1kg)", "Parle-G (2 pkt)", "Amul Milk (1L)"]
+    }
+}
+
+
+@router.get("/khata/customers", response_model=KhataLedgerResponse)
+async def list_khata_customers():
+    """Returns local neighbourhood customer credit ledger records."""
+    customers = [KhataCustomer(**c) for c in KHATA_CUSTOMERS_DB.values()]
+    total_due = sum(c.current_balance_inr for c in customers)
+    return KhataLedgerResponse(
+        store_name=catalogue_matcher.store_name,
+        total_outstanding_inr=round(total_due, 2),
+        customers=customers
+    )
+
+
+@router.post("/khata/settle", response_model=SettleKhataResponse)
+async def settle_khata_payment(request: SettleKhataRequest):
+    """Records a cash or UPI repayment from a customer and updates their ledger balance."""
+    cust = KHATA_CUSTOMERS_DB.get(request.customer_id)
+    if not cust:
+        raise HTTPException(status_code=404, detail=f"Khata customer '{request.customer_id}' not found.")
+    
+    prev_bal = cust["current_balance_inr"]
+    new_bal = max(0.0, round(prev_bal - request.amount_paid_inr, 2))
+    cust["current_balance_inr"] = new_bal
+    
+    import uuid
+    receipt_id = f"KHT-REC-{uuid.uuid4().hex[:6].upper()}"
+    return SettleKhataResponse(
+        success=True,
+        customer_id=request.customer_id,
+        customer_name=cust["name"],
+        amount_paid_inr=request.amount_paid_inr,
+        previous_balance_inr=prev_bal,
+        new_balance_inr=new_bal,
+        receipt_id=receipt_id,
+        message_hi=f"{cust['name']} का ₹{request.amount_paid_inr:g} भुगतान दर्ज किया गया। नया बकाया ₹{new_bal:g} है।"
+    )
+
+
+@router.post("/khata/voice-reminder", response_model=KhataReminderResponse)
+async def generate_khata_voice_reminder(request: KhataReminderRequest):
+    """
+    Generates a polite Hindi WhatsApp payment reminder and synthesizes an authentic audio voice note via Timbre.
+    """
+    cust = KHATA_CUSTOMERS_DB.get(request.customer_id)
+    if not cust:
+        raise HTTPException(status_code=404, detail=f"Khata customer '{request.customer_id}' not found.")
+    
+    bal = cust["current_balance_inr"]
+    name = cust["name"]
+    store = catalogue_matcher.store_name
+    
+    voice_script = f"नमस्ते {name}, {store} से आपका कुल बकाया {int(bal)} रुपये है। कृपया इस लिंक से UPI भुगतान कर दें। धन्यवाद।"
+    whatsapp_text = (
+        f"📖 *{store} — खाता स्मरण (Payment Reminder)*\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"आदरणीय {name},\n"
+        f"दुकान पर आपका कुल बकाया: *₹{bal:g}*\n"
+        f"कृपया नीचे दिए गए UPI लिंक पर क्लिक करके भुगतान करें:\n"
+        f"📲 upi://pay?pa=guptakirana@okaxis&pn=GuptaKirana&am={bal:g}&cu=INR\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"🙏 आपके सहयोग के लिए धन्यवाद।"
+    )
+    
+    synth = await timbre_service.synthesize_speech(
+        text=voice_script,
+        voice="Nalini",
+        language="hi-IN"
+    )
+    
+    return KhataReminderResponse(
+        customer_id=request.customer_id,
+        customer_name=name,
+        balance_inr=bal,
+        whatsapp_text=whatsapp_text,
+        voice_script_hi=voice_script,
+        audio_base64=synth.audio_base64,
+        audio_format=synth.audio_format
+    )
+
+
+# ---------------------------------------------------------
+# ONDC (Open Network for Digital Commerce) Beckn Protocol Export
+# ---------------------------------------------------------
+@router.post("/ondc/export-beckn", response_model=ONDCBecknExportResponse)
+async def export_ondc_beckn(
+    request: Optional[ONDCBecknExportRequest] = Body(None),
+    cart_items: Optional[List[CartItemInput]] = Body(None)
+):
+    """
+    Exports a voice-created Kirana cart into a standard ONDC Beckn Protocol v1.2.0 order payload.
+    Demonstrates bridging offline voice commerce into India's national digital commerce rails.
+    """
+    import uuid
+    import datetime
+    
+    order_id = f"ONDC-KRN-{uuid.uuid4().hex[:8].upper()}"
+    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    
+    items_to_export = cart_items or [
+        CartItemInput(sku_id="SKU-027", quantity=2.0, unit="packet"),
+        CartItemInput(sku_id="SKU-020", quantity=1.0, unit="kg")
+    ]
+    
+    cart = cart_service.build_cart(items_to_export)
+    
+    beckn_items = []
+    quote_breakup = []
+    
+    for it in cart.items:
+        beckn_items.append({
+            "id": it.sku_id,
+            "descriptor": {
+                "name": it.name_en,
+                "code": it.sku_id,
+                "short_desc": f"{it.name_hi} ({it.category})"
+            },
+            "quantity": {
+                "count": it.quantity,
+                "measure": {
+                    "unit": it.unit,
+                    "value": str(it.quantity)
+                }
+            },
+            "price": {
+                "currency": "INR",
+                "value": str(it.line_total)
+            },
+            "category_id": "Grocery"
+        })
+        quote_breakup.append({
+            "title": it.name_en,
+            "price": {
+                "currency": "INR",
+                "value": str(it.line_total)
+            }
+        })
+    
+    beckn_payload = {
+        "context": {
+            "domain": "ONDC:RET10",
+            "country": "IND",
+            "city": "std:011",
+            "action": "confirm",
+            "core_version": "1.2.0",
+            "bap_id": (request.bap_id if request else "nic2004:52110"),
+            "bap_uri": (request.bap_uri if request else "https://buyer-app.ondc.org"),
+            "bpp_id": "kiranavaani.gnani.ai",
+            "bpp_uri": "https://kiranavaani.onrender.com/ondc",
+            "transaction_id": str(uuid.uuid4()),
+            "message_id": str(uuid.uuid4()),
+            "timestamp": timestamp
+        },
+        "message": {
+            "order": {
+                "id": order_id,
+                "state": "Created",
+                "provider": {
+                    "id": "BPP-GUPTA-KIRANA-01",
+                    "descriptor": {
+                        "name": catalogue_matcher.store_name,
+                        "short_desc": "Local Neighbourhood Kirana on ONDC"
+                    }
+                },
+                "items": beckn_items,
+                "billing": {
+                    "name": (request.customer_name if request else "Sharma Ji"),
+                    "phone": "+91 98111-23456",
+                    "address": {
+                        "door": "402",
+                        "building": "Shanti Kunj",
+                        "city": "New Delhi",
+                        "area_code": "110001",
+                        "state": "Delhi"
+                    }
+                },
+                "fulfillment": {
+                    "type": "Delivery",
+                    "tracking": True,
+                    "provider_name": "Kirana Hyperlocal Fast Delivery (30 mins)"
+                },
+                "quote": {
+                    "price": {
+                        "currency": "INR",
+                        "value": str(cart.total_inr)
+                    },
+                    "breakup": quote_breakup
+                },
+                "payment": {
+                    "type": "ONDC-UPI",
+                    "status": "PAID",
+                    "collected_by": "BAP"
+                }
+            }
+        }
+    }
+    
+    return ONDCBecknExportResponse(
+        beckn_schema_version="1.2.0",
+        domain="ONDC:RET10",
+        bpp_id="kiranavaani.gnani.ai",
+        status="CONFIRMED",
+        payload=beckn_payload
     )

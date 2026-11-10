@@ -40,6 +40,7 @@ interface OrderSummaryProps {
   isMockTts?: boolean;
   onConfirmOrder: () => void;
   isOrderConfirmed: boolean;
+  onOpenOndcModal?: () => void;
 }
 
 export const OrderSummary: React.FC<OrderSummaryProps> = ({
@@ -56,6 +57,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
   isMockTts = false,
   onConfirmOrder,
   isOrderConfirmed,
+  onOpenOndcModal,
 }) => {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [selectedPaymentMode, setSelectedPaymentMode] = useState<"cod" | "upi" | "khata">(
@@ -373,6 +375,22 @@ _किरानावाणी (KiranaVaani) वॉयस AI द्वारा
               </button>
             </div>
           </div>
+        )}
+
+        {/* ONDC Beckn Protocol Export Button */}
+        {onOpenOndcModal && items.length > 0 && (
+          <button
+            onClick={onOpenOndcModal}
+            className="w-full py-2 px-3 rounded-lg bg-sky-950/40 hover:bg-sky-900/40 border border-sky-500/30 text-sky-200 text-xs font-semibold flex items-center justify-between transition-colors group"
+          >
+            <span className="flex items-center gap-1.5">
+              <span className="text-base">🇮🇳</span>
+              Export to ONDC (Beckn Protocol v1.2.0)
+            </span>
+            <span className="text-[10px] text-sky-400 font-mono group-hover:translate-x-0.5 transition-transform">
+              View JSON &rarr;
+            </span>
+          </button>
         )}
       </div>
 

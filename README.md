@@ -17,10 +17,10 @@
 
 | Award | How KiranaVaani Qualifies |
 | :--- | :--- |
-| **Mixed Vibes** | Seamlessly ingests code-mixed Hindi-English (*Hinglish*) and **Dravidian Code-Switching (Namma Bengaluru Kannada + Tamil)** with **Prisma v3.0 Auto-LID** (~$98.4\%$ accuracy) and native code-mix mode (e.g. *"ondu kilo godhi hittu matthe 2 packet Maggi kodi, aste"*). |
-| **Real Deal** | Solves high-frequency phone orders with traditional Indian market fractions (*"सवा दो किलो"*, *"ढाई किलो"*, *"पाव भर"* $=0.25\text{ kg}$, *"आधा पाव"* $=0.125\text{ kg}$, *"दर्जन"* $=12\text{ pcs}$), and features an authentic **Kirana Khata (खाता उधार) Credit Ledger** that automatically books orders to customer accounts. |
-| **Noise Canceller** | Evaluates telephony channel degradation across an **ITU-T G.711 $\mu$-law $8\text{ kHz}$ codec** and **environmental noise** down to $0\text{ dB}$ SNR. Demonstrates that 200 catalog keyterms bias lifts Item-F1 from $59.4\%$ to $84.6\%$ under extreme noise, featuring a live **A/B Sound Proofing Audio Switcher** in the web app. |
-| **Demo Day Drop** | Includes an interactive full-stack cockpit with live recording, **real-time animated waveform canvas** with $\mu$-law quantization steps, **1-click WhatsApp Kirana Order Slip generator**, and **dynamic scanable UPI QR Code**. |
+| **Mixed Vibes** | Seamlessly ingests code-mixed Hindi-English (*Hinglish*) and **Dravidian Code-Switching (Namma Bengaluru Kannada + Tamil)** with **Prisma v3.0 Auto-LID** (~$98.4\%$ accuracy) and native code-mix mode (e.g. *"ondu kilo godhi hittu matthe 2 packet Maggi kodi, aste"*). Features authentic colloquial honorifics (*"Sharma Ji"*, *"Gupta Ji"*, *"Anna"*) and vernacular units (*"पाव भर"*, *"चटांक"*, *"दर्जन"*). |
+| **Real Deal** | Solves high-frequency phone orders with traditional Indian market fractions (*"सवा दो किलो"*, *"ढाई किलो"*, *"आधा पाव"* $=0.125\text{ kg}$), an authentic **Kirana Khata 2.0 (खाता उधार) Credit Ledger** with settlement and WhatsApp audio reminders, **"Dukandar ki Salah" (दुकानदार की सलाह)** smart cross-sell upsell (*"चाय-चीनी के साथ पारले-जी बिस्कुट?"*), and **Out-of-Stock Intelligent Voice Substitution**. |
+| **Noise Canceller** | Evaluates telephony channel degradation across an **ITU-T G.711 $\mu$-law $8\text{ kHz}$ codec** and **environmental noise** down to $0\text{ dB}$ SNR. Demonstrates that 200 catalog keyterms bias lifts Item-F1 from $59.4\%$ to $84.6\%$ under extreme noise. Features an interactive **Live In-Browser FFT Spectrogram & $4\text{ kHz}$ Nyquist Cutoff Inspector** with real-time PSTN telephony companding simulation. |
+| **Demo Day Drop** | Includes an interactive full-stack cockpit with live recording, **Simulated Incoming PSTN Phone Call Cockpit** with caller ID and live phone audio streaming, **1-click WhatsApp Kirana Order Slip generator**, **dynamic scanable UPI QR Code**, and **ONDC (Open Network for Digital Commerce) Beckn Protocol v1.2.0 payload export**. |
 
 ---
 
@@ -325,7 +325,12 @@ Deploy your own instance of KiranaVaani on [Render](https://render.com):
 | `POST` | `/match-products` | Matches products against catalogue and flags ambiguities | `{"items": [...]}` | `{"matched_items": [...], "clarifications_needed": [...]}` |
 | `POST` | `/cart` | Assembles cart, calculates bill & generates spoken summaries | `{"items": [{"sku_id": "SKU-020", "quantity": 1.0}]}` | `{"subtotal_inr": 45.0, "total_inr": 45.0, "spoken_summary_hi": "..."}` |
 | `POST` | `/synthesize` | Generates spoken audio via Gnani Timbre | `{"text": "Aapke order me..."}` | `{"audio_base64": "...", "audio_format": "wav"}` |
-| `POST` | `/process-order` | Combined end-to-end voice pipeline preserving clarification | `{"transcript": "Bhaiya do packet Maggi..."}` | `{"confirmed_cart": {...}, "clarifications_needed": [...], ...}` |
+| `POST` | `/process-order` | Combined end-to-end voice pipeline preserving clarification & upsell | `{"transcript": "Bhaiya do packet Maggi..."}` | `{"confirmed_cart": {...}, "upsell_suggestion": {...}, ...}` |
+| `GET` | `/khata/customers` | Returns local Kirana Khata 2.0 customer credit ledger records | `None` | `{"total_outstanding_inr": 2390.0, "customers": [...]}` |
+| `POST` | `/khata/settle` | Records cash or UPI debt repayment and updates customer ledger | `{"customer_id": "CUST-001", "amount_paid_inr": 100.0}` | `{"success": true, "new_balance_inr": 320.0, ...}` |
+| `POST` | `/khata/voice-reminder` | Generates WhatsApp reminder slip and Timbre audio voice note | `{"customer_id": "CUST-001"}` | `{"whatsapp_text": "...", "audio_base64": "...", ...}` |
+| `POST` | `/catalogue/toggle-stock` | Toggles an SKU's in-stock status to test voice substitution | `{"sku_id": "SKU-013", "in_stock": false}` | `{"sku_id": "SKU-013", "in_stock": false, ...}` |
+| `POST` | `/ondc/export-beckn` | Exports cart to official ONDC Beckn Protocol v1.2.0 payload | `{"customer_name": "Sharma Ji", ...}` | `{"beckn_schema_version": "1.2.0", "payload": {...}}` |
 
 ---
 
@@ -379,14 +384,14 @@ python -m pytest backend/tests -v
 Expected output:
 ```
 ============================= test session starts =============================
-collected 25 items
+collected 44 items
 
-backend/tests/test_catalogue.py .....                                    [ 20%]
-backend/tests/test_noise_lab.py .......                                  [ 48%]
-backend/tests/test_orders.py .......                                     [ 76%]
-backend/tests/test_parser.py ......                                      [100%]
+backend/tests/test_catalogue.py .....                                    [ 11%]
+backend/tests/test_noise_lab.py .......                                  [ 27%]
+backend/tests/test_orders.py .....................                       [ 75%]
+backend/tests/test_parser.py ...........                                 [100%]
 
-============================= 25 passed in 1.29s ==============================
+============================= 44 passed in 5.49s ==============================
 ```
 
 ---

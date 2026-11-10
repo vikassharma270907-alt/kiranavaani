@@ -18,7 +18,8 @@ from backend.app.schemas import (
     ProductMatchResult,
     ClarificationQuestion,
     ClarificationOption,
-    MatchProductsResponse
+    MatchProductsResponse,
+    SubstitutionSuggestion
 )
 from backend.app.services.order_parser import make_boundary_regex
 
@@ -64,6 +65,21 @@ AMBIGUITY_FAMILIES: Dict[str, Dict[str, Any]] = {
 }
 
 
+# Default substitute recommendations if an SKU goes out of stock in a Kirana store
+DEFAULT_SUBSTITUTIONS: Dict[str, List[str]] = {
+    "SKU-013": ["SKU-014", "SKU-015"],  # Amul Butter -> Amul Paneer or Mother Dairy Curd
+    "SKU-002": ["SKU-003"],             # India Gate Basmati -> Sona Masoori Rice
+    "SKU-003": ["SKU-002"],             # Sona Masoori -> Basmati Rice
+    "SKU-016": ["SKU-017"],             # Fortune Sunflower Oil -> Arogyam Mustard Oil
+    "SKU-017": ["SKU-016"],             # Mustard Oil -> Sunflower Oil
+    "SKU-027": ["SKU-028"],             # Maggi 2-Min -> Maggi Veg Atta Noodles
+    "SKU-028": ["SKU-027"],             # Maggi Atta -> Maggi 2-Min
+    "SKU-031": ["SKU-032"],             # Parle-G -> Britannia Good Day
+    "SKU-024": ["SKU-025"],             # Red Label Tea -> Tata Tea Gold
+    "SKU-007": ["SKU-008", "SKU-009"]   # Toor Dal -> Moong Dal or Chana Dal
+}
+
+
 class CatalogueMatcher:
     def __init__(self, catalogue_path: Optional[Path] = None):
         path = catalogue_path or get_catalogue_path()
@@ -82,9 +98,43 @@ class CatalogueMatcher:
 
         self.store_name = data.get("store_name", self.store_name)
         raw_skus = data.get("skus", [])
-        self.skus = [CatalogueSKU(**s) for s in raw_skus]
+        self.skus = []
+        for s in raw_skus:
+            sku_obj = CatalogueSKU(**s)
+            # Attach default substitutes if not in json
+            if not sku_obj.substitutes and sku_obj.sku_id in DEFAULT_SUBSTITUTIONS:
+                sku_obj.substitutes = DEFAULT_SUBSTITUTIONS[sku_obj.sku_id]
+            self.skus.append(sku_obj)
         self.sku_lookup = {s.sku_id: s for s in self.skus}
         logger.info(f"Loaded {len(self.skus)} SKUs into CatalogueMatcher from {path}")
+
+    def set_sku_stock(self, sku_id: str, in_stock: bool) -> bool:
+        """Toggles in-stock status for a given SKU (merchant inventory control)."""
+        sku = self.sku_lookup.get(sku_id)
+        if sku:
+            sku.in_stock = in_stock
+            logger.info(f"Updated {sku_id} ({sku.name_en}) stock status to {in_stock}")
+            return True
+        return False
+
+    def get_substitute_for_sku(self, sku_id: str) -> Optional[CatalogueSKU]:
+        """Finds the best available in-stock substitute for an out-of-stock item."""
+        sku = self.sku_lookup.get(sku_id)
+        if not sku:
+            return None
+
+        # 1. Check direct configured substitutes
+        for sub_id in (sku.substitutes or []):
+            candidate = self.sku_lookup.get(sub_id)
+            if candidate and candidate.in_stock:
+                return candidate
+
+        # 2. Fallback to same category in-stock items
+        for candidate in self.skus:
+            if candidate.sku_id != sku.sku_id and candidate.category == sku.category and candidate.in_stock:
+                return candidate
+
+        return None
 
     def get_all_skus(self) -> List[CatalogueSKU]:
         return self.skus
@@ -273,6 +323,28 @@ class CatalogueMatcher:
 
         # 4. Check confidence threshold
         if top_candidate.score >= CONFIDENCE_THRESHOLD:
+            # Check stock availability
+            if not getattr(top_sku, "in_stock", True):
+                sub_sku = self.get_substitute_for_sku(top_sku.sku_id)
+                if sub_sku:
+                    substitution = SubstitutionSuggestion(
+                        original_item_name=top_sku.name_en,
+                        out_of_stock_sku=top_sku,
+                        substitute_sku=sub_sku,
+                        reason_hi=f"'{top_sku.name_hi}' अभी उपलब्ध नहीं है। क्या '{sub_sku.name_hi}' (₹{sub_sku.price_inr}) चलेगा?",
+                        reason_en=f"'{top_sku.name_en}' is out of stock. Would you prefer '{sub_sku.name_en}' (₹{sub_sku.price_inr})?",
+                        spoken_prompt_hi=f"'{top_sku.name_hi}' अभी दुकान में खत्म है। इसके बदले '{sub_sku.name_hi}' दे दें?",
+                        spoken_prompt_en=f"'{top_sku.name_en}' is out of stock. Shall I substitute with '{sub_sku.name_en}'?"
+                    )
+                    return ProductMatchResult(
+                        original_item=item,
+                        status="OUT_OF_STOCK_SUBSTITUTION",
+                        confidence=top_candidate.score,
+                        matched_sku=top_sku,
+                        substitution=substitution,
+                        candidates=scored_candidates[:3]
+                    )
+
             return ProductMatchResult(
                 original_item=item,
                 status="MATCHED",
@@ -318,6 +390,7 @@ class CatalogueMatcher:
     def match_items(self, items: List[ParsedItem], keyterms_enabled: bool = True) -> MatchProductsResponse:
         matched: List[ProductMatchResult] = []
         clarifications: List[ClarificationQuestion] = []
+        substitutions: List[SubstitutionSuggestion] = []
         unmatched: List[ParsedItem] = []
 
         for item in items:
@@ -326,12 +399,15 @@ class CatalogueMatcher:
 
             if result.status == "CLARIFICATION_REQUIRED" and result.clarification:
                 clarifications.append(result.clarification)
+            elif result.status == "OUT_OF_STOCK_SUBSTITUTION" and result.substitution:
+                substitutions.append(result.substitution)
             elif result.status == "UNRECOGNIZED":
                 unmatched.append(item)
 
         return MatchProductsResponse(
             matched_items=matched,
             clarifications_needed=clarifications,
+            substitutions_needed=substitutions,
             unmatched_items=unmatched
         )
 

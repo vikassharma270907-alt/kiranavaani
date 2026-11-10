@@ -11,7 +11,8 @@ from backend.app.schemas import (
     CartItemInput,
     CartRequest,
     CartResponse,
-    CatalogueSKU
+    CatalogueSKU,
+    UpsellSuggestion
 )
 from backend.app.services.catalogue_matcher import catalogue_matcher
 
@@ -21,6 +22,94 @@ logger = logging.getLogger(__name__)
 class CartService:
     def __init__(self):
         pass
+
+    def compute_upsell_suggestion(self, cart_items: List[CartItem]) -> Optional[UpsellSuggestion]:
+        """
+        Dukandar ki Salah (दुकानदार की सलाह) — Authentic Kirana Smart Upsell & Cross-Sell Engine.
+        Analyzes basket affinities and generates authentic Indian merchant suggestions in Timbre TTS.
+        """
+        sku_set = {item.sku_id for item in cart_items}
+        if not sku_set:
+            return None
+
+        # 1. Chai/Coffee + Sugar -> Parle-G Biscuit or Good Day
+        has_tea_coffee = any(s in sku_set for s in ["SKU-024", "SKU-025", "SKU-026"])
+        has_sugar = "SKU-020" in sku_set
+        has_biscuit = any(s in sku_set for s in ["SKU-031", "SKU-032"])
+        if (has_tea_coffee or has_sugar) and not has_biscuit:
+            parle_g = catalogue_matcher.get_sku("SKU-031")
+            if parle_g and getattr(parle_g, "in_stock", True):
+                return UpsellSuggestion(
+                    sku_id=parle_g.sku_id,
+                    name_en=parle_g.name_en,
+                    name_hi=parle_g.name_hi,
+                    category=parle_g.category,
+                    price_inr=parle_g.price_inr,
+                    unit=parle_g.unit,
+                    quantity=1.0,
+                    pitch_hi="चाय-चीनी के साथ 1 पैकेट ₹10 वाला पारले-जी बिस्कुट भी डाल दें?",
+                    pitch_en="Along with tea and sugar, should I add a pack of ₹10 Parle-G biscuits?",
+                    reason_tag="चाय + बिस्कुट (Chai + Biscuit)"
+                )
+
+        # 2. Atta / Maida -> Amul Pure Cow Ghee or Mustard Oil
+        has_flour = any(s in sku_set for s in ["SKU-001", "SKU-005"])
+        has_oil_ghee = any(s in sku_set for s in ["SKU-016", "SKU-017", "SKU-018"])
+        if has_flour and not has_oil_ghee:
+            ghee = catalogue_matcher.get_sku("SKU-018")
+            if ghee and getattr(ghee, "in_stock", True):
+                return UpsellSuggestion(
+                    sku_id=ghee.sku_id,
+                    name_en=ghee.name_en,
+                    name_hi=ghee.name_hi,
+                    category=ghee.category,
+                    price_inr=ghee.price_inr,
+                    unit=ghee.unit,
+                    quantity=1.0,
+                    pitch_hi="गरम रोटियों के लिए शुद्ध अमूल गाय का घी (₹320) भी चाहिए?",
+                    pitch_en="Would you like pure Amul Cow Ghee (₹320) for fresh rotis?",
+                    reason_tag="आटा + शुद्ध घी (Atta + Shuddh Ghee)"
+                )
+
+        # 3. Dal / Pulses or Rice -> Tata Salt or MDH Haldi
+        has_dal_rice = any(s in sku_set for s in ["SKU-002", "SKU-003", "SKU-007", "SKU-008", "SKU-009"])
+        has_spices = any(s in sku_set for s in ["SKU-019", "SKU-021", "SKU-022", "SKU-023"])
+        if has_dal_rice and not has_spices:
+            salt = catalogue_matcher.get_sku("SKU-019")
+            if salt and getattr(salt, "in_stock", True):
+                return UpsellSuggestion(
+                    sku_id=salt.sku_id,
+                    name_en=salt.name_en,
+                    name_hi=salt.name_hi,
+                    category=salt.category,
+                    price_inr=salt.price_inr,
+                    unit=salt.unit,
+                    quantity=1.0,
+                    pitch_hi="दाल-चावल के साथ क्या 1 किलो टाटा नमक (₹28) भी लिख लें?",
+                    pitch_en="Along with dal and rice, shall we add 1 kg Tata Salt (₹28)?",
+                    reason_tag="दाल-चावल + नमक (Staple Combo)"
+                )
+
+        # 4. Maggi -> Kurkure Masala Munch
+        has_maggi = any(s in sku_set for s in ["SKU-027", "SKU-028"])
+        has_snacks = any(s in sku_set for s in ["SKU-029", "SKU-030"])
+        if has_maggi and not has_snacks:
+            kurkure = catalogue_matcher.get_sku("SKU-029")
+            if kurkure and getattr(kurkure, "in_stock", True):
+                return UpsellSuggestion(
+                    sku_id=kurkure.sku_id,
+                    name_en=kurkure.name_en,
+                    name_hi=kurkure.name_hi,
+                    category=kurkure.category,
+                    price_inr=kurkure.price_inr,
+                    unit=kurkure.unit,
+                    quantity=1.0,
+                    pitch_hi="मैगी के साथ 1 पैकेट कुरकुरे मसाला मंच (₹20) भी जोड़ दें?",
+                    pitch_en="Along with Maggi, shall we add a pack of Kurkure Masala Munch (₹20)?",
+                    reason_tag="नाश्ता कॉम्बो (Snack Combo)"
+                )
+
+        return None
 
     def build_cart(
         self,
@@ -83,8 +172,11 @@ class CartService:
             khata_info.current_order_inr = total
             khata_info.new_balance_inr = round(khata_info.previous_balance_inr + total, 2)
 
+        # Calculate Dukandar ki Salah (Smart Cross-Sell Suggestion)
+        upsell = self.compute_upsell_suggestion(cart_items)
+
         # Build natural spoken summaries
-        summary_hi, summary_en = self._generate_spoken_summaries(cart_items, total, khata_info)
+        summary_hi, summary_en = self._generate_spoken_summaries(cart_items, total, khata_info, upsell)
 
         return CartResponse(
             items=cart_items,
@@ -93,14 +185,16 @@ class CartService:
             delivery_fee_inr=0.0,
             total_inr=total,
             spoken_summary_hi=summary_hi,
-            spoken_summary_en=summary_en
+            spoken_summary_en=summary_en,
+            upsell_suggestion=upsell
         )
 
     def _generate_spoken_summaries(
         self,
         items: List[CartItem],
         total: float,
-        khata_info: Optional[Any] = None
+        khata_info: Optional[Any] = None,
+        upsell: Optional[UpsellSuggestion] = None
     ) -> tuple[str, str]:
         if not items:
             return (
