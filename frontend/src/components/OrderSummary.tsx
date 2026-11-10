@@ -11,9 +11,12 @@ import {
   Copy, 
   Check, 
   ExternalLink,
-  Receipt
+  Receipt,
+  Printer
 } from "lucide-react";
 import { CartItem } from "./ShoppingCart";
+import { ThermalReceiptModal } from "./ThermalReceiptModal";
+import { SoundboxChime } from "./SoundboxChime";
 
 export interface KhataInfo {
   is_khata: boolean;
@@ -65,6 +68,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
   );
   const [isCopiedSlip, setIsCopiedSlip] = useState(false);
   const [showWhatsAppSlip, setShowWhatsAppSlip] = useState(false);
+  const [showThermalReceipt, setShowThermalReceipt] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Sync payment mode if Khata is detected
@@ -377,6 +381,22 @@ _किरानावाणी (KiranaVaani) वॉयस AI द्वारा
           </div>
         )}
 
+        {/* 58mm Thermal POS Receipt Button */}
+        {items.length > 0 && (
+          <button
+            onClick={() => setShowThermalReceipt(true)}
+            className="w-full py-2 px-3 rounded-lg bg-amber-950/30 hover:bg-amber-900/40 border border-amber-500/30 text-amber-200 text-xs font-semibold flex items-center justify-between transition-colors group"
+          >
+            <span className="flex items-center gap-1.5">
+              <Printer className="w-4 h-4 text-amber-400" />
+              58mm Thermal POS Receipt (दुकान रसीद)
+            </span>
+            <span className="text-[10px] text-amber-400 font-mono group-hover:translate-x-0.5 transition-transform">
+              Print / Preview &rarr;
+            </span>
+          </button>
+        )}
+
         {/* ONDC Beckn Protocol Export Button */}
         {onOpenOndcModal && items.length > 0 && (
           <button
@@ -397,9 +417,17 @@ _किरानावाणी (KiranaVaani) वॉयस AI द्वारा
       {/* Confirm order action */}
       <div className="pt-2">
         {isOrderConfirmed ? (
-          <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg flex items-center justify-center gap-2 text-emerald-300 text-xs font-semibold">
-            <CheckCircle2 className="w-4 h-4" />
-            Order Confirmed & Sent to Kirana Store!
+          <div className="space-y-3">
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg flex items-center justify-center gap-2 text-emerald-300 text-xs font-semibold">
+              <CheckCircle2 className="w-4 h-4" />
+              Order Confirmed & Sent to Kirana Store!
+            </div>
+            <SoundboxChime
+              amount={total}
+              customerName={khataInfo?.customer_name || "Customer"}
+              paymentMode={selectedPaymentMode.toUpperCase()}
+              autoPlayTrigger={true}
+            />
           </div>
         ) : (
           <button
@@ -416,6 +444,17 @@ _किरानावाणी (KiranaVaani) वॉयस AI द्वारा
           </button>
         )}
       </div>
+
+      {/* 58mm Thermal Receipt Printable Modal */}
+      <ThermalReceiptModal
+        isOpen={showThermalReceipt}
+        onClose={() => setShowThermalReceipt(false)}
+        items={items}
+        subtotal={subtotal}
+        total={total}
+        customerName={khataInfo?.customer_name}
+        paymentMode={selectedPaymentMode.toUpperCase()}
+      />
     </div>
   );
 };

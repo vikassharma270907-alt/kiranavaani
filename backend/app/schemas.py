@@ -79,6 +79,15 @@ class ParsedItem(BaseModel):
     raw_clause: Optional[str] = None
 
 
+class RepairedItemEvent(BaseModel):
+    original_phrase: str
+    action: str = Field(..., description="'CORRECTED_QUANTITY' or 'CANCELLED_ITEM'")
+    product: str
+    previous_quantity: Optional[float] = None
+    new_quantity: Optional[float] = None
+    explanation: str
+
+
 class ParseOrderRequest(BaseModel):
     transcript: str = Field(..., examples=["Bhaiya do packet Maggi, ek kilo sugar aur aadha litre milk bhej dena."])
     keyterms_enabled: bool = Field(True, description="Enable catalogue keyterms biasing")
@@ -90,6 +99,10 @@ class ParseOrderResponse(BaseModel):
     items: List[ParsedItem]
     is_order_complete: bool = Field(False, description="True if caller expressed completion e.g. 'bas itna hi'")
     khata_info: Optional[KhataInfo] = None
+    repairs_applied: List[RepairedItemEvent] = Field(default_factory=list)
+    detected_intent: str = Field("ORDER", description="'ORDER', 'PRICE_INQUIRY', or 'BUDGET_QUERY'")
+    price_inquiry_item: Optional[str] = None
+    budget_cap_inr: Optional[float] = None
 
 
 # ---------------------------------------------------------
@@ -271,6 +284,9 @@ class ProcessOrderResponse(BaseModel):
     is_mock_tts: bool = False
     khata_info: Optional[KhataInfo] = None
     upsell_suggestion: Optional[UpsellSuggestion] = None
+    repairs_applied: List[RepairedItemEvent] = Field(default_factory=list)
+    token_confidence_scores: List[Dict[str, Any]] = Field(default_factory=list)
+    detected_intent: str = Field("ORDER", description="'ORDER', 'PRICE_INQUIRY', or 'BUDGET_QUERY'")
 
 
 # ---------------------------------------------------------
@@ -355,3 +371,99 @@ class ONDCBecknExportResponse(BaseModel):
     bpp_id: str = "kiranavaani.gnani.ai"
     status: str = "CONFIRMED"
     payload: Dict[str, Any]
+
+
+# ---------------------------------------------------------
+# Bhav Pucho (Price Inquiry & Budget Advisory) Schemas
+# ---------------------------------------------------------
+class PriceInquiryRequest(BaseModel):
+    query: str = Field(..., examples=["Basmati chawal ka kya bhav hai?"])
+
+
+class PriceQuoteItem(BaseModel):
+    sku_id: str
+    name_en: str
+    name_hi: str
+    category: str
+    price_inr: float
+    unit: str
+    in_stock: bool
+
+
+class PriceInquiryResponse(BaseModel):
+    query: str
+    found: bool
+    items: List[PriceQuoteItem]
+    spoken_answer_hi: str
+    spoken_answer_en: str
+    voice_audio_base64: Optional[str] = None
+    voice_audio_format: str = "wav"
+
+
+class BudgetAdvisorRequest(BaseModel):
+    budget_inr: float = Field(..., examples=[500.0])
+    mandatory_items: List[CartItemInput] = Field(default_factory=list)
+    filler_product_query: Optional[str] = Field("sugar", description="Product to fill remaining budget with (e.g. sugar, tea, milk)")
+
+
+class BudgetAdvisorResponse(BaseModel):
+    budget_inr: float
+    allocated_total_inr: float
+    remaining_balance_inr: float
+    mandatory_items_cost: float
+    suggested_filler_item: Optional[CatalogueSKU] = None
+    suggested_filler_quantity: Optional[float] = None
+    advice_hi: str
+    advice_en: str
+    voice_audio_base64: Optional[str] = None
+    voice_audio_format: str = "wav"
+
+
+# ---------------------------------------------------------
+# Kirana Soundbox 2.0 & Thermal POS Receipt Schemas
+# ---------------------------------------------------------
+class SoundboxChimeRequest(BaseModel):
+    amount_inr: float = Field(..., examples=[106.0])
+    store_name: str = Field("Gupta Kirana Store")
+    customer_name: Optional[str] = None
+    payment_mode: str = Field("UPI", description="'UPI', 'Cash', or 'Khata'")
+
+
+class SoundboxChimeResponse(BaseModel):
+    amount_inr: float
+    chime_text_hi: str
+    voice_audio_base64: Optional[str] = None
+    voice_audio_format: str = "wav"
+    timestamp: str
+    is_mock: bool = False
+
+
+class ThermalReceiptLine(BaseModel):
+    sku_id: str
+    name_en: str
+    name_hi: str
+    quantity: float
+    unit: str
+    rate: float
+    total: float
+
+
+class ThermalReceiptData(BaseModel):
+    receipt_no: str
+    store_name: str = "GUPTA KIRANA & GENERAL STORE"
+    store_tagline: str = "Shudh Rashan • Vishwas Ka Prateek"
+    fssai_lic: str = "13324999000182"
+    gstin: str = "07AAAAA0000A1Z5"
+    store_address: str = "Shop 4, Main Market, Block B, New Delhi - 110001"
+    store_phone: str = "+91 98111-23456"
+    customer_name: str = "Walk-in Customer"
+    date_time: str
+    items: List[ThermalReceiptLine]
+    subtotal_inr: float
+    cgst_inr: float
+    sgst_inr: float
+    delivery_fee_inr: float = 0.0
+    total_inr: float
+    savings_inr: float
+    payment_mode: str
+    upi_qr_string: str

@@ -4,6 +4,12 @@ import base64
 import sys
 import re
 
+if len(sys.argv) > 1 and sys.argv[1] in ("--help", "-h"):
+    print("Usage: python scripts/test_live_render.py [BASE_URL]")
+    print("Default BASE_URL: https://kiranavaani.onrender.com")
+    print("Example: python scripts/test_live_render.py http://127.0.0.1:8000")
+    sys.exit(0)
+
 BASE = sys.argv[1].rstrip('/') if len(sys.argv) > 1 else 'https://kiranavaani.onrender.com'
 
 def test_endpoint(name, path, method='GET', data=None):

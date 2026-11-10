@@ -1,11 +1,20 @@
 import React from "react";
-import { FileText, Cpu, CheckCircle2, ShieldCheck, HelpCircle } from "lucide-react";
+import { FileText, Cpu, CheckCircle2, ShieldCheck, HelpCircle, RotateCcw, AlertTriangle, Sparkles, Tag } from "lucide-react";
 
 interface ParsedItem {
   product: string;
   quantity: number;
   unit: string;
   raw_clause?: string;
+}
+
+export interface RepairEvent {
+  original_phrase: string;
+  action: string;
+  product: string;
+  previous_quantity?: number;
+  new_quantity?: number;
+  explanation: string;
 }
 
 interface TranscriptPanelProps {
@@ -15,6 +24,8 @@ interface TranscriptPanelProps {
   model: string;
   parsedItems: ParsedItem[];
   isOrderComplete: boolean;
+  repairsApplied?: RepairEvent[];
+  detectedIntent?: string;
 }
 
 export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
@@ -24,6 +35,8 @@ export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
   model,
   parsedItems,
   isOrderComplete,
+  repairsApplied = [],
+  detectedIntent = "ORDER"
 }) => {
   if (!transcript) {
     return (
@@ -48,7 +61,21 @@ export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           Transcription & Extraction
         </h2>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {detectedIntent === "PRICE_INQUIRY" && (
+            <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20 flex items-center gap-1 font-semibold">
+              <Tag className="w-3 h-3 text-amber-400" />
+              Bhav Pucho: Rate Check
+            </span>
+          )}
+
+          {detectedIntent === "BUDGET_QUERY" && (
+            <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 flex items-center gap-1 font-semibold">
+              <Sparkles className="w-3 h-3 text-emerald-400" />
+              Budget Cap Optimization
+            </span>
+          )}
+
           <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-300 border border-sky-500/20 flex items-center gap-1">
             <Cpu className="w-3 h-3 text-sky-400" />
             {model} Auto-LID
@@ -79,7 +106,7 @@ export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
       {/* Raw Transcript */}
       <div>
         <div className="text-xs font-medium text-slate-400 mb-1">Raw Spoken Speech:</div>
-        <div className="p-3 bg-slate-950 rounded-lg border border-slate-800 text-slate-100 text-sm font-medium leading-relaxed">
+        <div className="p-3 bg-slate-950 rounded-lg border border-slate-800 text-slate-100 text-sm font-medium leading-relaxed font-hindi">
           "{transcript}"
         </div>
       </div>
@@ -93,6 +120,26 @@ export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           </div>
           <div className="p-2.5 bg-slate-950/80 rounded-lg border border-teal-500/20 text-teal-200 text-xs font-mono">
             {normalizedTranscript}
+          </div>
+        </div>
+      )}
+
+      {/* Bhasha-Sudhaar Conversational Repair Alert */}
+      {repairsApplied && repairsApplied.length > 0 && (
+        <div className="p-3 bg-purple-950/40 border border-purple-500/30 rounded-lg space-y-1.5 animate-fade-in">
+          <div className="flex items-center gap-2 text-xs font-bold text-purple-300">
+            <RotateCcw className="w-4 h-4 text-purple-400 animate-spin-slow" />
+            Bhasha-Sudhaar (भाषा-सुधार) Conversational Repair Applied:
+          </div>
+          <div className="space-y-1">
+            {repairsApplied.map((rep, idx) => (
+              <div key={idx} className="text-[11px] text-purple-200 bg-purple-900/30 px-2.5 py-1 rounded border border-purple-500/20 flex items-center justify-between">
+                <span>{rep.explanation}</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono">
+                  {rep.action}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       )}

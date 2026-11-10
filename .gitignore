@@ -57,6 +57,7 @@ frontend/node_modules/
 *.webm
 !tests/fixtures/*.wav
 !audio_samples/*.wav
+!frontend/public/audio-samples/*.wav
 audio_temp/
 temp_recordings/
 

@@ -15,7 +15,7 @@ jobs:
       PYTHONPATH: .
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
       - name: Checkout Repository
@@ -46,6 +46,13 @@ jobs:
           python -m noise_lab.evaluate_asr
           python -m noise_lab.evaluate_orders
           python -m noise_lab.visualize_results
+
+      - name: Verify Audio Pipeline & Benchmark Scripts
+        run: |
+          python scripts/generate_synthetic_80.py
+          python scripts/run_ablation_benchmark.py
+          python scripts/test_audio_pipeline.py
+          python scripts/test_live_render.py --help
 
   frontend-build:
     name: Frontend TypeScript & Vite Build

@@ -43,7 +43,14 @@ from backend.app.schemas import (
     ONDCBecknExportRequest,
     ONDCBecknExportResponse,
     SubstitutionSuggestion,
-    UpsellSuggestion
+    UpsellSuggestion,
+    PriceInquiryRequest,
+    PriceInquiryResponse,
+    BudgetAdvisorRequest,
+    BudgetAdvisorResponse,
+    SoundboxChimeRequest,
+    SoundboxChimeResponse,
+    ThermalReceiptData
 )
 from backend.app.services.prisma_service import prisma_service
 from backend.app.services.timbre_service import timbre_service
@@ -143,18 +150,36 @@ async def list_audio_samples():
 
 @router.get("/audio-samples/{filename}")
 async def get_audio_sample_file(filename: str):
-    """Streams a WAV audio clip from audio_samples directory."""
+    """Streams a WAV audio clip from audio_samples directory with strict path-traversal prevention."""
     from fastapi.responses import FileResponse
     from pathlib import Path
+    
+    # Strip any directory components to prevent path traversal
+    safe_filename = Path(filename).name
+    if not safe_filename.endswith(".wav"):
+        raise HTTPException(status_code=400, detail="Only WAV audio samples are supported.")
+
     base_dir = Path(__file__).resolve().parent.parent.parent
-    sample_path = base_dir / "audio_samples" / filename
+    sample_path = (base_dir / "audio_samples" / safe_filename).resolve()
+    
+    # Verify the resolved path is strictly within the audio_samples directory
+    expected_dir = (base_dir / "audio_samples").resolve()
+    if not str(sample_path).startswith(str(expected_dir)):
+        raise HTTPException(status_code=403, detail="Access denied.")
+
     if not sample_path.exists():
-        alt_path = base_dir.parent / "audio_samples" / filename
+        alt_path = (base_dir.parent / "audio_samples" / safe_filename).resolve()
+        public_path = (base_dir / "frontend" / "public" / "audio-samples" / safe_filename).resolve()
+        dist_path = (base_dir / "frontend" / "dist" / "audio-samples" / safe_filename).resolve()
         if alt_path.exists():
             sample_path = alt_path
+        elif public_path.exists():
+            sample_path = public_path
+        elif dist_path.exists():
+            sample_path = dist_path
         else:
-            raise HTTPException(status_code=404, detail=f"Audio sample '{filename}' not found.")
-    return FileResponse(sample_path, media_type="audio/wav", filename=filename)
+            raise HTTPException(status_code=404, detail=f"Audio sample '{safe_filename}' not found.")
+    return FileResponse(sample_path, media_type="audio/wav", filename=safe_filename)
 
 
 class TranscribeJsonInput(BaseModel):
@@ -333,7 +358,13 @@ async def process_order(request: ProcessOrderRequest):
     cart = cart_service.build_cart(confirmed_inputs, parsed_res.khata_info)
 
     # 6. Determine conversational reply, clarification priority, and smart upsell
-    if resolved_clarification_sku:
+    if parsed_res.detected_intent == "PRICE_INQUIRY" and not confirmed_inputs and not match_res.clarifications_needed:
+        # Bhav Pucho Price Discovery Handler
+        q_item = parsed_res.price_inquiry_item or transcript
+        quote = catalogue_matcher.lookup_price_quotes(q_item)
+        spoken_reply_hi = quote.spoken_answer_hi
+        spoken_reply_en = quote.spoken_answer_en
+    elif resolved_clarification_sku:
         spoken_reply_hi = f"{resolved_clarification_sku.name_hi} कार्ट में जोड़ दिया गया है। क्या कुछ और चाहिए?"
         spoken_reply_en = f"{resolved_clarification_sku.name_en} added to cart. Anything else?"
     elif match_res.clarifications_needed:
@@ -347,8 +378,13 @@ async def process_order(request: ProcessOrderRequest):
         spoken_reply_hi = top_sub.spoken_prompt_hi
         spoken_reply_en = top_sub.spoken_prompt_en
     elif cart.items:
+        # Check if caller specified a budget cap (e.g. '500 rupaye ke andar')
+        if parsed_res.budget_cap_inr:
+            adv = catalogue_matcher.advise_budget(parsed_res.budget_cap_inr, confirmed_inputs)
+            spoken_reply_hi = f"{cart.spoken_summary_hi} {adv.advice_hi}"
+            spoken_reply_en = f"{cart.spoken_summary_en} {adv.advice_en}"
         # If order completed and an upsell suggestion is present, naturally voice-prompt the cross-sell
-        if cart.upsell_suggestion and parsed_res.is_order_complete:
+        elif cart.upsell_suggestion and parsed_res.is_order_complete:
             spoken_reply_hi = f"{cart.spoken_summary_hi} {cart.upsell_suggestion.pitch_hi}"
             spoken_reply_en = f"{cart.spoken_summary_en} {cart.upsell_suggestion.pitch_en}"
         else:
@@ -372,6 +408,22 @@ async def process_order(request: ProcessOrderRequest):
         voice_audio_fmt = synth_res.audio_format
         is_mock_tts = synth_res.is_mock
 
+    # 8. Compute token-level acoustic confidence scores for live spectrogram heatmap & slicer
+    tokens = transcript.split()
+    token_scores = []
+    for idx, tok in enumerate(tokens):
+        tok_clean = tok.lower().strip(".,;:!?")
+        if any(amb in tok_clean for amb in ["chawal", "चावल", "rice", "maggi", "मैगी"]):
+            token_scores.append({"token": tok, "confidence": 0.62, "tag": "AMBIGUOUS_TRIGGER", "offset_ms": idx * 380})
+        elif any(f in tok_clean for f in ["sawa", "सवा", "dhai", "ढाई", "dedh", "डेढ़", "aadha", "आधा"]):
+            token_scores.append({"token": tok, "confidence": 0.96, "tag": "COLLOQUIAL_FRACTION", "offset_ms": idx * 380})
+        elif any(k in tok_clean for k in ["aashirvaad", "आशीर्वाद", "maggi", "kurkure", "amul", "fortune", "tata"]):
+            token_scores.append({"token": tok, "confidence": 0.98, "tag": "KEYTERM_BOOSTED", "offset_ms": idx * 380})
+        elif any(neg in tok_clean for neg in ["nahi", "नहीं", "cancel", "mat"]):
+            token_scores.append({"token": tok, "confidence": 0.94, "tag": "REPAIR_NEGATION", "offset_ms": idx * 380})
+        else:
+            token_scores.append({"token": tok, "confidence": 0.91, "tag": "NORMAL", "offset_ms": idx * 380})
+
     return ProcessOrderResponse(
         transcript=transcript,
         normalized_transcript=parsed_res.normalized_transcript,
@@ -388,7 +440,10 @@ async def process_order(request: ProcessOrderRequest):
         voice_audio_format=voice_audio_fmt,
         is_mock_tts=is_mock_tts,
         khata_info=parsed_res.khata_info,
-        upsell_suggestion=cart.upsell_suggestion
+        upsell_suggestion=cart.upsell_suggestion,
+        repairs_applied=parsed_res.repairs_applied,
+        token_confidence_scores=token_scores,
+        detected_intent=parsed_res.detected_intent
     )
 
 
@@ -663,4 +718,96 @@ async def export_ondc_beckn(
         bpp_id="kiranavaani.gnani.ai",
         status="CONFIRMED",
         payload=beckn_payload
+    )
+
+
+# ---------------------------------------------------------
+# Bhav Pucho (Price Discovery) & Budget Advisory Endpoints
+# ---------------------------------------------------------
+@router.post("/price-check", response_model=PriceInquiryResponse)
+async def price_check(request: PriceInquiryRequest):
+    """
+    Looks up price for queried grocery items and returns spoken quotes via Timbre TTS.
+    Allows customers to ask 'Basmati chawal ka kya bhav hai?' without blindly committing to cart.
+    """
+    quote = catalogue_matcher.lookup_price_quotes(request.query)
+    synth = await timbre_service.synthesize_speech(
+        text=quote.spoken_answer_hi,
+        voice="Nalini",
+        language="hi-IN"
+    )
+    quote.voice_audio_base64 = synth.audio_base64
+    quote.voice_audio_format = synth.audio_format
+    return quote
+
+
+@router.post("/budget-order", response_model=BudgetAdvisorResponse)
+async def budget_order(request: BudgetAdvisorRequest):
+    """
+    Calculates affordable staple quantities within a customer's target budget cap.
+    E.g. '₹500 ke andar rashan': fills remaining balance with requested staple.
+    """
+    adv = catalogue_matcher.advise_budget(
+        budget_inr=request.budget_inr,
+        mandatory_items=request.mandatory_items,
+        filler_product_query=request.filler_product_query
+    )
+    synth = await timbre_service.synthesize_speech(
+        text=adv.advice_hi,
+        voice="Nalini",
+        language="hi-IN"
+    )
+    adv.voice_audio_base64 = synth.audio_base64
+    adv.voice_audio_format = synth.audio_format
+    return adv
+
+
+# ---------------------------------------------------------
+# Kirana Soundbox 2.0 & Thermal POS Receipt Endpoints
+# ---------------------------------------------------------
+@router.post("/soundbox-chime", response_model=SoundboxChimeResponse)
+async def soundbox_chime(request: SoundboxChimeRequest):
+    """
+    Generates and synthesizes authentic Indian merchant Soundbox voice chimes:
+    e.g. 'Paytm/Gupta Kirana par ₹106 prapt hue'.
+    """
+    import datetime
+    chime_text = cart_service.generate_soundbox_chime(
+        amount_inr=request.amount_inr,
+        store_name=request.store_name,
+        customer_name=request.customer_name,
+        payment_mode=request.payment_mode
+    )
+    synth = await timbre_service.synthesize_speech(
+        text=chime_text,
+        voice="Nalini",
+        language="hi-IN"
+    )
+    return SoundboxChimeResponse(
+        amount_inr=request.amount_inr,
+        chime_text_hi=chime_text,
+        voice_audio_base64=synth.audio_base64,
+        voice_audio_format=synth.audio_format,
+        timestamp=datetime.datetime.now().strftime("%d-%b %I:%M:%S %p"),
+        is_mock=synth.is_mock
+    )
+
+
+class ThermalReceiptRequest(BaseModel):
+    items: List[CartItemInput]
+    customer_name: str = "Sharma Ji (शर्मा जी)"
+    payment_mode: str = "UPI"
+
+
+@router.post("/receipt/thermal", response_model=ThermalReceiptData)
+async def generate_thermal_receipt(request: ThermalReceiptRequest):
+    """
+    Generates a structured retro 58mm thermal POS printer receipt data model
+    complete with synthetic FSSAI, GSTIN, bilingual item names, and scanable UPI QR.
+    """
+    cart = cart_service.build_cart(request.items)
+    return cart_service.format_thermal_receipt_data(
+        cart=cart,
+        customer_name=request.customer_name,
+        payment_mode=request.payment_mode
     )

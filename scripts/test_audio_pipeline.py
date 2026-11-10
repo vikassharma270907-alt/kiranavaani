@@ -14,8 +14,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from backend.parser import HinglishOrderParser
-from backend.noise_lab import NoiseLab
+from backend.app.services.order_parser import order_parser
+from backend.app.services.catalogue_matcher import catalogue_matcher
+from backend.app.services.cart_service import cart_service
+from backend.app.schemas import CartItemInput
 
 AUDIO_DIR = PROJECT_ROOT / "audio_samples"
 
@@ -73,9 +75,6 @@ TEST_CASES = [
 ]
 
 def run_pipeline_demo():
-    parser = HinglishOrderParser()
-    noise_lab = NoiseLab(parser=parser)
-
     print("\n" + "=" * 90)
     print("KIRANAVAANI: 5 TEST CLIPS END-TO-END PIPELINE VERIFICATION (GNANI PRISMA v3.0 & TIMBRE v2.5)")
     print("=" * 90)
@@ -98,22 +97,30 @@ def run_pipeline_demo():
         print(f"      Auto-LID: hi-Latn / hi-Deva (Code-Mixed 98.4%) | 200 Catalog Keyterms: ACTIVE")
 
         # Parse order
-        res = parser.parse_utterance(hyp, prisma_version=tc["model"], keyterms_enabled=tc["keyterms"])
+        parsed_res = order_parser.parse_utterance(hyp, keyterms_enabled=tc["keyterms"])
+        match_res = catalogue_matcher.match_items(parsed_res.items, keyterms_enabled=tc["keyterms"])
 
         # Check clarification
-        if res["clarifications_needed"]:
-            clar = res["clarifications_needed"][0]
-            print(f"  [3] Clarification Gate: TRIGGERED (Confidence {clar['confidence']})")
-            print(f"      Question: {clar['question_hi']}")
-            print(f"      Options: {[o['name_hi'] for o in clar['options']]}")
+        if match_res.clarifications_needed:
+            clar = match_res.clarifications_needed[0]
+            print(f"  [3] Clarification Gate: TRIGGERED (Confidence {clar.confidence})")
+            print(f"      Question: {clar.question_hi}")
+            print(f"      Options: {[o.name_hi for o in clar.options]}")
         else:
-            print(f"  [3] Cart Construction: {len(res['items'])} items recognized with >95% confidence")
-            for item in res["items"]:
-                print(f"      • {item['name_hi']} ({item['name_en']}) -> Qty: {item['qty']} {item['unit']} @ ₹{item['price_inr']} = ₹{item['line_total_inr']}")
-            print(f"      Total Bill: ₹{res['total_inr']} | Order Completed: {res['is_order_complete']}")
-
-        # Timbre v2.5 readback
-        print(f"  [4] Gnani Timbre v2.5 Spoken Reply: \"{res['timbre_v25_tts_reply']}\"")
+            confirmed_inputs = [
+                CartItemInput(
+                    sku_id=m.matched_sku.sku_id,
+                    quantity=m.original_item.quantity,
+                    unit=m.original_item.unit
+                )
+                for m in match_res.matched_items if m.status == "MATCHED" and m.matched_sku
+            ]
+            cart = cart_service.build_cart(confirmed_inputs)
+            print(f"  [3] Cart Construction: {len(cart.items)} items recognized with >95% confidence")
+            for item in cart.items:
+                print(f"      • {item.name_hi} ({item.name_en}) -> Qty: {item.quantity} {item.unit} @ ₹{item.unit_price} = ₹{item.line_total}")
+            print(f"      Total Bill: ₹{cart.total_inr} | Order Completed: {parsed_res.is_order_complete}")
+            print(f"  [4] Gnani Timbre v2.5 Spoken Reply: \"{cart.spoken_summary_hi}\"")
         print("-" * 90)
 
     print("\nSUCCESS: All 5 test clips passed the complete Audio -> STT -> Logic -> TTS pipeline!")

@@ -20,7 +20,10 @@ from backend.app.schemas import (
     ClarificationQuestion,
     ClarificationOption,
     MatchProductsResponse,
-    SubstitutionSuggestion
+    SubstitutionSuggestion,
+    PriceQuoteItem,
+    PriceInquiryResponse,
+    BudgetAdvisorResponse
 )
 from backend.app.services.order_parser import make_boundary_regex
 
@@ -201,8 +204,8 @@ class CatalogueMatcher:
         """
         Matches a single ParsedItem to the catalogue.
         """
-        product_query = item.product.strip()
-        if not product_query or len(product_query) < 2:
+        product_query = re.sub(r"[^\w\s\u0900-\u0963\u0966-\u097F\u0C80-\u0CFF\u0B80-\u0BFF\-]", "", item.product).strip()
+        if not product_query or len(product_query) < 2 or product_query.lower() in ("ही", "hi", "to", "तो", "ka", "ki", "ke", "ko", "se", "me", "pe"):
             return ProductMatchResult(
                 original_item=item,
                 status="UNRECOGNIZED",
@@ -442,6 +445,123 @@ class CatalogueMatcher:
         if best_sku and best_score >= 0.65:
             return best_sku, best_score
         return None
+
+    def lookup_price_quotes(self, query: str) -> PriceInquiryResponse:
+        """
+        'Bhav Pucho' price lookup: Searches catalogue for matched SKUs and formats spoken quote.
+        """
+        clean_q = query.lower().strip()
+        scored: List[Tuple[CatalogueSKU, float]] = []
+        for sku in self.get_all_skus():
+            aliases = [sku.name_en.lower(), sku.name_hi.lower()] + [a.lower() for a in sku.aliases]
+            best_s = 0.0
+            for a in aliases:
+                s = fuzz.partial_ratio(a, clean_q) / 100.0
+                if s > best_s:
+                    best_s = s
+            if best_s >= 0.60:
+                scored.append((sku, best_s))
+        
+        scored.sort(key=lambda x: x[1], reverse=True)
+        top_skus = [s[0] for s in scored[:3]]
+
+        if not top_skus:
+            return PriceInquiryResponse(
+                query=query,
+                found=False,
+                items=[],
+                spoken_answer_hi=f"माफ़ कीजिए, '{query}' का भाव हमारे कैटलॉग में नहीं मिला।",
+                spoken_answer_en=f"Sorry, price for '{query}' was not found in our catalogue."
+            )
+
+        quote_items = [
+            PriceQuoteItem(
+                sku_id=sku.sku_id,
+                name_en=sku.name_en,
+                name_hi=sku.name_hi,
+                category=sku.category,
+                price_inr=sku.price_inr,
+                unit=sku.unit,
+                in_stock=sku.in_stock
+            )
+            for sku in top_skus
+        ]
+
+        if len(top_skus) == 1:
+            it = top_skus[0]
+            hi = f"{it.name_hi} का भाव {int(it.price_inr)} रुपये प्रति {it.unit} है।"
+            en = f"{it.name_en} is priced at ₹{it.price_inr:g} per {it.unit}."
+        else:
+            hi_parts = [f"{it.name_hi} {int(it.price_inr)} रुपये प्रति {it.unit}" for it in top_skus[:2]]
+            en_parts = [f"{it.name_en} is ₹{it.price_inr:g}/{it.unit}" for it in top_skus[:2]]
+            hi = f"{', '.join(hi_parts)} है। क्या कार्ट में जोड़ना है?"
+            en = f"{' and '.join(en_parts)}. Would you like to add this to your cart?"
+
+        return PriceInquiryResponse(
+            query=query,
+            found=True,
+            items=quote_items,
+            spoken_answer_hi=hi,
+            spoken_answer_en=en
+        )
+
+    def advise_budget(
+        self,
+        budget_inr: float,
+        mandatory_items: List[Any],
+        filler_product_query: Optional[str] = "sugar"
+    ) -> BudgetAdvisorResponse:
+        """
+        'Budget-Aware Kirana Basket':
+        Given a budget cap (e.g. ₹500), computes cost of mandatory items and suggests
+        optimal filler quantity of requested staple (e.g. sugar or tea).
+        """
+        mandatory_cost = 0.0
+        for m in mandatory_items:
+            sku = self.sku_lookup.get(getattr(m, "sku_id", None) or m.get("sku_id"))
+            if sku:
+                qty = getattr(m, "quantity", 1.0) if hasattr(m, "quantity") else m.get("quantity", 1.0)
+                mandatory_cost += sku.price_inr * qty
+
+        remaining = max(0.0, budget_inr - mandatory_cost)
+        
+        filler_sku = self.sku_lookup.get("SKU-020")  # Madhur Sugar
+        if filler_product_query:
+            quotes = self.lookup_price_quotes(filler_product_query)
+            if quotes.found and quotes.items:
+                filler_sku = self.sku_lookup.get(quotes.items[0].sku_id) or filler_sku
+
+        suggested_qty = 0.0
+        if filler_sku and filler_sku.price_inr > 0 and remaining > 0:
+            raw_qty = remaining / filler_sku.price_inr
+            suggested_qty = round(raw_qty * 2) / 2
+            if suggested_qty == 0 and raw_qty > 0.2:
+                suggested_qty = 0.25
+
+        allocated_total = round(mandatory_cost + (suggested_qty * (filler_sku.price_inr if filler_sku else 0)), 2)
+        rem_balance = round(max(0.0, budget_inr - allocated_total), 2)
+
+        hi_msg = (
+            f"आपके ₹{budget_inr:g} के बजट में ज़रूरी सामान ₹{mandatory_cost:g} का हुआ। "
+            f"बचे हुए ₹{remaining:g} में {suggested_qty:g} {filler_sku.unit if filler_sku else ''} "
+            f"{filler_sku.name_hi if filler_sku else ''} जोड़ा जा सकता है।"
+        )
+        en_msg = (
+            f"Within your ₹{budget_inr:g} budget, required items cost ₹{mandatory_cost:g}. "
+            f"With the remaining ₹{remaining:g}, you can add {suggested_qty:g} {filler_sku.unit if filler_sku else ''} "
+            f"of {filler_sku.name_en if filler_sku else ''}."
+        )
+
+        return BudgetAdvisorResponse(
+            budget_inr=budget_inr,
+            allocated_total_inr=allocated_total,
+            remaining_balance_inr=rem_balance,
+            mandatory_items_cost=round(mandatory_cost, 2),
+            suggested_filler_item=filler_sku,
+            suggested_filler_quantity=suggested_qty,
+            advice_hi=hi_msg,
+            advice_en=en_msg
+        )
 
 
 # Default singleton instance

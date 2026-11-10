@@ -29,6 +29,26 @@
       "destination": "/api/index.py"
     },
     {
+      "source": "/catalogue/(.*)",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/audio-samples",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/audio-samples/(.*)",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/khata/(.*)",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/ondc/(.*)",
+      "destination": "/api/index.py"
+    },
+    {
       "source": "/transcribe",
       "destination": "/api/index.py"
     },
@@ -50,6 +70,22 @@
     },
     {
       "source": "/process-order",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/price-check",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/budget-order",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/soundbox-chime",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/receipt/(.*)",
       "destination": "/api/index.py"
     }
   ]

@@ -37,9 +37,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend code, data catalogues and configuration
+# Copy backend code, data catalogues, audio samples and configuration
 COPY backend/ ./backend/
 COPY data/ ./data/
+COPY audio_samples/ ./audio_samples/
 
 # Copy compiled frontend distribution from Stage 1 for unified serving
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist

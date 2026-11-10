@@ -1,0 +1,176 @@
+{
+  "benchmark_title": "KiranaVaani Noise-Robustness & Keyterms Ablation Benchmark",
+  "dataset_size": 80,
+  "results": [
+    {
+      "tier_name": "Tier 1: Clean Studio",
+      "snr_db": 30,
+      "noise_type": "none",
+      "configs": {
+        "v25_no_key": {
+          "wer": 0.26,
+          "precision": 100.0,
+          "recall": 49.52,
+          "item_f1": 66.24,
+          "quantity_accuracy": 20.8,
+          "ambiguities_flagged": 105,
+          "total_orders_evaluated": 80
+        },
+        "v30_key_off": {
+          "wer": 0.26,
+          "precision": 100.0,
+          "recall": 49.52,
+          "item_f1": 66.24,
+          "quantity_accuracy": 20.8,
+          "ambiguities_flagged": 105,
+          "total_orders_evaluated": 80
+        },
+        "v30_key_on": {
+          "wer": 0.0,
+          "precision": 100.0,
+          "recall": 78.37,
+          "item_f1": 87.87,
+          "quantity_accuracy": 21.99,
+          "ambiguities_flagged": 45,
+          "total_orders_evaluated": 80
+        }
+      }
+    },
+    {
+      "tier_name": "Tier 2: Telephony Channel",
+      "snr_db": 20,
+      "noise_type": "line_noise",
+      "configs": {
+        "v25_no_key": {
+          "wer": 0.26,
+          "precision": 100.0,
+          "recall": 49.52,
+          "item_f1": 66.24,
+          "quantity_accuracy": 20.8,
+          "ambiguities_flagged": 105,
+          "total_orders_evaluated": 80
+        },
+        "v30_key_off": {
+          "wer": 0.26,
+          "precision": 100.0,
+          "recall": 49.52,
+          "item_f1": 66.24,
+          "quantity_accuracy": 20.8,
+          "ambiguities_flagged": 105,
+          "total_orders_evaluated": 80
+        },
+        "v30_key_on": {
+          "wer": 0.0,
+          "precision": 100.0,
+          "recall": 78.37,
+          "item_f1": 87.87,
+          "quantity_accuracy": 21.99,
+          "ambiguities_flagged": 45,
+          "total_orders_evaluated": 80
+        }
+      }
+    },
+    {
+      "tier_name": "Tier 3: Ceiling Fan Hum",
+      "snr_db": 10,
+      "noise_type": "fan",
+      "configs": {
+        "v25_no_key": {
+          "wer": 0.26,
+          "precision": 100.0,
+          "recall": 49.52,
+          "item_f1": 66.24,
+          "quantity_accuracy": 20.8,
+          "ambiguities_flagged": 105,
+          "total_orders_evaluated": 80
+        },
+        "v30_key_off": {
+          "wer": 0.26,
+          "precision": 100.0,
+          "recall": 49.52,
+          "item_f1": 66.24,
+          "quantity_accuracy": 20.8,
+          "ambiguities_flagged": 105,
+          "total_orders_evaluated": 80
+        },
+        "v30_key_on": {
+          "wer": 0.0,
+          "precision": 100.0,
+          "recall": 78.37,
+          "item_f1": 87.87,
+          "quantity_accuracy": 21.99,
+          "ambiguities_flagged": 45,
+          "total_orders_evaluated": 80
+        }
+      }
+    },
+    {
+      "tier_name": "Tier 4: Street Traffic",
+      "snr_db": 5,
+      "noise_type": "traffic",
+      "configs": {
+        "v25_no_key": {
+          "wer": 0.26,
+          "precision": 100.0,
+          "recall": 49.52,
+          "item_f1": 66.24,
+          "quantity_accuracy": 20.8,
+          "ambiguities_flagged": 105,
+          "total_orders_evaluated": 80
+        },
+        "v30_key_off": {
+          "wer": 0.26,
+          "precision": 100.0,
+          "recall": 49.52,
+          "item_f1": 66.24,
+          "quantity_accuracy": 20.8,
+          "ambiguities_flagged": 105,
+          "total_orders_evaluated": 80
+        },
+        "v30_key_on": {
+          "wer": 0.26,
+          "precision": 100.0,
+          "recall": 75.96,
+          "item_f1": 86.34,
+          "quantity_accuracy": 21.99,
+          "ambiguities_flagged": 50,
+          "total_orders_evaluated": 80
+        }
+      }
+    },
+    {
+      "tier_name": "Tier 5: Market Babble",
+      "snr_db": 0,
+      "noise_type": "market",
+      "configs": {
+        "v25_no_key": {
+          "wer": 0.69,
+          "precision": 100.0,
+          "recall": 49.52,
+          "item_f1": 66.24,
+          "quantity_accuracy": 20.8,
+          "ambiguities_flagged": 105,
+          "total_orders_evaluated": 80
+        },
+        "v30_key_off": {
+          "wer": 0.69,
+          "precision": 100.0,
+          "recall": 49.52,
+          "item_f1": 66.24,
+          "quantity_accuracy": 20.8,
+          "ambiguities_flagged": 105,
+          "total_orders_evaluated": 80
+        },
+        "v30_key_on": {
+          "wer": 0.69,
+          "precision": 100.0,
+          "recall": 75.96,
+          "item_f1": 86.34,
+          "quantity_accuracy": 21.99,
+          "ambiguities_flagged": 50,
+          "total_orders_evaluated": 80
+        }
+      }
+    }
+  ]
+}

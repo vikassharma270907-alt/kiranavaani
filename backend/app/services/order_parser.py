@@ -8,7 +8,7 @@ Normalizes colloquial fractional numerals ('aadha' -> 0.5, 'dhai' -> 2.5, 'dedh'
 import re
 from typing import List, Tuple, Dict, Any, Optional
 
-from backend.app.schemas import ParsedItem, ParseOrderResponse, KhataInfo
+from backend.app.schemas import ParsedItem, ParseOrderResponse, KhataInfo, RepairedItemEvent
 
 
 def make_boundary_regex(phrase: str) -> str:
@@ -16,7 +16,8 @@ def make_boundary_regex(phrase: str) -> str:
     parts = phrase.strip().split()
     escaped = [re.escape(p) for p in parts]
     inner = r"\s+".join(escaped)
-    return rf"(?<![\w\u0900-\u097F\u0C80-\u0CFF\u0B80-\u0BFF]){inner}(?![\w\u0900-\u097F\u0C80-\u0CFF\u0B80-\u0BFF])"
+    word_chars = r"\w\u0900-\u0963\u0966-\u097F\u0C80-\u0CFF\u0B80-\u0BFF"
+    return rf"(?<![{word_chars}]){inner}(?![{word_chars}])"
 
 
 # Comprehensive Multilingual Indic Numeral Rules (Hindi, Hinglish, Kannada, Tamil)
@@ -196,6 +197,8 @@ class HinglishOrderParser:
     def strip_conversational_fillers(self, text: str) -> str:
         """Removes greetings, polite fillers, and ledger phrases to isolate product order clauses."""
         cleaned = text
+        # Normalize Devanagari danda and common sentence punctuation to spaces (preserve numeric decimals)
+        cleaned = re.sub(r"(?<!\d)\.(?!\d)|[\u0964\u0965!?]", " ", cleaned)
         # Remove khata/ledger phrases from being falsely parsed as product names (e.g. 'Sharma ji ke khaate me likh lo')
         cleaned = re.sub(
             r"(?:[a-zA-Z\u0900-\u097F]+(?:\s+ji)?\s+)?ke\s+(?:khaate|khata|खाते|खाता)\s+(?:me|में)?(?:\s*(?:daal\s+dena|daal\s+do|likh\s+lo|likh\s+dena|डाल\s+देना|लिख\s+लो))?",
@@ -297,6 +300,165 @@ class HinglishOrderParser:
             note_hi=f"{cust_name} के खाते में दर्ज किया गया"
         )
 
+    def detect_intent(self, text: str) -> Tuple[str, Optional[str], Optional[float]]:
+        """
+        Classifies caller intent into:
+        1. 'PRICE_INQUIRY' (e.g. 'Basmati chawal ka kya bhav hai?')
+        2. 'BUDGET_QUERY' (e.g. '500 rupaye ke andar rashan de do')
+        3. 'ORDER' (standard voice order placement)
+        """
+        text_lower = text.lower()
+        
+        # 1. Budget query detection
+        budget_match = re.search(
+            r"(\d+(?:\.\d+)?)\s*(?:rupaye|rs|₹|rupees|r)?\s*(?:ke\s+andar|mein|me|ka)\s*(?:rashan|budget|saman|order)",
+            text_lower
+        )
+        if budget_match:
+            try:
+                cap = float(budget_match.group(1))
+                return "BUDGET_QUERY", None, cap
+            except (ValueError, TypeError):
+                pass
+                
+        # 2. Price inquiry detection
+        price_patterns = [
+            r"([a-zA-Z\u0900-\u097F\s]+?)\s+(?:ka|ki|ke)\s*(?:kya\s+)?(?:bhav|bhao|rate|price|daam|daam\s+hai|kitne\s+(?:ka|ki|ke|mein)\s+(?:hai|diya|padega))",
+            r"(?:bhav|bhao|rate|price|daam)\s+(?:batao|bataiye|kya\s+hai)\s*(?:([a-zA-Z\u0900-\u097F\s]+))?",
+            r"(?:kitne\s+(?:ka|ki|ke|mein)\s+(?:hai|diya|padega))\s*(?:([a-zA-Z\u0900-\u097F\s]+))?"
+        ]
+        for pat in price_patterns:
+            m = re.search(pat, text_lower)
+            if m:
+                queried_prod = None
+                for g in m.groups():
+                    if g and len(g.strip()) > 1:
+                        cand = g.strip()
+                        if cand not in ("bhaiya", "gupta ji", "anna", "namaste", "yeh", "woh", "kya"):
+                            queried_prod = cand
+                            break
+                return "PRICE_INQUIRY", queried_prod, None
+
+        return "ORDER", None, None
+
+    def resolve_conversational_repairs(
+        self, 
+        items: List[ParsedItem], 
+        text: str
+    ) -> Tuple[List[ParsedItem], List[RepairedItemEvent]]:
+        """
+        'Bhasha-Sudhaar' (Conversational Repair & Negation Engine):
+        Handles mid-utterance backtracks, cancellations, and quantity corrections.
+        E.g.:
+        1. '5 kilo atta, nahi nahi 5 nahi 2 kilo karna' -> Corrects 5kg to 2kg.
+        2. 'do packet Maggi aur ek butter, nahi butter mat bhejna cancel kar do' -> Discards butter.
+        """
+        text_lower = text.lower()
+        repairs: List[RepairedItemEvent] = []
+        filtered_items: List[ParsedItem] = []
+
+        # Step 1: Detect explicit verbal item cancellations
+        cancellation_regex = (
+            r"(?:([a-zA-Z\u0900-\u097F]+)\s+(?:mat\s+bhejna|cancel\s+kar\s+do|cancel\s+karo|nahi\s+chahiye|hata\s+do|vendaam|beda|मत\s+भेजना|कैंसिल\s+कर\s+दो|कैंसिल\s+करो|हटा\s+दो|नहीं\s+चाहिए))|"
+            r"(?:(?:mat\s+bhejna|cancel\s+karo|cancel\s+kar\s+do|hata\s+do|nahi\s+chahiye|vendaam|beda|मत\s+भेजना|कैंसिल\s+कर\s+दो|कैंसिल\s+करो|हटा\s+दो|नहीं\s+चाहिए)\s+([a-zA-Z\u0900-\u097F]+))"
+        )
+        cancelled_keywords = set()
+        for match in re.finditer(cancellation_regex, text_lower):
+            for grp in match.groups():
+                if grp and len(grp.strip()) > 2 and grp.strip() not in ("arre", "bhaiya", "nahi", "नहीं", "aur", "और"):
+                    cancelled_keywords.add(grp.strip().lower())
+
+        # Step 2: Detect quantity correction patterns ('X nahi Y' e.g. '5 nahi 2' or '5 नहीं 2')
+        qty_correction_pattern = r"(\d+(?:\.\d+)?)\s*(?:kilo|kg|litre|packet|bar|किलो|लीटर|पैकेट)?\s*(?:nahi|नहीं)\s*(\d+(?:\.\d+)?)"
+        corrections = []
+        for m in re.finditer(qty_correction_pattern, text_lower):
+            try:
+                old_q = float(m.group(1))
+                new_q = float(m.group(2))
+                corrections.append((old_q, new_q, m.group(0)))
+            except (ValueError, TypeError):
+                continue
+
+        # Process items sequentially and apply cancellations / replacements
+        for item in items:
+            item_prod_lower = item.product.lower()
+            
+            # Check if this item is purely a verbal correction / backtracking clause
+            is_pure_correction = bool(
+                re.search(qty_correction_pattern, item.raw_clause or "")
+                or re.search(r"(?:nahi|नहीं|नही|arre|अरे|cancel|कैंसिल)\s*(?:nahi|नहीं|नही|\d+)", item.raw_clause or "")
+                or item_prod_lower.strip() in ("karna", "kar do", "bhejna", "dena", "nahi", "arre nahi", "नहीं", "नही")
+            )
+            if is_pure_correction:
+                continue
+
+            # Check if this item is marked for cancellation
+            is_cancelled = False
+            for kw in cancelled_keywords:
+                if kw in item_prod_lower or item_prod_lower in kw:
+                    is_cancelled = True
+                    repairs.append(
+                        RepairedItemEvent(
+                            original_phrase=kw,
+                            action="CANCELLED_ITEM",
+                            product=item.product,
+                            previous_quantity=item.quantity,
+                            new_quantity=0.0,
+                            explanation=f"Item '{item.product}' cancelled via verbal backtracking ('{kw}')"
+                        )
+                    )
+                    break
+            
+            if is_cancelled:
+                continue
+
+            # Check if this item had a quantity correction
+            matched_correction = None
+            for old_q, new_q, phrase in corrections:
+                if abs(item.quantity - old_q) < 0.01:
+                    matched_correction = (old_q, new_q, phrase)
+                    break
+
+            if matched_correction:
+                old_q, new_q, phrase = matched_correction
+                repairs.append(
+                    RepairedItemEvent(
+                        original_phrase=phrase,
+                        action="CORRECTED_QUANTITY",
+                        product=item.product,
+                        previous_quantity=old_q,
+                        new_quantity=new_q,
+                        explanation=f"Quantity for '{item.product}' corrected from {old_q:g} to {new_q:g} via verbal repair ('{phrase}')"
+                    )
+                )
+                item.quantity = new_q
+
+            # Handle duplicate products where subsequent clause has 'nahi'
+            existing_match_idx = None
+            for idx, prev_it in enumerate(filtered_items):
+                if prev_it.product.strip().lower() == item_prod_lower or (len(item_prod_lower) > 3 and item_prod_lower in prev_it.product.lower()):
+                    existing_match_idx = idx
+                    break
+
+            if existing_match_idx is not None and ("nahi" in text_lower or "नहीं" in text_lower):
+                prev_it = filtered_items[existing_match_idx]
+                repairs.append(
+                    RepairedItemEvent(
+                        original_phrase=item.raw_clause or text,
+                        action="CORRECTED_QUANTITY",
+                        product=prev_it.product,
+                        previous_quantity=prev_it.quantity,
+                        new_quantity=item.quantity,
+                        explanation=f"Replaced earlier mention of '{prev_it.product}' ({prev_it.quantity:g}) with updated clause ({item.quantity:g})"
+                    )
+                )
+                filtered_items[existing_match_idx] = item
+            else:
+                if item_prod_lower not in ("karna", "kar do", "bhejna", "dena", "nahi", "arre nahi"):
+                    filtered_items.append(item)
+
+        return filtered_items, repairs
+
     def parse_utterance(self, text: str, keyterms_enabled: bool = True) -> ParseOrderResponse:
         """
         Parses a full transcript into individual product mentions with normalized quantity and unit.
@@ -304,6 +466,7 @@ class HinglishOrderParser:
         raw_transcript = text.strip()
         is_order_complete = self.check_order_completion(raw_transcript)
         khata_info = self.extract_khata_info(raw_transcript)
+        intent, price_item, budget_cap = self.detect_intent(raw_transcript)
         
         # 1. First strip conversational fillers and completion verbs from raw text
         cleaned_text = self.strip_conversational_fillers(raw_transcript)
@@ -325,8 +488,17 @@ class HinglishOrderParser:
             if not clause or len(clause) < 2:
                 continue
 
-            # Check if this clause is purely a filler, customer name, or completion word that escaped
-            if clause.lower() in ("bhej dena", "pack kar do", "itna hi", "likh lo", "dena", "saaku", "aste", "kodi", "kudunga"):
+            norm_c = re.sub(r"[^\w\u0900-\u0963\u0966-\u097F\u0C80-\u0CFF\u0B80-\u0BFF]", "", clause.lower())
+            if len(norm_c) < 2 or norm_c in (
+                "bhej dena", "pack kar do", "itna hi", "likh lo", "dena", "saaku", "aste", "kodi", "kudunga",
+                "hi", "ही", "bas", "बस", "bhi", "भी", "to", "तो", "aur", "और", "hai", "है", "ho", "हो", "gaya", "गया", "kripya", "कृपया", "please", "zarra"
+            ):
+                continue
+
+            # Skip verbal repair/cancellation clauses like "नहीं नहीं 5 नहीं 2 kilo कर दो"
+            if re.search(r"(?:nahi|नहीं)\s*(?:nahi|नहीं)?\s*\d+\s*(?:nahi|नहीं)\s*\d+", clause.lower()) or (
+                re.search(r"\b(?:nahi|नहीं)\b", clause.lower()) and re.search(r"\d", clause) and any(w in clause.lower() for w in ("kar do", "karna", "karo", "kodi", "कर दो", "करना", "करो"))
+            ):
                 continue
 
             if khata_info and khata_info.customer_name and clause.lower() in khata_info.customer_name.lower():
@@ -334,8 +506,10 @@ class HinglishOrderParser:
 
             qty, unit, prod_text = self.extract_quantity_and_unit(clause)
 
-            # If prod_text is empty, try to see if original clause had product
             final_prod = prod_text if prod_text else clause
+            clean_final = re.sub(r"[^\w\u0900-\u0963\u0966-\u097F\u0C80-\u0CFF\u0B80-\u0BFF]", "", final_prod.lower())
+            if len(clean_final) < 2 or clean_final in ("hi", "ही", "bas", "बस", "bhi", "भी", "to", "तो", "aur", "और", "hai", "है", "ho", "हो", "gaya", "गया"):
+                continue
 
             items.append(
                 ParsedItem(
@@ -346,12 +520,19 @@ class HinglishOrderParser:
                 )
             )
 
+        # 4. Apply Bhasha-Sudhaar (Conversational Repair & Negation Engine)
+        repaired_items, repairs_applied = self.resolve_conversational_repairs(items, raw_transcript)
+
         return ParseOrderResponse(
             raw_transcript=raw_transcript,
             normalized_transcript=normalized_transcript,
-            items=items,
+            items=repaired_items,
             is_order_complete=is_order_complete,
-            khata_info=khata_info
+            khata_info=khata_info,
+            repairs_applied=repairs_applied,
+            detected_intent=intent,
+            price_inquiry_item=price_item,
+            budget_cap_inr=budget_cap
         )
 
 

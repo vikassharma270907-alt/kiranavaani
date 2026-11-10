@@ -1,21 +1,48 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Activity, Radio, Volume2, ShieldCheck, HelpCircle, Layers, Sliders } from "lucide-react";
+import { Activity, Radio, Volume2, ShieldCheck, HelpCircle, Layers, Sliders, Scissors, Sparkles, AlertTriangle } from "lucide-react";
+
+export interface TokenConfidence {
+  token: string;
+  confidence: number;
+  tag: string;
+  offset_ms?: number;
+}
 
 interface AcousticSpectrogramProps {
   isActive: boolean;
   audioElement?: HTMLAudioElement | null;
   sampleRate?: number;
+  tokenConfidenceScores?: TokenConfidence[];
+  onPlayAudioSlice?: (offsetMs: number, token: string) => void;
 }
 
 export const AcousticSpectrogram: React.FC<AcousticSpectrogramProps> = ({
   isActive,
   audioElement,
   sampleRate = 8000,
+  tokenConfidenceScores = [],
+  onPlayAudioSlice
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [telephonyFilterOn, setTelephonyFilterOn] = useState(true);
-  const [noiseLevel, setNoiseLevel] = useState<number>(5); // dB SNR
+  const [selectedTokenSlice, setSelectedTokenSlice] = useState<string | null>(null);
   const animationFrameId = useRef<number | null>(null);
+
+  // Fallback demo tokens if none passed from active transcription
+  const activeTokens: TokenConfidence[] = tokenConfidenceScores.length > 0
+    ? tokenConfidenceScores
+    : [
+        { token: "भैया", confidence: 0.94, tag: "NORMAL", offset_ms: 0 },
+        { token: "2", confidence: 0.98, tag: "KEYTERM_BOOSTED", offset_ms: 400 },
+        { token: "किलो", confidence: 0.96, tag: "COLLOQUIAL_FRACTION", offset_ms: 800 },
+        { token: "चावल", confidence: 0.62, tag: "AMBIGUOUS_TRIGGER", offset_ms: 1200 },
+        { token: "और", confidence: 0.92, tag: "NORMAL", offset_ms: 1600 },
+        { token: "1", confidence: 0.98, tag: "KEYTERM_BOOSTED", offset_ms: 2000 },
+        { token: "Maggi", confidence: 0.99, tag: "KEYTERM_BOOSTED", offset_ms: 2400 },
+        { token: "masala", confidence: 0.97, tag: "KEYTERM_BOOSTED", offset_ms: 2800 },
+        { token: "लिख", confidence: 0.91, tag: "NORMAL", offset_ms: 3200 },
+        { token: "लो", confidence: 0.90, tag: "NORMAL", offset_ms: 3600 }
+      ];
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -74,23 +101,19 @@ export const AcousticSpectrogram: React.FC<AcousticSpectrogramProps> = ({
 
         let magnitude = 0;
         if (isActive) {
-          // Voice formant energy simulation
           const voiceEnergy =
             Math.sin(phase + i * 0.3) * 0.3 +
             Math.cos(phase * 1.5 + i * 0.15) * 0.25 +
             Math.sin(phase * 0.7 + i * 0.5) * 0.2;
 
-          // Low frequencies (0-2 kHz) have heavy fundamental voice pitch
           let baseProfile = Math.exp(-Math.pow((currentFreqKhz - 1.2) / 1.5, 2));
 
-          // Attenuation if telephony filter is ON and frequency > 3.6 kHz
           if (telephonyFilterOn && currentFreqKhz > 3.4) {
             baseProfile *= Math.exp(-(currentFreqKhz - 3.4) * 3.5);
           }
 
           magnitude = Math.max(0.05, Math.min(0.95, (baseProfile + voiceEnergy * 0.3) * (0.8 + Math.random() * 0.1)));
         } else {
-          // Subtle idle ambient noise floor
           magnitude = 0.04 + Math.sin(phase * 0.5 + i) * 0.02;
         }
 
@@ -98,7 +121,6 @@ export const AcousticSpectrogram: React.FC<AcousticSpectrogramProps> = ({
         const x = i * barWidth;
         const y = height - barHeight - 16;
 
-        // Gradient bar coloring based on frequency zone
         const grad = ctx.createLinearGradient(0, y, 0, height);
         if (currentFreqKhz > 4.0 && telephonyFilterOn) {
           grad.addColorStop(0, "#f43f5e");
@@ -125,15 +147,22 @@ export const AcousticSpectrogram: React.FC<AcousticSpectrogramProps> = ({
         cancelAnimationFrame(animationFrameId.current);
       }
     };
-  }, [isActive, telephonyFilterOn, noiseLevel]);
+  }, [isActive, telephonyFilterOn]);
+
+  const handleTokenClick = (tok: TokenConfidence) => {
+    setSelectedTokenSlice(tok.token);
+    if (onPlayAudioSlice) {
+      onPlayAudioSlice(tok.offset_ms || 0, tok.token);
+    }
+  };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-xl space-y-3">
+    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-xl space-y-3.5">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
         <div className="flex items-center gap-2">
           <Activity className="w-4 h-4 text-rose-400" />
           <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
-            Acoustic Spectrum & G.711 Telephony Inspector
+            Acoustic Spectrum & Nyquist Inspector
           </h3>
           <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-300 border border-rose-500/20 font-mono">
             Nyquist Cut: 4.0 kHz
@@ -160,8 +189,8 @@ export const AcousticSpectrogram: React.FC<AcousticSpectrogramProps> = ({
         <canvas
           ref={canvasRef}
           width={640}
-          height={140}
-          className="w-full h-[140px] block"
+          height={120}
+          className="w-full h-[120px] block"
         />
 
         {/* Legend Overlay */}
@@ -175,14 +204,73 @@ export const AcousticSpectrogram: React.FC<AcousticSpectrogramProps> = ({
         </div>
       </div>
 
+      {/* Token-Level Acoustic Confidence Heatmap & Interactive Audio Slicer */}
+      <div className="bg-slate-950/80 border border-slate-800 rounded-lg p-3 space-y-2">
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-1.5 font-semibold text-slate-200">
+            <Scissors className="w-3.5 h-3.5 text-teal-400" />
+            Phonetic Confidence Heatmap & Audio Slicer
+          </div>
+          <span className="text-[10px] text-slate-400">
+            Click any token to scrub 0.8s audio slice
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+          {activeTokens.map((tok, i) => {
+            const isAmbiguous = tok.confidence < 0.75;
+            const isBoosted = tok.tag === "KEYTERM_BOOSTED";
+            const isFraction = tok.tag === "COLLOQUIAL_FRACTION";
+            const isNegation = tok.tag === "REPAIR_NEGATION";
+            const isSelected = selectedTokenSlice === tok.token;
+
+            let badgeClass = "bg-slate-800/80 text-slate-300 border-slate-700 hover:border-slate-500";
+            if (isAmbiguous) {
+              badgeClass = "bg-rose-500/20 text-rose-300 border-rose-500/40 hover:bg-rose-500/30 ring-1 ring-rose-500/50 animate-pulse";
+            } else if (isBoosted) {
+              badgeClass = "bg-teal-500/20 text-teal-300 border-teal-500/40 hover:bg-teal-500/30";
+            } else if (isFraction) {
+              badgeClass = "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30";
+            } else if (isNegation) {
+              badgeClass = "bg-purple-500/20 text-purple-300 border-purple-500/40 hover:bg-purple-500/30";
+            }
+
+            return (
+              <button
+                key={i}
+                onClick={() => handleTokenClick(tok)}
+                className={`group px-2 py-1 rounded-md text-xs font-mono border transition-all flex items-center gap-1 ${badgeClass} ${
+                  isSelected ? "ring-2 ring-white scale-105" : ""
+                }`}
+                title={`Confidence: ${(tok.confidence * 100).toFixed(1)}% | Tag: ${tok.tag}`}
+              >
+                <span>{tok.token}</span>
+                <span className="text-[9px] opacity-75 font-sans">
+                  {Math.round(tok.confidence * 100)}%
+                </span>
+                {isAmbiguous && (
+                  <Volume2 className="w-3 h-3 text-rose-400 ml-0.5 group-hover:scale-125 transition-transform" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {selectedTokenSlice && (
+          <div className="text-[11px] text-teal-300 flex items-center gap-1.5 pt-0.5 font-mono">
+            <Volume2 className="w-3.5 h-3.5 text-teal-400 animate-bounce" />
+            Playing scrubbed audio snippet for phoneme: <span className="font-bold underline">"{selectedTokenSlice}"</span>
+          </div>
+        )}
+      </div>
+
       {/* Acoustic Physics Annotation */}
       <div className="text-[11px] text-slate-400 leading-relaxed bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80 flex items-start gap-2">
         <span className="text-amber-400 flex-shrink-0">🔬</span>
         <div>
-          <strong className="text-slate-200">The Acoustic Telephony Challenge:</strong> Standard 8 kHz mobile calls strictly cut off frequencies above <span className="text-rose-400 font-mono">4 kHz</span>. This Nyquist boundary eliminates the sibilant consonant frequencies (/s/, /sh/, /f/), causing phonetic hallucinations like <span className="text-amber-300 font-mono">"meghee"</span> instead of <span className="text-teal-300 font-mono">"Maggi"</span>. KiranaVaani's 200 catalog keyterms bias recovers brand names with <strong className="text-teal-300">91.1% Item-F1</strong>.
+          <strong className="text-slate-200">The Acoustic Telephony Challenge:</strong> Standard 8 kHz mobile calls cut off frequencies above <span className="text-rose-400 font-mono">4 kHz</span>. This Nyquist boundary eliminates the sibilant consonant frequencies (/s/, /sh/, /f/), causing phonetic hallucinations like <span className="text-amber-300 font-mono">"meghee"</span> instead of <span className="text-teal-300 font-mono">"Maggi"</span>. KiranaVaani's 200 catalog keyterms bias recovers brand names with <strong className="text-teal-300">91.1% Item-F1</strong>.
         </div>
       </div>
     </div>
   );
 };
-

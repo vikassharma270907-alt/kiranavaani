@@ -56,7 +56,11 @@ FRACTION_MAP = [
 
 def generate_synthetic_dataset(count: int = 80) -> List[Dict[str, Any]]:
     # Load catalog
-    catalog_path = Path(__file__).resolve().parent.parent / "catalog" / "kirana_catalog_35_skus.json"
+    catalog_path = Path(__file__).resolve().parent.parent / "data" / "catalogue.json"
+    if not catalog_path.exists():
+        catalog_path = Path(__file__).resolve().parent.parent / "backend" / "app" / "data" / "grocery_catalogue.json"
+    if not catalog_path.exists():
+        catalog_path = Path(__file__).resolve().parent.parent.parent / "catalog" / "kirana_catalog_35_skus.json"
     with open(catalog_path, "r", encoding="utf-8") as f:
         catalog = json.load(f)
     skus = catalog["skus"]

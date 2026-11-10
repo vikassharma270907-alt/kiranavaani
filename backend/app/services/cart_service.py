@@ -13,7 +13,9 @@ from backend.app.schemas import (
     CartRequest,
     CartResponse,
     CatalogueSKU,
-    UpsellSuggestion
+    UpsellSuggestion,
+    ThermalReceiptData,
+    ThermalReceiptLine
 )
 from backend.app.services.catalogue_matcher import catalogue_matcher
 
@@ -230,6 +232,96 @@ class CartService:
             en_summary = f"Your order includes {en_items_str}. Total bill is ₹{total:g}. Would you like to confirm?"
 
         return hi_summary, en_summary
+
+    def generate_soundbox_chime(
+        self,
+        amount_inr: float,
+        store_name: str = "Gupta Kirana Store",
+        customer_name: Optional[str] = None,
+        payment_mode: str = "UPI"
+    ) -> str:
+        """
+        Generates authentic Indian Kirana Soundbox voice notification text:
+        e.g. 'Paytm/PhonePe par ₹106 prapt hue' or 'Sharma ji ke khate me ₹106 darj hue'.
+        """
+        amt_int = int(amount_inr)
+        
+        # Friendly Hindi number words for common amounts
+        hi_nums = {
+            10: "दस", 14: "चौदह", 20: "बीस", 25: "पच्चीस", 28: "अट्ठाइस",
+            50: "पचास", 88: "अट्ठासी", 95: "पंचानवे", 100: "एक सौ",
+            106: "एक सौ छह", 120: "एक सौ बीस", 150: "एक सौ पचास",
+            200: "दो सौ", 250: "ढाई सौ", 300: "तीन सौ", 420: "चार सौ बीस",
+            500: "पाँच सौ"
+        }
+        amt_spoken = hi_nums.get(amt_int, f"{amt_int}")
+        
+        short_store = store_name.split()[0] + " किराना"
+
+        if payment_mode.lower() == "khata":
+            cust = customer_name or "ग्राहक"
+            return f"{short_store} साउंडबॉक्स: {cust} के खाते में {amt_spoken} रुपये दर्ज हुए।"
+        elif payment_mode.lower() == "cash":
+            return f"{short_store} साउंडबॉक्स: {amt_spoken} रुपये का नकद भुगतान प्राप्त हुआ।"
+        else:
+            return f"{short_store} साउंडबॉक्स: {amt_spoken} रुपये का यूपीआई भुगतान प्राप्त हुआ।"
+
+    def format_thermal_receipt_data(
+        self,
+        cart: CartResponse,
+        customer_name: str = "Sharma Ji (शर्मा जी)",
+        payment_mode: str = "UPI"
+    ) -> ThermalReceiptData:
+        """
+        Builds structured data for the retro 58mm Kirana thermal POS printer bill.
+        """
+        import uuid
+        import datetime
+
+        rec_id = f"KRN-{datetime.datetime.now().strftime('%y%m%d')}-{uuid.uuid4().hex[:4].upper()}"
+        dt_str = datetime.datetime.now().strftime("%d-%b-%Y %I:%M %p")
+        
+        subtotal = cart.total_inr
+        # Synthetic GST calculation (2.5% CGST + 2.5% SGST on packaged grocery)
+        cgst = round(subtotal * 0.025, 2)
+        sgst = round(subtotal * 0.025, 2)
+        savings = round(subtotal * 0.08, 2) # Synthetic 8% local discount
+        
+        receipt_lines = [
+            ThermalReceiptLine(
+                sku_id=it.sku_id,
+                name_en=it.name_en,
+                name_hi=it.name_hi,
+                quantity=it.quantity,
+                unit=it.unit,
+                rate=it.unit_price,
+                total=it.line_total
+            )
+            for it in cart.items
+        ]
+
+        upi_qr = f"upi://pay?pa=guptakirana@okaxis&pn=GuptaKirana&am={subtotal:g}&cu=INR&tn={rec_id}"
+
+        return ThermalReceiptData(
+            receipt_no=rec_id,
+            store_name="GUPTA KIRANA & GENERAL STORE",
+            store_tagline="शुद्ध राशन • विश्वास का प्रतीक • प्रो. रमेश गुप्ता",
+            fssai_lic="13324999000182",
+            gstin="07AAAAA0000A1Z5",
+            store_address="दुकान नं. 4, मुख्य बाज़ार, दिल्ली - 110001",
+            store_phone="+91 98111-23456",
+            customer_name=customer_name,
+            date_time=dt_str,
+            items=receipt_lines,
+            subtotal_inr=subtotal,
+            cgst_inr=cgst,
+            sgst_inr=sgst,
+            delivery_fee_inr=0.0,
+            total_inr=subtotal,
+            savings_inr=savings,
+            payment_mode=payment_mode.upper(),
+            upi_qr_string=upi_qr
+        )
 
 
 # Default singleton instance

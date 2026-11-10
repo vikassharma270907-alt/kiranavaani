@@ -156,3 +156,50 @@ def test_kannada_tamil_completion():
     assert order_parser.check_order_completion("ondu packet maggi kodi, aste") is True
     assert order_parser.check_order_completion("eradu kilo rice, saaku") is True
     assert order_parser.check_order_completion("oru litre oil, avlo dhaan") is True
+
+
+def test_bhasha_sudhaar_quantity_correction():
+    """Verify Bhasha-Sudhaar mid-sentence quantity repair ('5 nahi 2 kilo karna')."""
+    transcript = "Bhaiya 5 kilo आशीर्वाद आटा, नहीं नहीं 5 नहीं 2 kilo कर दो, और 1 packet Maggi."
+    res = order_parser.parse_utterance(transcript)
+    
+    assert len(res.repairs_applied) > 0
+    correction = next((r for r in res.repairs_applied if r.action == "CORRECTED_QUANTITY"), None)
+    assert correction is not None
+    assert correction.previous_quantity == 5.0
+    assert correction.new_quantity == 2.0
+
+    # Ensure atta is in items with quantity 2.0
+    atta_item = next((it for it in res.items if "आटा" in it.product or "atta" in it.product.lower()), None)
+    assert atta_item is not None
+    assert atta_item.quantity == 2.0
+
+
+def test_bhasha_sudhaar_item_cancellation():
+    """Verify Bhasha-Sudhaar verbal item cancellation ('butter mat bhejna cancel kar do')."""
+    transcript = "2 packet Maggi aur 1 Amul butter, arre nahi butter mat bhejna cancel kar do."
+    res = order_parser.parse_utterance(transcript)
+
+    assert len(res.repairs_applied) > 0
+    cancellation = next((r for r in res.repairs_applied if r.action == "CANCELLED_ITEM"), None)
+    assert cancellation is not None
+    assert "butter" in cancellation.product.lower()
+
+    # Butter should NOT be in active items
+    assert not any("butter" in it.product.lower() for it in res.items)
+    # Maggi should remain
+    assert any("maggi" in it.product.lower() for it in res.items)
+
+
+def test_bhav_pucho_intent_detection():
+    """Verify Bhav Pucho rate check vs ordering intent classification."""
+    inquiry_res = order_parser.parse_utterance("Basmati chawal ka kya bhav chal raha hai?")
+    assert inquiry_res.detected_intent == "PRICE_INQUIRY"
+    assert inquiry_res.price_inquiry_item is not None
+
+    budget_res = order_parser.parse_utterance("500 rupaye ke andar rashan bana do")
+    assert budget_res.detected_intent == "BUDGET_QUERY"
+    assert budget_res.budget_cap_inr == 500.0
+
+    normal_res = order_parser.parse_utterance("2 packet Maggi aur 1 kilo sugar dena")
+    assert normal_res.detected_intent == "ORDER"

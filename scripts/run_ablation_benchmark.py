@@ -21,8 +21,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from backend.parser import HinglishOrderParser
-from backend.noise_lab import NoiseLab
+from noise_lab.evaluate_orders import run_order_evaluation
 
 DATASET_PATH = Path(__file__).resolve().parent.parent / "reports" / "synthetic_80_test_set.json"
 RESULTS_JSON = Path(__file__).resolve().parent.parent / "reports" / "ablation_benchmark_results.json"
@@ -39,11 +38,8 @@ def run_ablation():
 
     print(f"Loaded {len(dataset)} synthetic test samples for ablation benchmark.")
 
-    parser = HinglishOrderParser()
-    noise_lab = NoiseLab(parser=parser)
-
-    res = noise_lab.run_acoustic_tier_benchmark(dataset)
-    benchmark_tiers = res["benchmark"]
+    res = run_order_evaluation(dataset, output_dir=RESULTS_JSON.parent)
+    benchmark_tiers = res["results"]
 
     # Print summary table
     print("\n" + "=" * 90)
@@ -57,7 +53,7 @@ def run_ablation():
         name = tier["tier_name"].split(":")[0] + f" ({tier['snr_db']}dB)"
         cfg = tier["configs"]
         v25 = f"{cfg['v25_no_key']['wer']}% / {cfg['v25_no_key']['item_f1']}%"
-        v30_off = f"{cfg['v30_no_key']['wer']}% / {cfg['v30_no_key']['item_f1']}%"
+        v30_off = f"{cfg['v30_key_off']['wer']}% / {cfg['v30_key_off']['item_f1']}%"
         v30_on = f"{cfg['v30_key_on']['wer']}% / {cfg['v30_key_on']['item_f1']}%"
         print(f"{name:<35} | {v25:<16} | {v30_off:<16} | {v30_on:<16}")
     print("=" * 90)
@@ -77,11 +73,11 @@ def run_ablation():
     snr_labels = [f"{tier['snr_db']} dB" for tier in benchmark_tiers]
 
     f1_v25 = [tier["configs"]["v25_no_key"]["item_f1"] for tier in benchmark_tiers]
-    f1_v30_off = [tier["configs"]["v30_no_key"]["item_f1"] for tier in benchmark_tiers]
+    f1_v30_off = [tier["configs"]["v30_key_off"]["item_f1"] for tier in benchmark_tiers]
     f1_v30_on = [tier["configs"]["v30_key_on"]["item_f1"] for tier in benchmark_tiers]
 
     wer_v25 = [tier["configs"]["v25_no_key"]["wer"] for tier in benchmark_tiers]
-    wer_v30_off = [tier["configs"]["v30_no_key"]["wer"] for tier in benchmark_tiers]
+    wer_v30_off = [tier["configs"]["v30_key_off"]["wer"] for tier in benchmark_tiers]
     wer_v30_on = [tier["configs"]["v30_key_on"]["wer"] for tier in benchmark_tiers]
 
     x = np.arange(len(snrs))

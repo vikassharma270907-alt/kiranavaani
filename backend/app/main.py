@@ -4,6 +4,7 @@ Main FastAPI Application Entrypoint for KiranaVaani.
 from contextlib import asynccontextmanager
 import logging
 import os
+import re
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -69,7 +70,15 @@ if not is_vercel and frontend_dist.exists() and (frontend_dist / "index.html").e
         @app.exception_handler(StarletteHTTPException)
         async def spa_404_handler(request, exc: StarletteHTTPException):
             if exc.status_code == 404 and request.method == "GET":
-                if not request.url.path.startswith(("/api", "/docs", "/redoc", "/openapi.json", "/health", "/catalogue", "/khata", "/ondc", "/audio-samples")):
+                path = request.url.path
+                is_system_path = path.startswith(("/etc", "/var", "/bin", "/usr", "/proc", "/sys", "/windows", "/..", ".."))
+                has_extension = bool(re.search(r"\.[a-zA-Z0-9]+$", path))
+                api_prefixes = (
+                    "/api", "/docs", "/redoc", "/openapi.json", "/health", "/catalogue",
+                    "/khata", "/ondc", "/audio-samples", "/transcribe", "/parse-order",
+                    "/match-products", "/cart", "/synthesize", "/process-order"
+                )
+                if not path.startswith(api_prefixes) and not is_system_path and not has_extension:
                     return FileResponse(frontend_dist / "index.html")
             return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 

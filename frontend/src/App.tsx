@@ -63,6 +63,9 @@ export const App: React.FC = () => {
   const [isMockTts, setIsMockTts] = useState(true);
   const [isOrderConfirmed, setIsOrderConfirmed] = useState(false);
   const [khataInfo, setKhataInfo] = useState<any | null>(null);
+  const [repairsApplied, setRepairsApplied] = useState<any[]>([]);
+  const [tokenConfidenceScores, setTokenConfidenceScores] = useState<any[]>([]);
+  const [detectedIntent, setDetectedIntent] = useState<string>("ORDER");
 
   // Determine API base URL dynamically for local dev and Vercel production
   const getApiBase = () => {
@@ -163,6 +166,9 @@ export const App: React.FC = () => {
       setIsMockTts(data.is_mock_tts);
       setKhataInfo(data.khata_info || null);
       setUpsellSuggestion(data.upsell_suggestion || null);
+      setRepairsApplied(data.repairs_applied || []);
+      setTokenConfidenceScores(data.token_confidence_scores || []);
+      setDetectedIntent(data.detected_intent || "ORDER");
 
       // Merge confirmed items into cart
       if (data.confirmed_cart && data.confirmed_cart.items) {
@@ -346,6 +352,9 @@ export const App: React.FC = () => {
     setVoiceAudioBase64(undefined);
     setIsOrderConfirmed(false);
     setKhataInfo(null);
+    setRepairsApplied([]);
+    setTokenConfidenceScores([]);
+    setDetectedIntent("ORDER");
   };
 
   // Compute bill totals
@@ -469,6 +478,11 @@ export const App: React.FC = () => {
             isLoading={isLoading}
             activeClarification={clarifications.length > 0}
             onClose={() => setShowCallSimulator(false)}
+            apiBaseUrl={getApiBase()}
+            voiceAudioBase64={voiceAudioBase64}
+            voiceAudioFormat={voiceAudioFormat}
+            spokenReplyHi={spokenReplyHi}
+            spokenReplyEn={spokenReplyEn}
           />
         )}
 
@@ -503,6 +517,7 @@ export const App: React.FC = () => {
               {showSpectrogram && (
                 <AcousticSpectrogram
                   isActive={isLoading || !!voiceAudioBase64}
+                  tokenConfidenceScores={tokenConfidenceScores}
                 />
               )}
             </div>
@@ -522,6 +537,8 @@ export const App: React.FC = () => {
               model={keytermsEnabled ? "Prisma v3.0 (Keyterms ON)" : "Prisma v3.0 (Keyterms OFF)"}
               parsedItems={parsedItems}
               isOrderComplete={isOrderComplete}
+              repairsApplied={repairsApplied}
+              detectedIntent={detectedIntent}
             />
           </div>
 

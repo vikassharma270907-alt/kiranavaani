@@ -10,7 +10,23 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from backend.noise_lab import NoiseLab
+from noise_lab.generate_noise import (
+    apply_telephony_channel,
+    generate_fan_hum,
+    generate_traffic_noise,
+    generate_market_babble,
+    mix_speech_and_noise
+)
+
+def generate_synthetic_noise(noise_type: str, duration: float, sr: int):
+    if noise_type == "traffic":
+        return generate_traffic_noise(duration, sample_rate=sr)
+    elif noise_type == "fan":
+        return generate_fan_hum(duration, sample_rate=sr)
+    elif noise_type == "market":
+        return generate_market_babble(duration, sample_rate=sr)
+    else:
+        return np.zeros(int(duration * sr), dtype=np.float32)
 
 AUDIO_DIR = PROJECT_ROOT / "audio_samples"
 AUDIO_DIR.mkdir(parents=True, exist_ok=True)
@@ -70,7 +86,6 @@ async def synthesize_clip(text: str, voice: str, out_path: Path):
     return data, sr
 
 async def main():
-    noise_lab = NoiseLab()
     print("Generating 5 Test Audio Clips & Telephony Noisy Variants...")
     
     for item in TEST_UTTERANCES:
@@ -79,14 +94,14 @@ async def main():
         speech_data, sr = await synthesize_clip(item["text"], item["voice"], clean_wav)
         
         # 1. Apply 8 kHz downsampler + ITU-T G.711 mu-law codec
-        telephony_audio, target_sr = noise_lab.apply_telephony_codec(speech_data, orig_sr=sr)
+        telephony_audio, target_sr = apply_telephony_channel(speech_data, orig_sr=sr)
         
         # 2. Generate environmental noise matching the tier
         duration = len(telephony_audio) / target_sr
-        noise = noise_lab.generate_synthetic_noise(item["noise_type"], duration, sr=target_sr)
+        noise = generate_synthetic_noise(item["noise_type"], duration, sr=target_sr)
         
         # 3. Mix at specified SNR
-        noisy_telephony_audio = noise_lab.mix_at_snr(telephony_audio, noise, target_snr_db=item["snr_db"])
+        noisy_telephony_audio = mix_speech_and_noise(telephony_audio, noise, target_snr_db=item["snr_db"])
         
         # Save noisy telephony file
         noisy_wav = AUDIO_DIR / f"{item['id']}_telephony_{item['noise_type']}_{item['snr_db']}db.wav"

@@ -206,7 +206,7 @@ def test_cart_paise_formatting():
 
 
 def test_audio_samples_endpoint():
-    """Verify audio samples metadata endpoint returns 5 clips with clean/degraded URLs."""
+    """Verify audio samples metadata endpoint returns 5 clips with clean/degraded URLs and streams audio."""
     res = client.get("/audio-samples")
     assert res.status_code == 200
     clips = res.json()
@@ -214,9 +214,24 @@ def test_audio_samples_endpoint():
     ids = [c["clip_id"] for c in clips]
     assert "clip_1_brand_keyterms" in ids
     assert "clip_5_kannada_hinglish" in ids
+    
     # Verify streaming endpoint works for clip 1
     stream_res = client.get(clips[0]["clean_audio_url"])
-    assert stream_res.status_code in (200, 404)  # 200 if file exists on disk, 404 if missing
+    assert stream_res.status_code == 200
+    assert len(stream_res.content) > 10000
+    assert "audio/wav" in stream_res.headers["content-type"]
+
+    # Verify telephony degraded audio for clip 5 (Kannada PSTN line) streams successfully
+    stream_res_kannada = client.get("/audio-samples/clip_5_kannada_hinglish_telephony_clean_20db.wav")
+    assert stream_res_kannada.status_code == 200
+    assert len(stream_res_kannada.content) > 10000
+
+    # Path traversal and security checks
+    traversal_res = client.get("/audio-samples/../../etc/passwd")
+    assert traversal_res.status_code in (400, 403, 404)
+
+    invalid_ext_res = client.get("/audio-samples/malicious.exe")
+    assert invalid_ext_res.status_code in (400, 403, 404)
 
 
 def test_process_order_spoken_clarification_resolution():
@@ -348,3 +363,82 @@ def test_ondc_beckn_export():
     assert data["payload"]["message"]["order"]["state"] == "Created"
     assert len(data["payload"]["message"]["order"]["items"]) >= 1
     assert data["payload"]["message"]["order"]["billing"]["name"] == "Sharma Ji"
+
+
+def test_price_check_endpoint():
+    """Verify Bhav Pucho price discovery endpoint returns quote and spoken Hindi/English answer."""
+    res = client.post("/price-check", json={"query": "Basmati rice"})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["found"] is True
+    assert len(data["items"]) >= 1
+    assert any("Basmati" in it["name_en"] for it in data["items"])
+    assert "भाव" in data["spoken_answer_hi"] or "रुपये" in data["spoken_answer_hi"]
+
+
+def test_budget_order_endpoint():
+    """Verify Budget-Aware grocery basket allocator under target budget cap."""
+    res = client.post("/budget-order", json={
+        "budget_inr": 500.0,
+        "mandatory_items": [
+            {"sku_id": "SKU-001", "quantity": 2.0, "unit": "kg"},  # Atta @ ₹52 = ₹104
+            {"sku_id": "SKU-007", "quantity": 1.0, "unit": "kg"}   # Toor Dal @ ₹145 = ₹145
+        ],
+        "filler_product_query": "sugar"
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["budget_inr"] == 500.0
+    assert data["mandatory_items_cost"] > 0
+    assert data["allocated_total_inr"] <= 500.0
+    assert data["suggested_filler_quantity"] is not None
+    assert "बजट" in data["advice_hi"]
+
+
+def test_soundbox_chime_endpoint():
+    """Verify Kirana Soundbox 2.0 audio chime notification."""
+    res = client.post("/soundbox-chime", json={
+        "amount_inr": 106.0,
+        "store_name": "Gupta Kirana Store",
+        "payment_mode": "UPI"
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["amount_inr"] == 106.0
+    assert "साउंडबॉक्स" in data["chime_text_hi"]
+    assert "यूपीआई भुगतान" in data["chime_text_hi"]
+    assert data["voice_audio_base64"] is not None
+
+
+def test_thermal_receipt_endpoint():
+    """Verify retro 58mm thermal POS printer receipt data generation."""
+    res = client.post("/receipt/thermal", json={
+        "items": [
+            {"sku_id": "SKU-027", "quantity": 2.0, "unit": "packet"},
+            {"sku_id": "SKU-020", "quantity": 1.0, "unit": "kg"}
+        ],
+        "customer_name": "Sharma Ji",
+        "payment_mode": "UPI"
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert "KRN-" in data["receipt_no"]
+    assert "GUPTA KIRANA" in data["store_name"]
+    assert "upi://" in data["upi_qr_string"]
+    assert len(data["items"]) == 2
+    assert data["total_inr"] > 0
+
+
+def test_process_order_with_bhasha_sudhaar():
+    """Verify that process-order applies mid-sentence conversational repair and returns token confidence."""
+    payload = {
+        "transcript": "Bhaiya 5 kilo atta, nahi 5 nahi 2 kilo karna, aur 1 packet Maggi",
+        "keyterms_enabled": True,
+        "synthesize_voice": False
+    }
+    res = client.post("/process-order", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert len(data["repairs_applied"]) > 0
+    assert len(data["token_confidence_scores"]) > 0
+    assert any(s["tag"] == "REPAIR_NEGATION" for s in data["token_confidence_scores"])
