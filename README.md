@@ -4,6 +4,7 @@
 [![Models](https://img.shields.io/badge/Speech%20Models-Prisma%20v3.0%20%7C%20Timbre%20v2.5-sky.svg)](https://gnani.ai)
 [![Target Awards](https://img.shields.io/badge/Awards-Mixed%20Vibes%20%7C%20Real%20Deal%20%7C%20Noise%20Canceller%20%7C%20Demo%20Day%20Drop-amber.svg)](#target-award-categories)
 [![Synthetic Data](https://img.shields.io/badge/Data%20Compliance-100%25%20Synthetic%20(Zero%20PII)-blue.svg)](#15-synthetic-data-compliance-declaration)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/vikassharma270907-alt/kiranavaani)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **KiranaVaani** is a noise-robust voice-ordering AI assistant and telephony acoustic benchmark designed for India's 12+ million neighbourhood grocery (*kirana*) stores. Powered by **Gnani.ai’s Prisma v3.0 Speech-to-Text (STT)** and **Timbre v2.5 Text-to-Speech (TTS)**, KiranaVaani handles rapid code-mixed Hindi-English (*Hinglish*) calls, normalizes colloquial Indian fractional quantities (*"सवा दो किलो"*, *"ढाई किलो"*, *"आधा लीटर"*), matches against a 35-SKU multilingual catalogue using RapidFuzz, enforces a strict conversational clarification gate for ambiguous orders (*"Did you mean Basmati or Sona Masoori rice?"*), and synthesizes spoken confirmation readbacks with natural Indian prosody.
@@ -289,6 +290,14 @@ cd frontend
 npm run dev
 ```
 Open `http://localhost:5173` in your browser.
+
+### 8.3. Deploy to Render (Cloud Full-Stack)
+Deploy KiranaVaani as a live full-stack service on [Render](https://render.com):
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/vikassharma270907-alt/kiranavaani)
+
+- **1-Click Blueprint**: Import repository `vikassharma270907-alt/kiranavaani` into Render Blueprints. Render automatically detects [`render.yaml`](render.yaml), runs the multi-stage [`Dockerfile`](Dockerfile) (Node 20 + Python 3.11), verifies `/health`, and serves the unified cockpit.
+- **Manual Setup**: See the step-by-step [Render Deployment Guide (DEPLOY_RENDER.md)](DEPLOY_RENDER.md) for custom environment variables, logging, and cold-start tips.
 
 ---
 

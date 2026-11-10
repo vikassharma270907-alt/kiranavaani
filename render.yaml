@@ -1,0 +1,36 @@
+# ==============================================================================
+# KiranaVaani — Render Infrastructure Blueprint (render.yaml)
+# Docs: https://render.com/docs/blueprint-spec
+# ==============================================================================
+
+services:
+  - type: web
+    name: kiranavaani
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: BACKEND_HOST
+        value: 0.0.0.0
+      - key: DEBUG
+        value: false
+      - key: CONFIDENCE_THRESHOLD
+        value: 0.78
+      - key: AMBIGUITY_DELTA_THRESHOLD
+        value: 0.12
+      - key: GNANI_STT_ENDPOINT
+        value: https://api.vachana.ai/stt/v3
+      - key: GNANI_TTS_ENDPOINT
+        value: https://api.vachana.ai/api/v1/tts/inference
+      - key: GNANI_STT_MODEL
+        value: prisma-v3.0
+      - key: GNANI_TTS_MODEL
+        value: timbre-v2.5
+      - key: GNANI_API_KEY
+        sync: false
