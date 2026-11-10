@@ -8,7 +8,7 @@ Normalizes colloquial fractional numerals ('aadha' -> 0.5, 'dhai' -> 2.5, 'dedh'
 import re
 from typing import List, Tuple, Dict, Any, Optional
 
-from backend.app.schemas import ParsedItem, ParseOrderResponse, KhataInfo, RepairedItemEvent, DeliveryLandmarkInfo
+from backend.app.schemas import ParsedItem, ParseOrderResponse, KhataInfo, RepairedItemEvent, DeliveryLandmarkInfo, CustomerJazbaatInfo
 
 
 def make_boundary_regex(phrase: str) -> str:
@@ -211,6 +211,21 @@ class HinglishOrderParser:
             flags=re.IGNORECASE
         )
         cleaned = re.sub(r"paise\s+.*?(?:dunga|denge|देंगे|दूंगा)", " ", cleaned, flags=re.IGNORECASE)
+
+        # Remove bargaining and past memory expressions to prevent phantom grocery items
+        cleaned = re.sub(
+            r"(?:kuch\s+(?:to\s+)?discount|thoda\s+discount|discount\s+lagao|chhoot\s+do|kam\s+karo|kuch\s+kam|कुछ\s+तो\s+डिस्काउंट|डिस्काउंट\s+लगाओ|छूट\s+दो|कम\s+करो|कम\s+लगाओ|डिस्काउंट|discount)[^,\.;\n]*",
+            " ",
+            cleaned,
+            flags=re.IGNORECASE
+        )
+        cleaned = re.sub(
+            r"(?:pichli\s+baar|पिछली\s+बार|last\s+time)[^,\.;\n]*",
+            " ",
+            cleaned,
+            flags=re.IGNORECASE
+        )
+
         all_cues = ORDER_COMPLETION_PHRASES + CONVERSATIONAL_FILLERS
         for cue in all_cues:
             reg = make_boundary_regex(cue)
@@ -350,8 +365,7 @@ class HinglishOrderParser:
         """
         text_lower = text.lower()
         delivery_triggers = [
-            "delivery", "डिलीवरी", "bhej dena", "भेज देना", "bhej do", "भेज दो",
-            "pahucha dena", "पहुंचा देना", "ghar par", "घर पर", "gali", "गली",
+            "delivery", "डिलीवरी", "pahucha dena", "पहुंचा देना", "ghar par", "घर पर", "gali", "गली",
             "mandir", "मंदिर", "makaan", "मकान", "floor", "मंज़िल", "manzil"
         ]
         has_delivery = any(trig in text_lower for trig in delivery_triggers)
@@ -399,15 +413,24 @@ class HinglishOrderParser:
                 time_window = m.group(1).strip()
                 break
 
-        # 4. Recipient Name
+        # If neither primary landmark nor house marker is found in the text,
+        # this is a standard order utterance (e.g. '2 packet Maggi bhej dena'), not delivery dispatch directions.
+        if not primary_landmark and not house_marker:
+            return None
+
+        # 4. Recipient Name (excluding shopkeeper terms)
+        recipient = "Sharma Ji (शर्मा जी)"
         name_match = re.search(r"([A-Za-z\u0900-\u097F]+)\s*(?:ji|jee|जी)", text, re.IGNORECASE)
-        recipient = f"{name_match.group(1).strip().capitalize()} Ji" if name_match else "Sharma Ji (शर्मा जी)"
+        if name_match:
+            cand = name_match.group(1).strip()
+            if cand.lower() not in ("gupta", "गुप्ता", "bhaiya", "भैया", "anna", "अन्ना", "uncle", "अंकल"):
+                recipient = f"{cand.capitalize()} Ji"
 
         # 5. Payment terms
         payment_terms = "CASH_ON_DELIVERY"
-        if "khata" in text_lower or "udhaar" in text_lower or "खाता" in text_lower:
+        if any(k in text_lower for k in ["khata", "khate", "udhaar", "खाता", "खाते"]):
             payment_terms = "KHATA_CREDIT"
-        elif "upi" in text_lower or "online" in text_lower or "paytm" in text_lower or "phonepe" in text_lower:
+        elif any(u in text_lower for u in ["upi", "online", "paytm", "phonepe", "यूपीआई", "ऑनलाइन"]):
             payment_terms = "UPI_PREPAID"
 
         parts = []
@@ -432,6 +455,83 @@ class HinglishOrderParser:
             full_vernacular_address=vernacular_addr
         )
 
+    def extract_customer_jazbaat(self, text: str) -> CustomerJazbaatInfo:
+        """
+        'Awaaz-e-Jazbaat' (Customer Urgency & Emotion Telemetry):
+        Inspired by Gnani.ai call360 Speech Analytics & Emotion Telemetry.
+        Analyzes conversational urgency cues, speech tempo, and anxiety/hurried markers.
+        Triggers '⚡ TATKAL_EXPRESS_10MIN' priority dispatch when high urgency is detected.
+        """
+        text_lower = text.lower()
+        urgency_cues_map = {
+            "jaldi": ["jaldi", "जल्दी", "jaldi se", "jaldi bhejo", "fatafat", "फटाफट"],
+            "emergency": ["emergency", "इमरजेंसी", "urgent", "अर्जेंट", "turant", "तुरंत"],
+            "guests": ["mehmaan", "मेहमान", "guests", "mehman aaye hain", "mehman baithe hain"],
+            "cooking_urgency": ["gas pe", "गैस पर", "doodh ubal", "chai chadhayi", "khatam ho gaya"],
+            "immediate_window": ["abhee", "अभी", "right now", "10 minute", "das minute", "10 min", "१० मिनट", "turant delivery"],
+            "dravidian_urgency": ["begane", "thumba urgent", "seekiram", "udane"]
+        }
+
+        detected_cues: List[str] = []
+        urgency_points = 0.0
+
+        for category, triggers in urgency_cues_map.items():
+            for trig in triggers:
+                if trig in text_lower:
+                    detected_cues.append(trig)
+                    urgency_points += 0.25
+                    break
+
+        # Estimated speech tempo (words per minute approximation from clause length)
+        words = text.strip().split()
+        word_count = len(words)
+        tempo_wpm = 120.0
+        if word_count > 12:
+            tempo_wpm = min(190.0, 130.0 + (word_count * 2.5))
+            urgency_points += 0.15
+
+        urgency_score = min(0.98, max(0.10, round(0.15 + urgency_points, 2)))
+
+        urgent_tatkal_keys = {
+            "emergency", "इमरजेंसी", "urgent", "अर्जेंट", "turant", "तुरंत",
+            "10 minute", "१० मिनट", "das minute", "right now", "jaldi", "जल्दी", "fatafat", "फटाफट"
+        }
+        has_direct_tatkal = any(c in urgent_tatkal_keys for c in detected_cues)
+
+        if urgency_score >= 0.50 or len(detected_cues) >= 2 or has_direct_tatkal:
+            return CustomerJazbaatInfo(
+                urgency_level="TATKAL_EXPRESS_10MIN",
+                urgency_score=max(0.65, urgency_score),
+                is_tatkal_priority=True,
+                speech_tempo_wpm=tempo_wpm,
+                detected_cues=detected_cues,
+                sentiment="HURRIED_ANXIOUS",
+                merchant_action_hint_hi="⚡ तत्काल डिलीवरी (10 मिनट): ग्राहक जल्दी में है, तुरंत पैक करें!",
+                merchant_action_hint_en="⚡ Tatkal Priority (10 Mins): Express pack & dispatch immediately!"
+            )
+        elif urgency_score >= 0.40:
+            return CustomerJazbaatInfo(
+                urgency_level="HIGH",
+                urgency_score=urgency_score,
+                is_tatkal_priority=False,
+                speech_tempo_wpm=tempo_wpm,
+                detected_cues=detected_cues,
+                sentiment="HURRIED_ANXIOUS",
+                merchant_action_hint_hi="उच्च प्राथमिकता: शीघ्र डिलीवरी अपेक्षित",
+                merchant_action_hint_en="High Priority: Prompt dispatch expected"
+            )
+        else:
+            return CustomerJazbaatInfo(
+                urgency_level="NORMAL",
+                urgency_score=urgency_score,
+                is_tatkal_priority=False,
+                speech_tempo_wpm=tempo_wpm,
+                detected_cues=detected_cues,
+                sentiment="POLITE_NEUTRAL",
+                merchant_action_hint_hi="सामान्य डिलीवरी (मानक समय)",
+                merchant_action_hint_en="Standard delivery (routine queue)"
+            )
+
     def extract_recipe_intent(self, text: str) -> Tuple[bool, Optional[str], int]:
         """
         'Rasoi se Rashan' (रसोई से राशन) Meal Recipe Intent Extractor:
@@ -440,11 +540,11 @@ class HinglishOrderParser:
         """
         text_lower = text.lower()
         recipe_dishes = {
-            "rajma chawal": ["rajma chawal", "rajma rice", "राजमा चावल", "rajma"],
-            "dal tadka": ["dal tadka", "dal chawal", "दाल तड़का", "दाल चावल", "yellow dal"],
+            "rajma chawal": ["rajma chawal", "rajma rice", "राजमा चावल", "राजमा", "rajma"],
+            "dal tadka": ["dal tadka", "dal chawal", "दाल तड़का", "दाल चावल", "तड़का दाल", "yellow dal"],
             "chai nashta": ["chai nashta", "chai biscuit", "चाय नाश्ता", "चाय बिस्कुट", "tea breakfast"],
             "poha nashta": ["poha", "पोहा", "poha nashta", "poha breakfast"],
-            "paneer pulao": ["paneer pulao", "paneer matar", "पनीर पुलाव", "paneer"]
+            "paneer pulao": ["paneer pulao", "paneer matar", "पनीर पुलाव", "paneer", "पनीर"]
         }
         detected_dish = None
         for dish, aliases in recipe_dishes.items():
@@ -455,17 +555,19 @@ class HinglishOrderParser:
         if not detected_dish:
             return False, None, 4
 
-        # Extract servings: e.g. '4 logon', 'do logo', 'char log', '6 person'
-        serv_match = re.search(r"(\d+)\s*(?:logon|logo|person|people|members|jan|log)", text_lower)
+        # Extract servings: e.g. '4 logon', 'do logo', 'char log', '6 person', '6 लोगों'
+        serv_match = re.search(r"(\d+)\s*(?:logon|logo|person|people|members|jan|log|लोग|लोगों|सदस्य|व्यक्ति)", text_lower)
         servings = 4
         if serv_match:
             try:
                 servings = int(serv_match.group(1))
             except (ValueError, TypeError):
                 servings = 4
-        elif "do log" in text_lower or "2 log" in text_lower:
+        elif any(k in text_lower for k in ["do log", "2 log", "दो लोग", "दो लोगो", "दो लोगों"]):
             servings = 2
-        elif "chheh" in text_lower or "6 log" in text_lower:
+        elif any(k in text_lower for k in ["char log", "4 log", "चार लोग", "चार लोगों"]):
+            servings = 4
+        elif any(k in text_lower for k in ["chheh", "6 log", "छह लोग", "छह लोगों"]):
             servings = 6
 
         return True, detected_dish, servings
@@ -482,14 +584,18 @@ class HinglishOrderParser:
         """
         text_lower = text.lower()
 
-        # 0. Check Recipe Intent first if recipe words with cooking intent present
+        # 0. Check Recipe Intent first if recipe words with cooking intent present (including Devanagari)
         is_recipe, dish, servings = self.extract_recipe_intent(text)
-        if is_recipe and ("banana hai" in text_lower or "samaan bhej" in text_lower or "recipe" in text_lower or "bana rahe" in text_lower):
+        recipe_cues = [
+            "banana hai", "बनाना है", "बनाना", "samaan bhej", "सामान भेज", "सामान",
+            "recipe", "रेसिपी", "bana rahe", "बना रहे", "मसाला", "masala", "cook", "पकाना"
+        ]
+        if is_recipe and any(cue in text_lower for cue in recipe_cues):
             return "RECIPE", dish, float(servings)
 
         # 1. Budget query detection
         budget_match = re.search(
-            r"(\d+(?:\.\d+)?)\s*(?:rupaye|rs|₹|rupees|r)?\s*(?:ke\s+andar|mein|me|ka)\s*(?:rashan|budget|saman|order)",
+            r"(\d+(?:\.\d+)?)\s*(?:rupaye|rs|₹|rupees|r)?\s*(?:ke\s+andar|के\s+अंदर|mein|me|ka)\s*(?:rashan|budget|saman|order|\d+|baaki|बाकी|[a-zA-Z\u0900-\u097F]+)?",
             text_lower
         )
         if budget_match:

@@ -159,7 +159,7 @@ class ProductMatchResult(BaseModel):
 
 
 class MatchProductsRequest(BaseModel):
-    items: List[ParsedItem]
+    items: List[ParsedItem] = Field(..., max_length=100)
     keyterms_enabled: bool = True
 
 
@@ -175,8 +175,8 @@ class MatchProductsResponse(BaseModel):
 # ---------------------------------------------------------
 class CartItemInput(BaseModel):
     sku_id: str
-    quantity: float
-    unit: Optional[str] = None
+    quantity: float = Field(..., gt=0.0, le=500.0, description="Quantity must be strictly positive and <= 500")
+    unit: Optional[str] = Field(None, max_length=25)
 
 
 class CartItem(BaseModel):
@@ -262,7 +262,7 @@ class AudioSampleClip(BaseModel):
 # ---------------------------------------------------------
 class ProcessOrderRequest(BaseModel):
     transcript: Optional[str] = Field(None, max_length=1000, description="Raw transcription text")
-    audio_base64: Optional[str] = None
+    audio_base64: Optional[str] = Field(None, max_length=15_000_000, description="Base64 audio payload (max ~10MB)")
     keyterms_enabled: bool = True
     synthesize_voice: bool = True
     pending_clarification_family: Optional[str] = Field(None, description="Active ambiguity family if caller is replying to a clarification")
@@ -291,6 +291,8 @@ class ProcessOrderResponse(BaseModel):
     landmark_info: Optional["DeliveryLandmarkInfo"] = None
     bhaav_taal_info: Optional["BhaavTaalResponse"] = None
     recipe_info: Optional["RecipeToCartResponse"] = None
+    jazbaat_info: Optional["CustomerJazbaatInfo"] = None
+    liveness_info: Optional["LivenessCheckResponse"] = None
 
 
 # ---------------------------------------------------------
@@ -329,9 +331,9 @@ class KhataLedgerResponse(BaseModel):
 
 
 class SettleKhataRequest(BaseModel):
-    customer_id: str
-    amount_paid_inr: float
-    payment_mode: str = "cash"
+    customer_id: str = Field(..., max_length=20)
+    amount_paid_inr: float = Field(..., gt=0.0, le=100000.0, description="Repayment amount must be positive")
+    payment_mode: str = Field("cash", max_length=25)
 
 
 class SettleKhataResponse(BaseModel):
@@ -480,7 +482,7 @@ class ThermalReceiptData(BaseModel):
 class VoiceprintVerificationRequest(BaseModel):
     customer_id: str = Field(..., examples=["CUST-001"], description="Customer ID in Khata Ledger")
     caller_phone: Optional[str] = Field("+91 98111-23456", description="Caller phone number")
-    audio_base64: Optional[str] = Field(None, description="Audio payload for acoustic feature extraction")
+    audio_base64: Optional[str] = Field(None, max_length=15_000_000, description="Audio payload for acoustic feature extraction (max ~10MB)")
     test_imposter_mode: bool = Field(False, description="Simulate an imposter trying to fraudulently charge this Khata")
 
 
@@ -641,11 +643,11 @@ class BargainItemDetail(BaseModel):
 
 
 class BhaavTaalRequest(BaseModel):
-    transcript: Optional[str] = None
+    transcript: Optional[str] = Field(None, max_length=1000)
     customer_id: Optional[str] = "CUST-001"
-    customer_name: Optional[str] = "Sharma Ji (शर्मा जी)"
+    customer_name: Optional[str] = Field("Sharma Ji (शर्मा जी)", max_length=100)
     cart_items: Optional[List[CartItemInput]] = None
-    target_discount_pct: Optional[float] = None
+    target_discount_pct: Optional[float] = Field(None, ge=0.0, le=100.0)
 
 
 class BhaavTaalResponse(BaseModel):
@@ -680,13 +682,13 @@ class DeliveryLandmarkInfo(BaseModel):
 
 class RiderDispatchSlipRequest(BaseModel):
     order_id: Optional[str] = None
-    customer_name: Optional[str] = "Sharma Ji (शर्मा जी)"
-    transcript: Optional[str] = None
+    customer_name: Optional[str] = Field("Sharma Ji (शर्मा जी)", max_length=100)
+    transcript: Optional[str] = Field(None, max_length=1000)
     landmark_info: Optional[DeliveryLandmarkInfo] = None
     cart_items: Optional[List[CartItemInput]] = None
-    total_amount_inr: Optional[float] = None
-    rider_name: str = "Chhotu (छोटू)"
-    rider_phone: str = "+91 98111-22334"
+    total_amount_inr: Optional[float] = Field(None, ge=0.0, le=100000.0)
+    rider_name: str = Field("Chhotu (छोटू)", max_length=100)
+    rider_phone: str = Field("+91 98111-22334", max_length=25)
 
 
 class RiderDispatchSlipResponse(BaseModel):
@@ -721,8 +723,8 @@ class RecipeIngredientItem(BaseModel):
 
 
 class RecipeToCartRequest(BaseModel):
-    dish_query: str = Field(..., examples=["Rajma Chawal for 4 people", "आज 4 लोगों के लिए राजमा चावल बनाना है"])
-    servings: Optional[int] = 4
+    dish_query: str = Field(..., max_length=500, examples=["Rajma Chawal for 4 people", "आज 4 लोगों के लिए राजमा चावल बनाना है"])
+    servings: Optional[int] = Field(4, le=50, description="Servings count (clamped to positive)")
     include_seasonings: bool = True
 
 
@@ -736,6 +738,80 @@ class RecipeToCartResponse(BaseModel):
     bundle_total_inr: float
     spoken_recipe_prompt_hi: str
     spoken_recipe_prompt_en: str
+    voice_audio_base64: Optional[str] = None
+    voice_audio_format: str = "wav"
+
+
+
+# ---------------------------------------------------------
+# Awaaz-e-Jazbaat (Customer Urgency & Emotion Telemetry)
+# Inspired by Gnani.ai call360 Speech Analytics
+# ---------------------------------------------------------
+class CustomerJazbaatInfo(BaseModel):
+    urgency_level: str = Field("NORMAL", description="'TATKAL_EXPRESS_10MIN', 'HIGH', 'NORMAL', or 'CASUAL'")
+    urgency_score: float = Field(0.2, ge=0.0, le=1.0)
+    is_tatkal_priority: bool = False
+    speech_tempo_wpm: float = Field(120.0, description="Estimated words per minute")
+    detected_cues: List[str] = Field(default_factory=list)
+    sentiment: str = Field("POLITE_NEUTRAL", description="'HURRIED_ANXIOUS', 'POLITE_NEUTRAL', 'FRUSTRATED', or 'PATIENT'")
+    merchant_action_hint_hi: str = Field("सामान्य डिलीवरी", description="Actionable hint for store owner in Hindi")
+    merchant_action_hint_en: str = Field("Standard delivery", description="Actionable hint for store owner in English")
+
+
+# ---------------------------------------------------------
+# Armour360 Acoustic Liveness & Anti-Spoofing Schemas
+# Inspired by Gnani.ai Armour360 Voice Biometrics Anti-Fraud
+# ---------------------------------------------------------
+class LivenessCheckRequest(BaseModel):
+    customer_id: str = Field("CUST-001", max_length=50)
+    customer_name: Optional[str] = Field("Sharma Ji (शर्मा जी)", max_length=100)
+    audio_base64: Optional[str] = None
+    simulate_replay_attack: bool = False
+    simulate_synthetic_voice: bool = False
+
+
+class LivenessCheckResponse(BaseModel):
+    customer_id: str
+    customer_name: str
+    is_live_human: bool
+    liveness_score: float = Field(..., ge=0.0, le=1.0)
+    verdict_badge: str = Field(..., description="'VERIFIED_LIVE_HUMAN', 'REPLAY_ATTACK_DETECTED', or 'SYNTHETIC_CLONE_DETECTED'")
+    attack_type: Optional[str] = None
+    spectral_flux: float
+    jitter_percent: float
+    shimmer_percent: float
+    secondary_resonance_db: float
+    diagnostic_details: str
+    recommended_action: str = Field(..., description="'PROCEED_WITH_CREDIT', 'REQUIRE_OTP_VERIFICATION', or 'BLOCK_TRANSACTION'")
+    security_prompt_hi: str
+
+
+# ---------------------------------------------------------
+# WhatsApp Voice Note Ingestion & Bot Schemas
+# ---------------------------------------------------------
+class WhatsAppVoiceNoteRequest(BaseModel):
+    sender_name: str = Field("Sharma Ji (शर्मा जी)", max_length=100)
+    sender_phone: str = Field("+91 98201-12345", max_length=25)
+    audio_base64: Optional[str] = None
+    audio_filename: str = Field("voice_note.ogg", max_length=100)
+    preset_id: Optional[str] = None
+    keyterms_enabled: bool = True
+
+
+class WhatsAppVoiceNoteResponse(BaseModel):
+    note_id: str
+    sender_name: str
+    sender_phone: str
+    received_timestamp: str
+    transcript: str
+    parsed_items: List[ParsedItem]
+    confirmed_skus_count: int
+    cart_total_inr: float
+    estimated_delivery_mins: int
+    is_tatkal: bool
+    upi_payment_link: str
+    upi_qr_data: str
+    whatsapp_auto_reply_text: str
     voice_audio_base64: Optional[str] = None
     voice_audio_format: str = "wav"
 

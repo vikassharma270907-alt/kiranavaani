@@ -1,7 +1,9 @@
 """
 Integration tests for KiranaVaani FastAPI endpoints.
-Tests /health, /catalogue, /transcribe, /parse-order, /match-products, /cart, /synthesize, /process-order.
+Tests /health, /catalogue, /transcribe, /parse-order, /match-products, /cart, /synthesize, /process-order,
+stock control, Khata credit ledger, ONDC Beckn v1.2.0, Soundbox chimes, and thermal POS receipts.
 """
+import base64
 import pytest
 from fastapi.testclient import TestClient
 from backend.app.main import app
@@ -442,3 +444,198 @@ def test_process_order_with_bhasha_sudhaar():
     assert len(data["repairs_applied"]) > 0
     assert len(data["token_confidence_scores"]) > 0
     assert any(s["tag"] == "REPAIR_NEGATION" for s in data["token_confidence_scores"])
+
+
+# =========================================================================
+# ADDITIONAL INTEGRATION TESTS: Error Paths, Transcribe, and Process Intents
+# =========================================================================
+
+def test_transcribe_endpoint_with_json_and_mock():
+    """Verify /transcribe endpoint accepts base64 audio JSON or returns realistic fallback mock."""
+    # 1. Default mock mode request (no body)
+    res_mock = client.post("/transcribe")
+    assert res_mock.status_code == 200
+    data_m = res_mock.json()
+    assert data_m["is_mock"] is True
+    assert "Maggi" in data_m["transcript"]
+    assert data_m["confidence"] > 0.80
+
+    # 2. JSON input with base64 payload
+    dummy_audio_b64 = base64.b64encode(b"RIFF\x24\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00\x80>\x00\x00").decode("utf-8")
+    res_b64 = client.post("/transcribe", json={
+        "audio_base64": dummy_audio_b64,
+        "keyterms_enabled": True,
+        "language_code": "hi-IN"
+    })
+    assert res_b64.status_code == 200
+    data_b = res_b64.json()
+    assert data_b["transcript"] is not None
+
+
+def test_transcribe_endpoint_invalid_base64_400():
+    """Verify /transcribe returns HTTP 400 when malformed non-base64 audio string is provided."""
+    res = client.post("/transcribe", json={
+        "audio_base64": "invalid_not_base64_payload$$$@@@",
+        "keyterms_enabled": True
+    })
+    assert res.status_code == 400
+    assert "Invalid base64 audio payload" in res.json()["detail"]
+
+
+def test_catalogue_toggle_stock_invalid_sku_404():
+    """Verify /catalogue/toggle-stock returns HTTP 404 for non-existent SKU."""
+    res = client.post("/catalogue/toggle-stock", json={
+        "sku_id": "SKU-NONEXISTENT-999",
+        "in_stock": False
+    })
+    assert res.status_code == 404
+    assert "not found" in res.json()["detail"]
+
+
+def test_khata_settle_invalid_customer_404():
+    """Verify /khata/settle returns HTTP 404 for non-existent customer ID."""
+    res = client.post("/khata/settle", json={
+        "customer_id": "CUST-NONEXISTENT-999",
+        "amount_paid_inr": 150.0,
+        "payment_mode": "cash"
+    })
+    assert res.status_code == 404
+    assert "not found" in res.json()["detail"]
+
+
+def test_khata_voice_reminder_invalid_customer_404():
+    """Verify /khata/voice-reminder returns HTTP 404 for non-existent customer ID."""
+    res = client.post("/khata/voice-reminder", json={"customer_id": "CUST-NONEXISTENT-999"})
+    assert res.status_code == 404
+    assert "not found" in res.json()["detail"]
+
+
+def test_price_check_unrecognized_query():
+    """Verify Bhav Pucho price discovery returns found=False for unrecognized grocery items."""
+    res = client.post("/price-check", json={"query": "unknown_alien_satellite_device_xyz"})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["found"] is False
+    assert len(data["items"]) == 0
+    assert "कैटलॉग में नहीं मिला" in data["spoken_answer_hi"]
+
+
+def test_soundbox_chime_khata_and_cash_modes():
+    """Verify Soundbox voice chime text generation for Khata credit and Cash transactions."""
+    # Khata mode
+    res_k = client.post("/soundbox-chime", json={
+        "amount_inr": 420.0,
+        "store_name": "Gupta Kirana Store",
+        "customer_name": "Sharma Ji",
+        "payment_mode": "Khata"
+    })
+    assert res_k.status_code == 200
+    assert "खाते में" in res_k.json()["chime_text_hi"]
+    assert "Sharma Ji" in res_k.json()["chime_text_hi"]
+
+    # Cash mode
+    res_c = client.post("/soundbox-chime", json={
+        "amount_inr": 100.0,
+        "store_name": "Gupta Kirana Store",
+        "payment_mode": "Cash"
+    })
+    assert res_c.status_code == 200
+    assert "नकद" in res_c.json()["chime_text_hi"]
+
+
+def test_audio_sample_nonexistent_wav_404():
+    """Verify attempting to stream a non-allowlisted WAV clip returns HTTP 404."""
+    res = client.get("/audio-samples/clip_99_nonexistent.wav")
+    assert res.status_code == 404
+    assert "not found" in res.json()["detail"]
+
+
+def test_process_order_bargain_intent_branch():
+    """Verify process-order correctly routes conversational bargaining to Bhaav-Taal response."""
+    payload = {
+        "transcript": "Gupta ji 10 kilo atta pe kuch discount lagao, thoda kam karo",
+        "keyterms_enabled": True,
+        "synthesize_voice": False
+    }
+    res = client.post("/process-order", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["detected_intent"] == "BARGAIN"
+    assert data["bhaav_taal_info"] is not None
+    assert "छूट" in data["spoken_reply_hi"]
+
+
+def test_process_order_delivery_intent_branch():
+    """Verify process-order correctly extracts delivery landmarks and assigns dispatch rider."""
+    payload = {
+        "transcript": "Bhaiya 1 packet Maggi aur delivery Ram Mandir ke peeche teesri gali me bhej dena shaam 6 baje",
+        "keyterms_enabled": True,
+        "synthesize_voice": False
+    }
+    res = client.post("/process-order", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["landmark_info"] is not None
+    assert data["landmark_info"]["has_delivery_intent"] is True
+    assert "छोटू" in data["spoken_reply_hi"] or "राम मंदिर" in data["spoken_reply_hi"] or len(data["confirmed_cart"]["items"]) >= 1
+
+
+def test_process_order_recipe_intent_branch():
+    """Verify process-order routes cooking recipe requests to Rasoi-se-Rashan bundle response."""
+    payload = {
+        "transcript": "Aaj 4 logon ke liye rajma chawal banana hai, samaan bhej do",
+        "keyterms_enabled": True,
+        "synthesize_voice": False
+    }
+    res = client.post("/process-order", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["detected_intent"] == "RECIPE"
+    assert data["recipe_info"] is not None
+    assert "Rajma" in data["recipe_info"]["dish_name_en"]
+
+
+def test_process_order_unrecognized_utterance():
+    """Verify process-order with unrecognized words returns polite Hindi/English clarification prompt."""
+    payload = {
+        "transcript": "xyz qwerty random string",
+        "keyterms_enabled": True,
+        "synthesize_voice": False
+    }
+    res = client.post("/process-order", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert "कोई किराना सामान पहचाना नहीं जा सका" in data["spoken_reply_hi"]
+    assert len(data["confirmed_cart"]["items"]) == 0
+
+
+def test_process_order_budget_query_branch():
+    """Verify process-order with budget query extracts budget cap and advice."""
+    payload = {
+        "transcript": "500 rupaye ke andar 2 kilo atta aur baaki sugar daal do",
+        "keyterms_enabled": True,
+        "synthesize_voice": False
+    }
+    res = client.post("/process-order", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["detected_intent"] == "BUDGET_QUERY"
+    assert "बजट" in data["spoken_reply_hi"]
+
+
+def test_ondc_beckn_export_custom_cart():
+    """Verify exporting custom cart items to ONDC Beckn v1.2.0 payload."""
+    payload = {
+        "bap_id": "custom-buyer-app:1234",
+        "customer_name": "Sunita Devi",
+        "delivery_address": "Shop 12, Main Bazaar, Delhi",
+        "cart_items": [
+            {"sku_id": "SKU-001", "quantity": 5.0, "unit": "kg"},
+            {"sku_id": "SKU-027", "quantity": 4.0, "unit": "packet"}
+        ]
+    }
+    res = client.post("/ondc/export-beckn", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["payload"]["message"]["order"]["billing"]["name"] == "Sunita Devi"
+    assert len(data["payload"]["message"]["order"]["items"]) == 2

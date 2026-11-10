@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   X, 
   Tag, 
@@ -34,6 +34,7 @@ export const BhaavTaalDrawer: React.FC<BhaavTaalDrawerProps> = ({
   const [targetDiscountPct, setTargetDiscountPct] = useState<number>(6.0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [bhaavResult, setBhaavResult] = useState<any | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -73,7 +74,12 @@ export const BhaavTaalDrawer: React.FC<BhaavTaalDrawerProps> = ({
 
   const playVoiceCounterOffer = () => {
     if (bhaavResult?.voice_audio_base64) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
       const audio = new Audio(`data:audio/${bhaavResult.voice_audio_format || "wav"};base64,${bhaavResult.voice_audio_base64}`);
+      audioRef.current = audio;
       audio.play().catch((e) => console.warn("Voice play error:", e));
     }
   };
@@ -271,3 +277,4 @@ export const BhaavTaalDrawer: React.FC<BhaavTaalDrawerProps> = ({
     </div>
   );
 };
+

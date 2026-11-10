@@ -313,3 +313,4 @@ export const JudgeTourBanner: React.FC<JudgeTourBannerProps> = ({
     </div>
   );
 };
+

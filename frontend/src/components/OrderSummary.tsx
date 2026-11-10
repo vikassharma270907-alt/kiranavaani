@@ -35,6 +35,7 @@ interface OrderSummaryProps {
   deliveryFee: number;
   total: number;
   itemCount: number;
+  discountAmount?: number;
   items?: CartItem[];
   khataInfo?: KhataInfo | null;
   spokenReplyHi?: string;
@@ -55,6 +56,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
   deliveryFee,
   total,
   itemCount,
+  discountAmount = 0,
   items = [],
   khataInfo,
   spokenReplyHi,
@@ -140,6 +142,8 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
         ? "📱 UPI डिजिटल भुगतान (Pre-paid)" 
         : "💵 Cash on Delivery (नकद)";
 
+    const discountLine = discountAmount > 0 ? `\n🏷️ *भाव-ताल विशेष छूट:* -₹${discountAmount.toFixed(2)}` : "";
+
     return (
 `🛒 *गुप्ता किराना एवं जनरल स्टोर*
 📍 दुकान नं. 4, मेन मार्केट, नई दिल्ली
@@ -147,6 +151,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
 📋 *ग्राहक ऑर्डर पर्ची (Kirana Slip):*
 ${itemsLines || "1. किराना सामान"}
 ━━━━━━━━━━━━━━━━━━━━━━
+Subtotal: ₹${subtotal.toFixed(2)}${discountLine}
 💰 *कुल बिल (Total):* ₹${total.toFixed(2)}
 🚚 *डिलीवरी:* मुफ़्त लोकल डिलीवरी (30 मिनट)
 💳 *भुगतान प्रकार:* ${paymentLabel}
@@ -190,6 +195,12 @@ _किरानावाणी (KiranaVaani) वॉयस AI द्वारा
           <span>Items Subtotal:</span>
           <span className="font-mono text-slate-100">₹{subtotal.toFixed(2)}</span>
         </div>
+        {discountAmount > 0 && (
+          <div className="flex justify-between text-emerald-400 font-medium">
+            <span>विशेष भाव-ताल छूट (Bhaav-Taal Discount):</span>
+            <span className="font-mono text-emerald-300">-₹{discountAmount.toFixed(2)}</span>
+          </div>
+        )}
         <div className="flex justify-between text-slate-300">
           <span>Kirana Local Delivery (30 mins):</span>
           <span className="text-teal-400 font-medium">

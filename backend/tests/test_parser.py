@@ -1,6 +1,7 @@
 """
 Unit tests for HinglishOrderParser.
-Tests fractional numeral conversion, unit normalization, clause extraction, and completion signals.
+Tests fractional numeral conversion, unit normalization, clause extraction, completion signals,
+Bhasha-Sudhaar conversational repairs, and Bhaav-Taal/Chhotu-Dispatch/Recipe intent extraction.
 """
 import pytest
 from backend.app.services.order_parser import order_parser
@@ -203,3 +204,81 @@ def test_bhav_pucho_intent_detection():
 
     normal_res = order_parser.parse_utterance("2 packet Maggi aur 1 kilo sugar dena")
     assert normal_res.detected_intent == "ORDER"
+
+
+def test_bargain_intent_extraction():
+    """Verify Bhaav-Taal discount request and target percentage extraction."""
+    is_b1, pct1, _ = order_parser.extract_bargain_intent("Gupta ji 10% discount milega kya?")
+    assert is_b1 is True
+    assert pct1 == 10.0
+
+    is_b2, pct2, _ = order_parser.extract_bargain_intent("thoda kam karo bhaiya, pichli baar to sasta diya tha")
+    assert is_b2 is True
+    assert pct2 is None
+
+    is_b3, _, _ = order_parser.extract_bargain_intent("2 packet Maggi aur 1 kilo sugar pack kar do")
+    assert is_b3 is False
+
+
+def test_delivery_landmarks_extraction():
+    """Verify Chhotu Delivery hyperlocal landmark, house marker, and delivery window extraction."""
+    lm = order_parser.extract_delivery_landmarks(
+        "Delivery Ram Mandir ke peeche, teesri gali me peela makaan, second floor pe Sharma ji ko bhej dena shaam 6 baje"
+    )
+    assert lm is not None
+    assert lm.has_delivery_intent is True
+    assert "Sharma" in lm.recipient_name
+    assert "mandir" in lm.primary_landmark.lower() or "मंदिर" in lm.primary_landmark
+    assert "peela makaan" in lm.house_or_floor_marker.lower() or "second floor" in lm.house_or_floor_marker.lower()
+    assert "shaam 6 baje" in lm.delivery_time_window.lower()
+    assert lm.payment_terms == "CASH_ON_DELIVERY"
+
+    # Non-delivery sentence
+    no_lm = order_parser.extract_delivery_landmarks("2 packet Maggi dena bas itna hi")
+    assert no_lm is None
+
+
+def test_recipe_intent_extraction():
+    """Verify Rasoi-se-Rashan dish matching and serving size extraction."""
+    is_r1, dish1, serv1 = order_parser.extract_recipe_intent("Aaj 4 logon ke liye rajma chawal banana hai")
+    assert is_r1 is True
+    assert dish1 == "rajma chawal"
+    assert serv1 == 4
+
+    is_r2, dish2, serv2 = order_parser.extract_recipe_intent("do logo ke liye poha nashta bana rahe hain")
+    assert is_r2 is True
+    assert dish2 == "poha nashta"
+    assert serv2 == 2
+
+    is_r3, _, _ = order_parser.extract_recipe_intent("1 kilo sugar aur 1 packet Tata Salt pack kar do")
+    assert is_r3 is False
+
+
+def test_detect_intent_comprehensive():
+    """Verify intent classifier across all 6 conversational intent types."""
+    # 1. Price inquiry
+    int1, item1, _ = order_parser.detect_intent("Basmati chawal ka kya bhav hai?")
+    assert int1 == "PRICE_INQUIRY"
+    assert "basmati" in (item1 or "").lower()
+
+    # 2. Budget query
+    int2, _, cap2 = order_parser.detect_intent("500 rupaye ke andar rashan de do")
+    assert int2 == "BUDGET_QUERY"
+    assert cap2 == 500.0
+
+    # 3. Bargain
+    int3, _, _ = order_parser.detect_intent("10 kilo atta pe kuch discount lagao")
+    assert int3 == "BARGAIN"
+
+    # 4. Delivery dispatch
+    int4, _, _ = order_parser.detect_intent("Delivery Ram Mandir ke peeche teesri gali me peela makaan bhej dena shaam 6 baje")
+    assert int4 == "DELIVERY_DISPATCH"
+
+    # 5. Recipe
+    int5, dish5, _ = order_parser.detect_intent("4 logon ke liye rajma chawal banana hai, samaan bhej do")
+    assert int5 == "RECIPE"
+    assert dish5 == "rajma chawal"
+
+    # 6. Standard Order
+    int6, _, _ = order_parser.detect_intent("2 packet Maggi aur 1 kilo sugar dena")
+    assert int6 == "ORDER"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   X, 
   Truck, 
@@ -38,6 +38,7 @@ export const DeliveryRiderModal: React.FC<DeliveryRiderModalProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [dispatchData, setDispatchData] = useState<any | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [deliveryStatus, setDeliveryStatus] = useState<string>("PACKED");
 
   useEffect(() => {
@@ -80,7 +81,12 @@ export const DeliveryRiderModal: React.FC<DeliveryRiderModalProps> = ({
 
   const playRiderVoiceNote = () => {
     if (dispatchData?.voice_audio_base64) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
       const audio = new Audio(`data:audio/${dispatchData.voice_audio_format || "wav"};base64,${dispatchData.voice_audio_base64}`);
+      audioRef.current = audio;
       audio.play().catch((e) => console.warn("Voice note play error:", e));
     }
   };
@@ -266,3 +272,4 @@ export const DeliveryRiderModal: React.FC<DeliveryRiderModalProps> = ({
     </div>
   );
 };
+

@@ -28,7 +28,11 @@ def test_endpoint(name, path, method='GET', data=None):
             try:
                 parsed = json.loads(content.decode('utf-8'))
             except Exception:
-                parsed = f'{len(content)} bytes ({resp.headers.get("content-type", "")})'
+                ct = resp.headers.get("content-type", "")
+                if "html" in ct:
+                    parsed = content.decode('utf-8', errors='replace')
+                else:
+                    parsed = f'{len(content)} bytes ({ct})'
             print(f'[PASS] {name} ({method} {path}) -> HTTP {status}')
             return True, parsed
     except Exception as e:

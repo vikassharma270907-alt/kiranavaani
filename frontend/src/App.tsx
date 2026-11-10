@@ -74,6 +74,7 @@ export const App: React.FC = () => {
   const [landmarkInfo, setLandmarkInfo] = useState<any | null>(null);
   const [bhaavTaalInfo, setBhaavTaalInfo] = useState<any | null>(null);
   const [recipeInfo, setRecipeInfo] = useState<any | null>(null);
+  const [bargainDiscount, setBargainDiscount] = useState<number>(0);
 
   // Order state
   const [transcript, setTranscript] = useState("");
@@ -398,12 +399,13 @@ export const App: React.FC = () => {
     setLandmarkInfo(null);
     setBhaavTaalInfo(null);
     setRecipeInfo(null);
+    setBargainDiscount(0);
   };
 
   // Compute bill totals
   const subtotal = cartItems.reduce((acc, it) => acc + it.line_total, 0);
   const deliveryFee = 0.0;
-  const grandTotal = subtotal + deliveryFee;
+  const grandTotal = Math.max(0, subtotal - bargainDiscount + deliveryFee);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
@@ -694,6 +696,34 @@ export const App: React.FC = () => {
 
           {/* Right Column: Confirmed Shopping Cart & Billing */}
           <div className="lg:col-span-5 space-y-6 sticky top-20">
+            {recipeInfo && (
+              <div className="p-3.5 rounded-xl bg-gradient-to-r from-orange-950/40 via-amber-950/30 to-slate-900 border border-amber-500/40 shadow-lg space-y-2">
+                <div className="flex items-center justify-between pb-2 border-b border-amber-500/20">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">🍲</span>
+                    <div>
+                      <h3 className="text-xs font-bold text-amber-300">
+                        रसोई से राशन (Rasoi Recipe Kit): {recipeInfo.dish_name}
+                      </h3>
+                      <p className="text-[11px] text-slate-300">
+                        {recipeInfo.servings} लोगों के लिए सामग्री • {recipeInfo.matched_ingredients?.length || 0} आइटम्स
+                      </p>
+                    </div>
+                  </div>
+                  {recipeInfo.combo_savings_inr > 0 && (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
+                      बचत: ₹{recipeInfo.combo_savings_inr}
+                    </span>
+                  )}
+                </div>
+                {recipeInfo.recipe_tip_hi && (
+                  <p className="text-[11px] text-amber-200/90 italic">
+                    💡 {recipeInfo.recipe_tip_hi}
+                  </p>
+                )}
+              </div>
+            )}
+
             <ShoppingCart
               items={cartItems}
               onRemoveItem={handleRemoveItem}
@@ -705,6 +735,7 @@ export const App: React.FC = () => {
               subtotal={subtotal}
               deliveryFee={deliveryFee}
               total={grandTotal}
+              discountAmount={bargainDiscount}
               itemCount={cartItems.length}
               items={cartItems}
               khataInfo={khataInfo}
@@ -787,6 +818,7 @@ export const App: React.FC = () => {
         cartItems={cartItems}
         customerName={khataInfo?.customer_name || "Sharma Ji (शर्मा जी)"}
         onApplyDiscountedTotal={(discTotal, savings) => {
+          setBargainDiscount(savings);
           setSpokenReplyHi(`₹${savings} की विशेष छूट लागू कर दी गई है। कुल बिल ₹${discTotal} हुआ।`);
         }}
       />

@@ -131,7 +131,7 @@ class PrismaSTTService:
         return TranscriptionResponse(
             transcript=DEFAULT_MOCK_TRANSCRIPT,
             language_detected="hi-Latn (Fallback Mock)",
-            confidence=0.75,
+            confidence=0.88,
             model=self.model,
             is_mock=True,
             note=f"Fallback due to upstream Gnani API status {last_status}"

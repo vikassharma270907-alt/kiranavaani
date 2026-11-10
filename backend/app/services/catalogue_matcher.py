@@ -460,10 +460,12 @@ class CatalogueMatcher:
             aliases = [sku.name_en.lower(), sku.name_hi.lower()] + [a.lower() for a in sku.aliases]
             best_s = 0.0
             for a in aliases:
-                s = fuzz.partial_ratio(a, clean_q) / 100.0
+                s1 = fuzz.ratio(a, clean_q) / 100.0
+                s2 = fuzz.token_sort_ratio(a, clean_q) / 100.0
+                s = max(s1, s2)
                 if s > best_s:
                     best_s = s
-            if best_s >= 0.60:
+            if best_s >= 0.68:
                 scored.append((sku, best_s))
         
         scored.sort(key=lambda x: x[1], reverse=True)
@@ -639,10 +641,16 @@ class CatalogueMatcher:
         max_allowable_discount = max(0.0, gross_margin - (tot_wholesale * 0.08))
         calculated_discount = min(tot_retail * discount_rate, max_allowable_discount)
         
-        # Round discount to friendly Indian rupee values (e.g. ₹20, ₹25, ₹35, ₹50)
-        friendly_discount = max(10.0, round(calculated_discount / 5.0) * 5.0)
-        if friendly_discount >= tot_retail:
+        # Round discount to friendly Indian rupee values (e.g. ₹15, ₹20, ₹25, ₹35, ₹50)
+        friendly_discount = max(5.0, round(calculated_discount / 5.0) * 5.0) if max_allowable_discount > 0 else 0.0
+        if target_discount_pct is not None and max_allowable_discount > 0:
+            friendly_discount = max(friendly_discount, round(tot_retail * 0.03, 2))
+        if friendly_discount > max_allowable_discount and max_allowable_discount > 0:
+            friendly_discount = round(max_allowable_discount, 2)
+        if friendly_discount >= tot_retail and tot_retail > 0:
             friendly_discount = round(tot_retail * 0.05, 2)
+        elif tot_retail <= 0:
+            friendly_discount = 0.0
 
         negotiated_total = round(max(0.0, tot_retail - friendly_discount), 2)
         effective_disc_pct = round((friendly_discount / tot_retail * 100), 1) if tot_retail > 0 else 6.0
@@ -715,14 +723,14 @@ class CatalogueMatcher:
         """
         q_lower = dish_query.lower()
         recipe_key = "rajma chawal"
-        if "dal" in q_lower or "tadka" in q_lower or "दाल" in q_lower:
-            recipe_key = "dal tadka"
-        elif "chai" in q_lower or "tea" in q_lower or "nashta" in q_lower or "चाय" in q_lower:
-            recipe_key = "chai nashta"
-        elif "poha" in q_lower or "पोहा" in q_lower:
+        if "poha" in q_lower or "पोहा" in q_lower:
             recipe_key = "poha nashta"
+        elif "dal" in q_lower or "tadka" in q_lower or "दाल" in q_lower:
+            recipe_key = "dal tadka"
         elif "paneer" in q_lower or "पनीर" in q_lower or "pulao" in q_lower:
             recipe_key = "paneer pulao"
+        elif "chai" in q_lower or "tea" in q_lower or "चाय" in q_lower or "nashta" in q_lower:
+            recipe_key = "chai nashta"
 
         recipes_db = {
             "rajma chawal": {
@@ -791,7 +799,8 @@ class CatalogueMatcher:
         }
 
         entry = recipes_db[recipe_key]
-        scale = max(0.5, round(servings / 4.0, 1))
+        safe_servings = max(1, min(servings, 50)) if (servings is not None and servings > 0) else 2
+        scale = max(0.5, round(safe_servings / 4.0, 2))
 
         matched_items: List[RecipeIngredientItem] = []
         subtotal = 0.0
@@ -804,7 +813,7 @@ class CatalogueMatcher:
                 continue
 
             scaled_qty = round(it["qty"] * scale, 2)
-            if scaled_qty < 1.0 and sku.unit == "packet":
+            if scaled_qty < 1.0 and sku.unit in ("packet", "bottle", "box", "piece", "pack"):
                 scaled_qty = 1.0
 
             line_cost = round(sku.price_inr * scaled_qty, 2)
