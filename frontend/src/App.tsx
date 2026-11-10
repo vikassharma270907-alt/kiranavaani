@@ -43,6 +43,7 @@ export const App: React.FC = () => {
   const [voiceAudioFormat, setVoiceAudioFormat] = useState("wav");
   const [isMockTts, setIsMockTts] = useState(true);
   const [isOrderConfirmed, setIsOrderConfirmed] = useState(false);
+  const [khataInfo, setKhataInfo] = useState<any | null>(null);
 
   // Determine API base URL dynamically for local dev and Vercel production
   const getApiBase = () => {
@@ -95,6 +96,10 @@ export const App: React.FC = () => {
         synthesize_voice: true
       };
 
+      if (clarifications.length > 0) {
+        payload.pending_clarification_family = clarifications[0].family;
+      }
+
       if (audioBlob) {
         // Convert audio blob to base64
         const reader = new FileReader();
@@ -136,6 +141,7 @@ export const App: React.FC = () => {
       setVoiceAudioBase64(data.voice_audio_base64);
       setVoiceAudioFormat(data.voice_audio_format || "wav");
       setIsMockTts(data.is_mock_tts);
+      setKhataInfo(data.khata_info || null);
 
       // Merge confirmed items into cart
       if (data.confirmed_cart && data.confirmed_cart.items) {
@@ -265,6 +271,7 @@ export const App: React.FC = () => {
     setSpokenReplyEn("");
     setVoiceAudioBase64(undefined);
     setIsOrderConfirmed(false);
+    setKhataInfo(null);
   };
 
   // Compute bill totals
@@ -349,6 +356,7 @@ export const App: React.FC = () => {
               isLoading={isLoading}
               keytermsEnabled={keytermsEnabled}
               onToggleKeyterms={() => setKeytermsEnabled((prev) => !prev)}
+              apiBaseUrl={getApiBase()}
             />
 
             {/* Clarification Gate (Alerts when ambiguous match detected) */}
@@ -379,6 +387,8 @@ export const App: React.FC = () => {
               deliveryFee={deliveryFee}
               total={grandTotal}
               itemCount={cartItems.length}
+              items={cartItems}
+              khataInfo={khataInfo}
               spokenReplyHi={spokenReplyHi}
               spokenReplyEn={spokenReplyEn}
               voiceAudioBase64={voiceAudioBase64}

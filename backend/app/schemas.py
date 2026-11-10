@@ -56,8 +56,19 @@ class TranscriptionResponse(BaseModel):
 
 
 # ---------------------------------------------------------
-# Order Parsing Schemas
+# Order Parsing & Khata Schemas
 # ---------------------------------------------------------
+class KhataInfo(BaseModel):
+    is_khata: bool = Field(False, description="True if order was requested on store credit (udhaar/khata)")
+    customer_name: Optional[str] = Field(None, description="Extracted customer name e.g. 'Sharma Ji'")
+    khata_id: Optional[str] = Field(None, description="Account ID e.g. '#42'")
+    previous_balance_inr: float = Field(420.0, description="Previous ledger balance")
+    current_order_inr: float = Field(0.0, description="Current order total")
+    new_balance_inr: float = Field(0.0, description="Total outstanding balance including this order")
+    payment_mode: str = Field("cash", description="'khata', 'upi', or 'cash'")
+    note_hi: Optional[str] = None
+
+
 class ParsedItem(BaseModel):
     product: str = Field(..., examples=["Maggi"])
     quantity: float = Field(..., examples=[2.0])
@@ -75,6 +86,7 @@ class ParseOrderResponse(BaseModel):
     normalized_transcript: str
     items: List[ParsedItem]
     is_order_complete: bool = Field(False, description="True if caller expressed completion e.g. 'bas itna hi'")
+    khata_info: Optional[KhataInfo] = None
 
 
 # ---------------------------------------------------------
@@ -186,6 +198,23 @@ class SynthesizeResponse(BaseModel):
 
 
 # ---------------------------------------------------------
+# Audio Samples Schema
+# ---------------------------------------------------------
+class AudioSampleClip(BaseModel):
+    clip_id: str
+    title: str
+    category: str
+    target_snr_db: int
+    noise_type: str
+    transcript_expected: str
+    clean_audio_url: str
+    degraded_audio_url: str
+    duration_sec: float
+    description: str
+    keyterm_boost_text: str
+
+
+# ---------------------------------------------------------
 # Combined End-to-End Pipeline Schemas
 # ---------------------------------------------------------
 class ProcessOrderRequest(BaseModel):
@@ -193,6 +222,7 @@ class ProcessOrderRequest(BaseModel):
     audio_base64: Optional[str] = None
     keyterms_enabled: bool = True
     synthesize_voice: bool = True
+    pending_clarification_family: Optional[str] = Field(None, description="Active ambiguity family if caller is replying to a clarification")
 
 
 class ProcessOrderResponse(BaseModel):
@@ -209,3 +239,4 @@ class ProcessOrderResponse(BaseModel):
     voice_audio_base64: Optional[str] = None
     voice_audio_format: Optional[str] = None
     is_mock_tts: bool = False
+    khata_info: Optional[KhataInfo] = None

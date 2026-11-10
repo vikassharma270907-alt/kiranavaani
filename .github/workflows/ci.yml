@@ -11,6 +11,8 @@ jobs:
   backend-tests:
     name: Backend Pytest & Noise Lab (${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: .
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]

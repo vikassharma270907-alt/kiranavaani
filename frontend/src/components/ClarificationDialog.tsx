@@ -62,8 +62,9 @@ export const ClarificationDialog: React.FC<ClarificationDialogProps> = ({
           </div>
 
           <div className="pt-2">
-            <div className="text-xs font-semibold text-slate-300 mb-2">
-              Select intended grocery item:
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-300 mb-2">
+              <span>Select or speak intended grocery item:</span>
+              <span className="text-[10px] text-teal-400 font-mono">🎙️ Hands-free Voice Answer supported</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {q.options.map((opt) => (
@@ -88,6 +89,10 @@ export const ClarificationDialog: React.FC<ClarificationDialogProps> = ({
                   </div>
                 </button>
               ))}
+            </div>
+            <div className="mt-2 text-[11px] text-slate-400 italic bg-slate-950/60 p-2 rounded border border-slate-800 flex items-center gap-1.5">
+              <span>💡</span>
+              <span><strong>Spoken Clarification:</strong> Simply click the microphone above and speak <em>"बासमती वाला"</em> or <em>"सोना मसूरी"</em> to resolve without clicking!</span>
             </div>
           </div>
         </div>

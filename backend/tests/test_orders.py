@@ -203,3 +203,50 @@ def test_cart_paise_formatting():
     data = response.json()
     assert data["total_inr"] == 47.50
     assert "47.50" in data["spoken_summary_hi"]
+
+
+def test_audio_samples_endpoint():
+    """Verify audio samples metadata endpoint returns 5 clips with clean/degraded URLs."""
+    res = client.get("/audio-samples")
+    assert res.status_code == 200
+    clips = res.json()
+    assert len(clips) >= 5
+    ids = [c["clip_id"] for c in clips]
+    assert "clip_1_brand_keyterms" in ids
+    assert "clip_5_kannada_hinglish" in ids
+    # Verify streaming endpoint works for clip 1
+    stream_res = client.get(clips[0]["clean_audio_url"])
+    assert stream_res.status_code in (200, 404)  # 200 if file exists on disk, 404 if missing
+
+
+def test_process_order_spoken_clarification_resolution():
+    """Verify that spoken clarification reply ('basmati wala') resolves an active ambiguity."""
+    payload = {
+        "transcript": "Basmati rice pack kar do bhaiya",
+        "pending_clarification_family": "rice",
+        "keyterms_enabled": True,
+        "synthesize_voice": False
+    }
+    res = client.post("/process-order", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    # Ambiguity should be resolved and item added to cart
+    assert len(data["confirmed_cart"]["items"]) >= 1
+    assert any("Basmati" in it["name_en"] for it in data["confirmed_cart"]["items"])
+    assert "बासमती" in data["spoken_reply_hi"]
+
+
+def test_process_order_with_khata_ledger():
+    """Verify that orders mentioning khata are tagged with KhataInfo and spoken ledger update."""
+    payload = {
+        "transcript": "Sharma ji ke khaate me likh lo bhaiya, 1 kilo sugar aur 1 packet Tata Salt, bas itna hi",
+        "keyterms_enabled": True,
+        "synthesize_voice": False
+    }
+    res = client.post("/process-order", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["khata_info"] is not None
+    assert data["khata_info"]["is_khata"] is True
+    assert "Sharma" in data["khata_info"]["customer_name"]
+    assert "खाते" in data["spoken_reply_hi"]

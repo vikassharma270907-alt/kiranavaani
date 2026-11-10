@@ -103,3 +103,56 @@ def test_completion_verb_does_not_corrupt_product_name():
     prods = [i.product.strip() for i in res.items]
     assert "Tata Salt" in prods
     assert "Tata Salt pack kar 2" not in prods
+
+
+def test_kannada_and_tamil_numerals():
+    """Verify Kannada and Tamil numeral fractions normalize properly."""
+    cases = [
+        ("ondu kilo atta", "1 kilo atta"),
+        ("eradu packet maggi", "2 packet maggi"),
+        ("ardha litre milk", "0.5 litre milk"),
+        ("kaalu kilo toor dal", "0.25 kilo toor dal"),
+        ("ondavare kilo sugar", "1.5 kilo sugar"),
+        ("oru kilo rice", "1 kilo rice"),
+        ("rendu packet biscuit", "2 packet biscuit"),
+        ("ara litre tel", "0.5 litre tel"),
+    ]
+    for raw, expected in cases:
+        normalized = order_parser.normalize_numerals(raw)
+        assert expected in normalized, f"Failed for '{raw}': got '{normalized}'"
+
+
+def test_pao_and_darjan_units():
+    """Verify traditional Indian market fractions: pao, aadha pao, and darjan."""
+    cases = [
+        ("paav bhar paneer", "0.25 paneer"),
+        ("aadha paav mirch", "0.125 mirch"),
+        ("darjan ande", "12 ande"),
+        ("aadha darjan biscuit", "6 biscuit"),
+    ]
+    for raw, expected in cases:
+        normalized = order_parser.normalize_numerals(raw)
+        assert expected in normalized, f"Failed for '{raw}': got '{normalized}'"
+
+
+def test_khata_extraction():
+    """Verify Kirana credit ledger (khata / udhaar) detection and customer name extraction."""
+    res1 = order_parser.parse_utterance("Sharma ji ke khaate me likh lo bhaiya, 2 packet maggi")
+    assert res1.khata_info is not None
+    assert res1.khata_info.is_khata is True
+    assert "Sharma" in res1.khata_info.customer_name
+    assert res1.khata_info.payment_mode == "khata"
+
+    res2 = order_parser.parse_utterance("Gupta ji 1 kilo sugar pack kar do, paise kal sham ko dunga")
+    assert res2.khata_info is not None
+    assert res2.khata_info.is_khata is True
+
+    res3 = order_parser.parse_utterance("2 packet kurkure dena, bas itna hi")
+    assert res3.khata_info is None or res3.khata_info.is_khata is False
+
+
+def test_kannada_tamil_completion():
+    """Verify Dravidian completion triggers like 'saaku', 'aste', 'avlo dhaan'."""
+    assert order_parser.check_order_completion("ondu packet maggi kodi, aste") is True
+    assert order_parser.check_order_completion("eradu kilo rice, saaku") is True
+    assert order_parser.check_order_completion("oru litre oil, avlo dhaan") is True

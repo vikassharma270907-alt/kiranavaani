@@ -28,7 +28,9 @@ from backend.app.schemas import (
     SynthesizeRequest,
     SynthesizeResponse,
     ProcessOrderRequest,
-    ProcessOrderResponse
+    ProcessOrderResponse,
+    AudioSampleClip,
+    KhataInfo
 )
 from backend.app.services.prisma_service import prisma_service
 from backend.app.services.timbre_service import timbre_service
@@ -49,6 +51,97 @@ async def get_catalogue():
         total_skus=len(skus),
         skus=skus
     )
+
+
+@router.get("/audio-samples", response_model=List[AudioSampleClip])
+async def list_audio_samples():
+    """
+    Returns benchmark test audio clips metadata across clean studio and degraded telephony noise tiers.
+    Enables live interactive A/B listening and evaluation directly in the frontend cockpit.
+    """
+    return [
+        AudioSampleClip(
+            clip_id="clip_1_brand_keyterms",
+            title="Clip 1: Code-Mixed Brand Keyterms (Maggi & Kurkure)",
+            category="Brand Bias & Telephony Noise",
+            target_snr_db=5,
+            noise_type="ESC-50 Street Traffic & Horns (+5 dB, 8 kHz G.711)",
+            transcript_expected="भैया 2 किलो बासमती चावल, 1 Maggi masala, 2 Kurkure और 1 litre Arogyam oil लिख लो, बस इतना ही।",
+            clean_audio_url="/audio-samples/clip_1_brand_keyterms_clean_16khz.wav",
+            degraded_audio_url="/audio-samples/clip_1_brand_keyterms_telephony_traffic_5db.wav",
+            duration_sec=4.2,
+            description="Evaluates 200 catalog keyterms bias. Keyterms ON resolves 'Maggi' & 'Kurkure' accurately; Keyterms OFF degrades to phonetic distortion 'meghee'.",
+            keyterm_boost_text="Keyterms ON: Maggi & Kurkure (100% Recalled) | OFF: meghee & kurkura"
+        ),
+        AudioSampleClip(
+            clip_id="clip_2_ambiguous_rice",
+            title="Clip 2: Ambiguous Rice (Basmati vs Sona Masoori)",
+            category="Conversational Clarification Loop",
+            target_snr_db=20,
+            noise_type="8 kHz μ-Law Telephony + Ceiling Fan (+20 dB)",
+            transcript_expected="भैया 5 किलो आशीर्वाद आटा, ढाई किलो चावल और 2 almond oil भेज देना।",
+            clean_audio_url="/audio-samples/clip_2_ambiguous_rice_clean_16khz.wav",
+            degraded_audio_url="/audio-samples/clip_2_ambiguous_rice_telephony_fan_20db.wav",
+            duration_sec=4.0,
+            description="Caller asks for 'चावल' without specifying Basmati vs Sona Masoori. Triggers active clarification dialogue.",
+            keyterm_boost_text="Triggers Active Ambiguity Gate: Basmati (₹95) vs Sona Masoori (₹58)"
+        ),
+        AudioSampleClip(
+            clip_id="clip_3_colloquial_fractions",
+            title="Clip 3: Colloquial Fractions (0 dB Market Babble)",
+            category="Extreme Noise Resilience & Fractions",
+            target_snr_db=0,
+            noise_type="ESC-50 Market Babble (0 dB SNR, 8 kHz G.711)",
+            transcript_expected="नमस्ते गुप्ता जी, सवा दो किलो आशीर्वाद आटा, आधा किलो तूर दाल, 1 Tata नमक, बस इतना ही।",
+            clean_audio_url="/audio-samples/clip_3_colloquial_fractions_clean_16khz.wav",
+            degraded_audio_url="/audio-samples/clip_3_colloquial_fractions_telephony_market_0db.wav",
+            duration_sec=4.5,
+            description="Evaluates colloquial fractional quantities ('सवा दो किलो' = 2.25 kg, 'आधा किलो' = 0.5 kg) under 0 dB extreme market babble.",
+            keyterm_boost_text="Extracts 2.25 kg + 0.5 kg accurately even at 0 dB SNR"
+        ),
+        AudioSampleClip(
+            clip_id="clip_4_dairy_snacks",
+            title="Clip 4: Dairy & Snacks Replenishment",
+            category="Multi-Unit Normalization",
+            target_snr_db=10,
+            noise_type="Shop Ceiling Fan Hum (+10 dB, 8 kHz G.711)",
+            transcript_expected="भैया 2 packet अमूल ताज़ा दूध, 1 Amul butter, 2 Parle-G बिस्कुट और 1 Vim bar, हो गया।",
+            clean_audio_url="/audio-samples/clip_4_dairy_snacks_clean_16khz.wav",
+            degraded_audio_url="/audio-samples/clip_4_dairy_snacks_telephony_fan_10db.wav",
+            duration_sec=3.8,
+            description="Tests discrete packaged items, unit normalization (packets, bars), and completion cue 'हो गया'.",
+            keyterm_boost_text="Multi-unit normalization: 2 packets milk + 1 butter + 2 biscuits"
+        ),
+        AudioSampleClip(
+            clip_id="clip_5_kannada_hinglish",
+            title="Clip 5: Namma Bengaluru Kannada + Hinglish Order",
+            category="Dravidian Code-Switching & Auto-LID",
+            target_snr_db=20,
+            noise_type="PSTN Telephony Line Noise (+20 dB)",
+            transcript_expected="Anna ondu kilo godhi hittu, eradu packet Maggi matthe ardha litre milk kodi, aste.",
+            clean_audio_url="/audio-samples/clip_5_kannada_hinglish_clean_16khz.wav",
+            degraded_audio_url="/audio-samples/clip_5_kannada_hinglish_telephony_clean_20db.wav",
+            duration_sec=4.1,
+            description="Tests Bengaluru Kirana mode with Kannada numerals (ondu=1, eradu=2, ardha=0.5) and completion cue 'aste'.",
+            keyterm_boost_text="Kannada + Hinglish Auto-LID: ondu godhi hittu -> 1 kg Atta, eradu Maggi -> 2 pkt"
+        )
+    ]
+
+
+@router.get("/audio-samples/{filename}")
+async def get_audio_sample_file(filename: str):
+    """Streams a WAV audio clip from audio_samples directory."""
+    from fastapi.responses import FileResponse
+    from pathlib import Path
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    sample_path = base_dir / "audio_samples" / filename
+    if not sample_path.exists():
+        alt_path = base_dir.parent / "audio_samples" / filename
+        if alt_path.exists():
+            sample_path = alt_path
+        else:
+            raise HTTPException(status_code=404, detail=f"Audio sample '{filename}' not found.")
+    return FileResponse(sample_path, media_type="audio/wav", filename=filename)
 
 
 class TranscribeJsonInput(BaseModel):
@@ -190,8 +283,29 @@ async def process_order(request: ProcessOrderRequest):
     )
 
     # 4. Filter confirmed items vs ambiguous items
-    # CRITICAL: We DO NOT automatically convert ambiguous items into confirmed orders!
     confirmed_inputs: List[CartItemInput] = []
+    resolved_clarification_sku = None
+
+    # Check if this turn directly answers an active clarification question
+    if request.pending_clarification_family:
+        resolved = catalogue_matcher.resolve_spoken_clarification(
+            family=request.pending_clarification_family,
+            utterance=transcript
+        )
+        if resolved:
+            resolved_clarification_sku, _ = resolved
+            confirmed_inputs.append(
+                CartItemInput(
+                    sku_id=resolved_clarification_sku.sku_id,
+                    quantity=1.0,
+                    unit=resolved_clarification_sku.unit
+                )
+            )
+            # Remove resolved ambiguity question
+            match_res.clarifications_needed = [
+                q for q in match_res.clarifications_needed if q.family != request.pending_clarification_family
+            ]
+
     for m in match_res.matched_items:
         if m.status == "MATCHED" and m.matched_sku:
             confirmed_inputs.append(
@@ -202,11 +316,14 @@ async def process_order(request: ProcessOrderRequest):
                 )
             )
 
-    # 5. Build confirmed cart
-    cart = cart_service.build_cart(confirmed_inputs)
+    # 5. Build confirmed cart with Khata balance calculation
+    cart = cart_service.build_cart(confirmed_inputs, parsed_res.khata_info)
 
     # 6. Determine conversational reply and clarification priority
-    if match_res.clarifications_needed:
+    if resolved_clarification_sku:
+        spoken_reply_hi = f"{resolved_clarification_sku.name_hi} कार्ट में जोड़ दिया गया है। क्या कुछ और चाहिए?"
+        spoken_reply_en = f"{resolved_clarification_sku.name_en} added to cart. Anything else?"
+    elif match_res.clarifications_needed:
         # Prioritize asking the first ambiguous question
         top_clarification = match_res.clarifications_needed[0]
         spoken_reply_hi = top_clarification.question_hi
@@ -245,5 +362,6 @@ async def process_order(request: ProcessOrderRequest):
         spoken_reply_en=spoken_reply_en,
         voice_audio_base64=voice_audio_b64,
         voice_audio_format=voice_audio_fmt,
-        is_mock_tts=is_mock_tts
+        is_mock_tts=is_mock_tts,
+        khata_info=parsed_res.khata_info
     )

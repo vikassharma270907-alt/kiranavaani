@@ -17,10 +17,10 @@
 
 | Award | How KiranaVaani Qualifies |
 | :--- | :--- |
-| **Mixed Vibes** | Ingests seamless code-mixed Hindi-English (*Hinglish*) speech with **Prisma v3.0 Auto-LID** (~$98.4\%$ accuracy) and native code-mix mode (Hindi syntax with English brand names in Latin script). |
-| **Real Deal** | Solves high-frequency phone orders for neighbourhood kirana stores with multi-unit normalization (`kg`, `gram`, `litre`, `packet`, `pack`, `bottle`), colloquial fractional quantities (*"सवा दो किलो आटा"*, *"ढाई किलो चावल"*), and order completion triggers (*"बस इतना ही"*, *"हो गया"*). |
-| **Noise Canceller** | Evaluates telephony channel degradation across an **ITU-T G.711 $\mu$-law $8\text{ kHz}$ codec** and **environmental noise** (shop ceiling fan, road traffic, market babble) down to $0\text{ dB}$ SNR. Demonstrates that 200 catalog keyterms bias lifts Item-F1 from $59.4\%$ to $84.6\%$ under extreme noise. |
-| **Demo Day Drop** | Includes an interactive full-stack cockpit with live recording, waveform visualizer, interactive clarification gate, and a crisp 2-minute video demo script with social media posts tagged `#GnaniAI` and `#GreatIndianAIInternshipChallenge`. |
+| **Mixed Vibes** | Seamlessly ingests code-mixed Hindi-English (*Hinglish*) and **Dravidian Code-Switching (Namma Bengaluru Kannada + Tamil)** with **Prisma v3.0 Auto-LID** (~$98.4\%$ accuracy) and native code-mix mode (e.g. *"ondu kilo godhi hittu matthe 2 packet Maggi kodi, aste"*). |
+| **Real Deal** | Solves high-frequency phone orders with traditional Indian market fractions (*"सवा दो किलो"*, *"ढाई किलो"*, *"पाव भर"* $=0.25\text{ kg}$, *"आधा पाव"* $=0.125\text{ kg}$, *"दर्जन"* $=12\text{ pcs}$), and features an authentic **Kirana Khata (खाता उधार) Credit Ledger** that automatically books orders to customer accounts. |
+| **Noise Canceller** | Evaluates telephony channel degradation across an **ITU-T G.711 $\mu$-law $8\text{ kHz}$ codec** and **environmental noise** down to $0\text{ dB}$ SNR. Demonstrates that 200 catalog keyterms bias lifts Item-F1 from $59.4\%$ to $84.6\%$ under extreme noise, featuring a live **A/B Sound Proofing Audio Switcher** in the web app. |
+| **Demo Day Drop** | Includes an interactive full-stack cockpit with live recording, **real-time animated waveform canvas** with $\mu$-law quantization steps, **1-click WhatsApp Kirana Order Slip generator**, and **dynamic scanable UPI QR Code**. |
 
 ---
 

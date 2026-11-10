@@ -22,7 +22,11 @@ class CartService:
     def __init__(self):
         pass
 
-    def build_cart(self, items_input: List[CartItemInput]) -> CartResponse:
+    def build_cart(
+        self,
+        items_input: List[CartItemInput],
+        khata_info: Optional[Any] = None
+    ) -> CartResponse:
         """
         Builds a structured cart from confirmed item inputs with SKU lookups and totals.
         """
@@ -74,8 +78,13 @@ class CartService:
         subtotal = round(subtotal, 2)
         total = subtotal
 
+        # Update Khata totals if applicable
+        if khata_info and hasattr(khata_info, "is_khata") and khata_info.is_khata:
+            khata_info.current_order_inr = total
+            khata_info.new_balance_inr = round(khata_info.previous_balance_inr + total, 2)
+
         # Build natural spoken summaries
-        summary_hi, summary_en = self._generate_spoken_summaries(cart_items, total)
+        summary_hi, summary_en = self._generate_spoken_summaries(cart_items, total, khata_info)
 
         return CartResponse(
             items=cart_items,
@@ -87,7 +96,12 @@ class CartService:
             spoken_summary_en=summary_en
         )
 
-    def _generate_spoken_summaries(self, items: List[CartItem], total: float) -> tuple[str, str]:
+    def _generate_spoken_summaries(
+        self,
+        items: List[CartItem],
+        total: float,
+        khata_info: Optional[Any] = None
+    ) -> tuple[str, str]:
         if not items:
             return (
                 "आपका कार्ट खाली है। कृपया बताएं आपको क्या चाहिए?",
@@ -106,8 +120,19 @@ class CartService:
         en_items_str = ", ".join(en_phrases)
 
         hi_total_str = f"{int(total)}" if total == int(total) else f"{total:.2f}"
-        hi_summary = f"आपके ऑर्डर में {hi_items_str} शामिल है। कुल बिल {hi_total_str} रुपये हुआ है। ऑर्डर कन्फर्म करें?"
-        en_summary = f"Your order includes {en_items_str}. Total bill is ₹{total:g}. Would you like to confirm?"
+        
+        if khata_info and hasattr(khata_info, "is_khata") and khata_info.is_khata:
+            hi_summary = (
+                f"आपके ऑर्डर में {hi_items_str} शामिल है। यह ₹{hi_total_str} {khata_info.customer_name} के खाते में दर्ज किया गया है। "
+                f"कुल बकाया ₹{int(khata_info.new_balance_inr)} हुआ।"
+            )
+            en_summary = (
+                f"Your order of {en_items_str} totaling ₹{total:g} is booked under {khata_info.customer_name}'s ledger. "
+                f"New outstanding balance is ₹{khata_info.new_balance_inr:g}."
+            )
+        else:
+            hi_summary = f"आपके ऑर्डर में {hi_items_str} शामिल है। कुल बिल {hi_total_str} रुपये हुआ है। ऑर्डर कन्फर्म करें?"
+            en_summary = f"Your order includes {en_items_str}. Total bill is ₹{total:g}. Would you like to confirm?"
 
         return hi_summary, en_summary
 

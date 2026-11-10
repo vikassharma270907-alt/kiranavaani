@@ -56,6 +56,7 @@ frontend/node_modules/
 *.flac
 *.webm
 !tests/fixtures/*.wav
+!audio_samples/*.wav
 audio_temp/
 temp_recordings/
 

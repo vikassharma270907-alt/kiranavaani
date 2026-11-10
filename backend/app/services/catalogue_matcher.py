@@ -335,6 +335,37 @@ class CatalogueMatcher:
             unmatched_items=unmatched
         )
 
+    def resolve_spoken_clarification(self, family: str, utterance: str) -> Optional[Tuple[CatalogueSKU, float]]:
+        """
+        Resolves a spoken clarification answer (e.g. 'basmati wala', 'sona masoori', 'atta maggi')
+        to one of the SKUs in that family without requiring mouse clicks.
+        """
+        fam = AMBIGUITY_FAMILIES.get(family.lower())
+        if not fam:
+            return None
+
+        clean_utt = utterance.lower().strip()
+        best_sku: Optional[CatalogueSKU] = None
+        best_score = 0.0
+
+        for sku_id in fam["sku_ids"]:
+            sku = self.sku_lookup.get(sku_id)
+            if not sku:
+                continue
+
+            candidates = [sku.name_en.lower(), sku.name_hi.lower()] + [a.lower() for a in sku.aliases]
+            for cand in candidates:
+                ratio = fuzz.partial_ratio(cand, clean_utt) / 100.0
+                token_ratio = fuzz.token_set_ratio(cand, clean_utt) / 100.0
+                score = max(ratio, token_ratio)
+                if score > best_score:
+                    best_score = score
+                    best_sku = sku
+
+        if best_sku and best_score >= 0.65:
+            return best_sku, best_score
+        return None
+
 
 # Default singleton instance
 catalogue_matcher = CatalogueMatcher()
