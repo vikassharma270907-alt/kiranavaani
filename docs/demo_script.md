@@ -46,17 +46,27 @@
 
 ---
 
-### 1:25 – 1:55 | Timbre v2.5 Voice Readback
+### 1:25 – 1:55 | Timbre v2.5 Voice Readback & Soundbox 2.0 Chime
 **Visual**: Presenter clicks *"Listen to Spoken Readback"*.
 **Audio Output**:
 > *"Aapke order me 2 packet Maggi, 1 kg Sugar aur aadha litre Milk shamil hai. Kul bill 88 rupaye hua hai. Order confirm karein?"*
 
-**Presenter Voiceover**:
-> "That voice readback was synthesized using **Gnani Timbre v2.5**, producing natural Indian prosody and Hindi pronunciation that shopkeepers and customers instantly trust."
+**Visual**: Presenter clicks *"Confirm Order"*. The **Kirana Soundbox 2.0** sounds its authentic merchant chime:
+> 🔊 *"Gupta Kirana Soundbox: अट्ठासी रुपये का यूपीआई भुगतान प्राप्त हुआ!"*
+
+**Visual**: Presenter clicks *"58mm Thermal POS Receipt"*. A realistic retro dot-matrix bill pops up with jagged tear edges, FSSAI/GSTIN details, and a scanable UPI QR code. Click *"Print"* to show printer preview!
 
 ---
 
-### 1:55 – 2:20 | The Noise Lab & Keyterm Biasing Resilience
+### 1:55 – 2:20 | Bhasha-Sudhaar & Acoustic Confidence Heatmap
+**Visual**: Switch screen to the **Acoustic Spectrogram**.
+**Presenter Voiceover**:
+> "Look at the **Phonetic Confidence Heatmap**: every token is scored acoustically in real-time. Notice how our **Bhasha-Sudhaar Engine** handles mid-sentence conversational repair: if a caller says *'5 kilo atta... arre nahi 5 nahi 2 kilo karna, aur Maggi mat bhejna'*, it rolls back the cancellation instantly without double-billing!
+> And when telephony bandpass causes phonetic ambiguity, the shopkeeper can click any word on the heatmap to slice and replay the exact 0.8-second audio snippet."
+
+---
+
+### 2:20 – 2:40 | The Noise Lab & Keyterm Biasing Resilience
 **Visual**: Switch screen to the **Noise Lab Results Plot** (`ablation_benchmark_plot.png`).
 **Presenter Voiceover**:
 > "Kirana stores are noisy places. In our **Telephony Noise Lab**, we benchmarked KiranaVaani across 80 synthetic orders through an 8 kHz ITU-T G.711 $\mu$-law telephony channel and ambient shop noise down to 0 dB SNR.
@@ -64,7 +74,7 @@
 
 ---
 
-### 2:20 – 2:35 | Conclusion & Call to Action
+### 2:40 – 2:55 | Conclusion & Call to Action
 **Visual**: Return to KiranaVaani Cockpit. Click "Confirm Order" — green confirmation banner flashes.
 **Presenter Voiceover**:
 > "KiranaVaani turns any neighbourhood grocery store into an AI-powered voice commerce hub. Built with pride for the **Great Indian AI Internship Challenge by Gnani.ai**. 
