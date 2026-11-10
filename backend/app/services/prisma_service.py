@@ -65,13 +65,14 @@ class PrismaSTTService:
 
         form_data = {
             "model": self.model,
-            "language_code": language_code,
+            "language_code": "hi-IN,en-IN" if language_code == "indic-auto" else language_code,
             "format": "codemix"
         }
 
         if keyterms:
+            import json
             # Pass top 200 catalogue keyterms to bias beam search
-            form_data["keyterms"] = ",".join(keyterms[:200])
+            form_data["keyterms"] = json.dumps(keyterms[:200])
 
         content_type = "audio/wav"
         if filename.endswith(".webm"):

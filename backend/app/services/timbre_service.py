@@ -101,6 +101,7 @@ class TimbreTTSService:
             "voice": voice,
             "model": self.model,
             "language": language,
+            "sample_rate": 24000,
             "speed": speed,
             "audio_config": {
                 "sample_rate": 24000,

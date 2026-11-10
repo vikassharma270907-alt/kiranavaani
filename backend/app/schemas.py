@@ -13,6 +13,7 @@ class HealthResponse(BaseModel):
     version: str = Field(..., examples=["2.0.0"])
     service: str = Field("KiranaVaani Backend", examples=["KiranaVaani Backend"])
     gnani_live_configured: bool = Field(False, description="True if a valid Gnani API key is configured")
+    live_api_configured: bool = Field(False, description="True if GNANI_API_KEY starts with vach_")
     gnani_stt_model: str = Field("prisma-v3.0")
     gnani_tts_model: str = Field("timbre-v2.5")
     catalogue_sku_count: int = Field(35)
