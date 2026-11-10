@@ -3,6 +3,7 @@ Catalogue Matcher Service.
 Matches extracted product mentions against the Kirana grocery catalogue using RapidFuzz.
 Detects ambiguous product mentions and low-confidence matches to trigger clarification dialogues.
 """
+from __future__ import annotations
 import json
 import logging
 import re

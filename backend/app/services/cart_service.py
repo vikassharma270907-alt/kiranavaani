@@ -3,8 +3,9 @@ Shopping Cart Service.
 Constructs structured shopping carts, calculates line totals, subtotals, and delivery charges,
 and synthesizes natural Hinglish/Hindi conversational summaries for Timbre TTS readbacks.
 """
+from __future__ import annotations
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 
 from backend.app.schemas import (
     CartItem,

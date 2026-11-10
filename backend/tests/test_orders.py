@@ -3,7 +3,7 @@ Integration tests for KiranaVaani FastAPI endpoints.
 Tests /health, /catalogue, /transcribe, /parse-order, /match-products, /cart, /synthesize, /process-order.
 """
 import pytest
-from starlette.testclient import TestClient
+from fastapi.testclient import TestClient
 from backend.app.main import app
 
 client = TestClient(app)

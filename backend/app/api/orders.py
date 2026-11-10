@@ -9,9 +9,10 @@ Implements:
 - POST /synthesize
 - POST /process-order
 """
+from __future__ import annotations
 import base64
 import logging
-from typing import Optional, List
+from typing import Optional, List, Dict, Any, Tuple
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body
 from pydantic import BaseModel
 
