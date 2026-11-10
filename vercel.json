@@ -1,0 +1,47 @@
+{
+  "version": 2,
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/health",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/catalogue",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/transcribe",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/parse-order",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/match-products",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/cart",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/synthesize",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/process-order",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

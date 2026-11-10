@@ -73,8 +73,16 @@ class PrismaSTTService:
             # Pass top 200 catalogue keyterms to bias beam search
             form_data["keyterms"] = ",".join(keyterms[:200])
 
+        content_type = "audio/wav"
+        if filename.endswith(".webm"):
+            content_type = "audio/webm"
+        elif filename.endswith(".mp3"):
+            content_type = "audio/mp3"
+        elif filename.endswith(".ogg"):
+            content_type = "audio/ogg"
+
         files = {
-            "audio_file": (filename, audio_bytes, "audio/wav")
+            "audio_file": (filename, audio_bytes, content_type)
         }
 
         try:

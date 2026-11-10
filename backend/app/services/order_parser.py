@@ -165,12 +165,18 @@ class HinglishOrderParser:
         Parses a full transcript into individual product mentions with normalized quantity and unit.
         """
         raw_transcript = text.strip()
+        is_order_complete = self.check_order_completion(raw_transcript)
+        
+        # 1. First strip conversational fillers and completion verbs from raw text
+        # (This prevents verbs like 'pack kar do' from having 'do' converted to '2')
+        cleaned_text = self.strip_conversational_fillers(raw_transcript)
+        
+        # 2. Normalize numerals in cleaned text and generate full normalized transcript
+        cleaned_normalized = self.normalize_numerals(cleaned_text)
         normalized_transcript = self.normalize_numerals(raw_transcript)
-        is_order_complete = self.check_order_completion(normalized_transcript)
-        cleaned_text = self.strip_conversational_fillers(normalized_transcript)
 
-        # Split clauses by delimiters
-        clauses = re.split(r",|\baur\b|\bऔर\b|\band\b|\btatha\b|\bतथा\b|;|\+|&|\bsaath me\b|\bसाथ में\b", cleaned_text, flags=re.IGNORECASE)
+        # 3. Split clauses by delimiters
+        clauses = re.split(r",|\baur\b|\bऔर\b|\band\b|\btatha\b|\bतथा\b|;|\+|&|\bsaath me\b|\bसाथ में\b", cleaned_normalized, flags=re.IGNORECASE)
 
         items: List[ParsedItem] = []
         for raw_c in clauses:
@@ -179,7 +185,7 @@ class HinglishOrderParser:
                 continue
 
             # Check if this clause is purely a filler or completion word that escaped
-            if clause.lower() in ("bhej dena", "pack kar do", "itna hi"):
+            if clause.lower() in ("bhej dena", "pack kar do", "itna hi", "likh lo", "dena"):
                 continue
 
             qty, unit, prod_text = self.extract_quantity_and_unit(clause)

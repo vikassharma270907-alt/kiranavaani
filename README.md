@@ -3,7 +3,7 @@
 [![Gnani.ai Challenge](https://img.shields.io/badge/Gnani.ai-Great%20Indian%20AI%20Internship%20Challenge-emerald.svg)](https://gnani.ai)
 [![Models](https://img.shields.io/badge/Speech%20Models-Prisma%20v3.0%20%7C%20Timbre%20v2.5-sky.svg)](https://gnani.ai)
 [![Target Awards](https://img.shields.io/badge/Awards-Mixed%20Vibes%20%7C%20Real%20Deal%20%7C%20Noise%20Canceller%20%7C%20Demo%20Day%20Drop-amber.svg)](#target-award-categories)
-[![Synthetic Data](https://img.shields.io/badge/Data%20Compliance-100%25%20Synthetic%20(Zero%20PII)-blue.svg)](#14-synthetic-data-compliance-declaration)
+[![Synthetic Data](https://img.shields.io/badge/Data%20Compliance-100%25%20Synthetic%20(Zero%20PII)-blue.svg)](#15-synthetic-data-compliance-declaration)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **KiranaVaani** is a noise-robust voice-ordering AI assistant and telephony acoustic benchmark designed for India's 12+ million neighbourhood grocery (*kirana*) stores. Powered by **Gnani.ai’s Prisma v3.0 Speech-to-Text (STT)** and **Timbre v2.5 Text-to-Speech (TTS)**, KiranaVaani handles rapid code-mixed Hindi-English (*Hinglish*) calls, normalizes colloquial Indian fractional quantities (*"सवा दो किलो"*, *"ढाई किलो"*, *"आधा लीटर"*), matches against a 35-SKU multilingual catalogue using RapidFuzz, enforces a strict conversational clarification gate for ambiguous orders (*"Did you mean Basmati or Sona Masoori rice?"*), and synthesizes spoken confirmation readbacks with natural Indian prosody.
@@ -56,6 +56,11 @@ India's retail backbone is powered by over 12 million neighbourhood kirana store
 
 ## 4. Technical Architecture
 
+![KiranaVaani System Architecture](assets/architecture/kirana_vaani_system_architecture_slide.png)
+
+> **Interactive Presentation Slide (16:9):** [`assets/architecture/kirana_vaani_system_architecture.html`](assets/architecture/kirana_vaani_system_architecture.html)  
+> **Vector SVG Diagram:** [`assets/architecture/kirana_vaani_system_architecture.svg`](assets/architecture/kirana_vaani_system_architecture.svg)
+
 ```mermaid
 flowchart LR
     subgraph Channel ["Acoustic & Telephony Channel"]
@@ -85,7 +90,60 @@ flowchart LR
 
 ---
 
-## 5. Repository Structure
+## 5. Core Mathematical Formulations & Acoustic Physics
+
+### 5.1. ITU-T G.711 $\mu$-Law Companding Codec ($8\text{ kHz}$ Telephony)
+
+Real PSTN mobile calls compress dynamic range using logarithmic $\mu$-law compression ($\mu = 255$) before 8-bit uniform quantization:
+
+$$
+F(x) = \text{sgn}(x) \frac{\ln(1 + \mu |x|)}{\ln(1 + \mu)}, \quad -1 \le x \le 1, \quad \mu = 255
+$$
+
+The quantized signal is reconstructed via inverse expansion:
+
+$$
+F^{-1}(y) = \text{sgn}(y) \frac{1}{\mu} \left( (1 + \mu)^{|y|} - 1 \right)
+$$
+
+*Acoustic Insight:* This $8\text{ kHz}$ band-limiting cut (Nyquist frequency at $4\text{ kHz}$) and 8-bit quantization noise disproportionately degrade high-frequency consonant fricatives (`/s/`, `/f/`, `/sh/`), causing phonetic hallucinations like `"meghee"` instead of `"Maggi"`.
+
+### 5.2. ESC-50 Environmental Noise Mixing at Target SNR
+
+Given speech signal $s[n]$ and environmental noise $d[n]$, the noise scaling factor $\alpha$ for target $\text{SNR} \in \{20, 10, 5, 0\}\text{ dB}$ is:
+
+$$
+\alpha = \sqrt{\frac{P_{\text{speech}}}{P_{\text{noise}} \cdot 10^{\text{SNR}_{\text{target}} / 10}}}
+$$
+
+The degraded and quantized signal $x[n]$ is synthesized as:
+
+$$
+x[n] = F^{-1}\left( \mathcal{Q}_{\text{8-bit}}\left( F(s[n] + \alpha d[n]) \right) \right)
+$$
+
+### 5.3. Levenshtein Similarity & Clarification Gate
+
+For candidate token $t$ and catalogue alias $c$:
+
+$$
+\text{Sim}(t, c) = 1 - \frac{\text{dist}_{\text{Levenshtein}}(t, c)}{\max(|t|, |c|)}
+$$
+
+- **Auto-Add Gate:** $\text{Sim}(t, c) \ge 0.78$ and unambiguous.
+- **Clarification Re-Ask Gate:** $0.55 \le \text{Sim}(t, c) < 0.78$ OR generic product family (e.g. `"चावल"` without specifying *Basmati* vs. *Sona Masoori*).
+
+### 5.4. Why Item-Level $\text{F1}$ Trumps Raw $\text{WER}$
+
+Following the **LAHAJA** and **Vividh-ASR** Indian speech benchmarks, raw $\text{WER}$ unfairly penalizes harmless script variations (e.g. `"1 kg"` vs `"एक किलो"`). **Item-Level $\text{F1}$** directly measures business accuracy: a True Positive requires exact match on both canonical `sku_id` and normalized `quantity`:
+
+$$
+\text{Item-F1} = \frac{2 \cdot \text{TP}_{\text{item+qty}}}{2 \cdot \text{TP}_{\text{item+qty}} + \text{FP}_{\text{item+qty}} + \text{FN}_{\text{item+qty}}} \times 100\%
+$$
+
+---
+
+## 6. Repository Structure
 
 ```
 kiranavaani/
@@ -164,7 +222,7 @@ kiranavaani/
 
 ---
 
-## 6. Prerequisites
+## 7. Prerequisites
 
 - **Python**: Version `3.11` or higher (`3.11`, `3.12`, `3.13`, `3.14`).
 - **Node.js**: Version `18.0` or higher (`v20`, `v22`, `v24` supported).
@@ -173,7 +231,7 @@ kiranavaani/
 
 ---
 
-## 7. Installation & Environment Setup
+## 8. Installation & Environment Setup
 
 ### 7.1. Clone the Repository
 ```bash
@@ -213,7 +271,7 @@ cd ..
 
 ---
 
-## 8. Running the Application
+## 9. Running the Application
 
 ### 8.1. Start the Backend Server
 From the repository root:
@@ -234,7 +292,7 @@ Open `http://localhost:5173` in your browser.
 
 ---
 
-## 9. API Endpoint Documentation
+## 10. API Endpoint Documentation
 
 | Method | Endpoint | Description | Sample Request | Sample Response |
 | :--- | :--- | :--- | :--- | :--- |
@@ -249,7 +307,7 @@ Open `http://localhost:5173` in your browser.
 
 ---
 
-## 10. Running the Noise Lab Experiments
+## 11. Running the Noise Lab Experiments
 
 The Noise Lab benchmarks acoustic degradation across 5 SNR tiers (+30 dB, +20 dB, +10 dB, +5 dB, 0 dB):
 
@@ -268,7 +326,7 @@ All evaluation metrics, CSV tables, and publication-ready figures are saved in `
 
 ---
 
-## 11. Key Experimental Findings
+## 12. Key Experimental Findings
 
 ```
 ==========================================================================================
@@ -289,7 +347,7 @@ At $0\text{ dB}$ SNR (extreme shop babble noise), injecting **200 Kirana catalog
 
 ---
 
-## 12. Automated Test Suite
+## 13. Automated Test Suite
 
 Run all backend unit, integration, and noise lab tests via Pytest:
 ```bash
@@ -311,7 +369,7 @@ backend/tests/test_parser.py ......                                      [100%]
 
 ---
 
-## 13. Screenshots & Visual Interface
+## 14. Screenshots & Visual Interface
 
 ### Cockpit Application Interface
 - **Left Column**: Live voice recording with pulsating audio indicator, preset order selection, and transcription with Auto-LID badge.
@@ -322,14 +380,14 @@ backend/tests/test_parser.py ......                                      [100%]
 
 ---
 
-## 14. Synthetic Data Compliance Declaration
+## 15. Synthetic Data Compliance Declaration
 
 - **100% Zero-PII Synthetic Dataset**: All 80 test orders in `data/sample_orders.json` are synthetically generated combinations of 35 Kirana catalogue items, fractional quantities, and Hinglish conversational idioms.
 - Zero customer phone numbers, personal Aadhaar details, or private phone call audio recordings are contained in this repository.
 
 ---
 
-## 15. Limitations & Future Roadmap
+## 16. Limitations & Future Roadmap
 
 1. **Room Impulse Reverberation**: The current Noise Lab simulates additive noise and telephony channel bandpass, but does not yet model multi-surface wall reverberation (RT60).
 2. **Additional Indic Dialects**: Full cross-lingual testing for Telugu, Marathi, and Bengali is planned for v2.1.
@@ -337,7 +395,7 @@ backend/tests/test_parser.py ......                                      [100%]
 
 ---
 
-## 16. License & Contributions
+## 17. License & Contributions
 
 - **License**: Distributed under the [MIT License](LICENSE).
 - **Contributing**: Pull requests are welcome. Please ensure all unit tests pass (`python -m pytest backend/tests`) and frontend builds cleanly (`npm run build`) before opening a PR.

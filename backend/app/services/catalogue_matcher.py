@@ -94,21 +94,22 @@ class CatalogueMatcher:
     def check_ambiguity_family(self, phrase: str, item: ParsedItem) -> Optional[ClarificationQuestion]:
         """
         Detects if a generic term triggers a clarification prompt across known ambiguity families.
+        Uses boundary-safe regex to prevent false substring matches (e.g. 'akki' inside 'chakki').
         """
-        phrase_clean = phrase.strip().lower()
+        phrase_clean = phrase.strip()
 
         for fam_key, fam_data in AMBIGUITY_FAMILIES.items():
-            # Check if any trigger word is present
+            # Check if any trigger word is present as a whole word
             trigger_matched = any(
-                t in phrase_clean or re.search(make_boundary_regex(t), phrase_clean, re.IGNORECASE)
+                bool(re.search(make_boundary_regex(t), phrase_clean, re.IGNORECASE))
                 for t in fam_data["triggers"]
             )
             if not trigger_matched:
                 continue
 
-            # Check if a differentiating specific word is already mentioned
+            # Check if a differentiating specific word is already mentioned as a whole word
             specific_matched = any(
-                s in phrase_clean or re.search(make_boundary_regex(s), phrase_clean, re.IGNORECASE)
+                bool(re.search(make_boundary_regex(s), phrase_clean, re.IGNORECASE))
                 for s in fam_data["specifics"]
             )
             if specific_matched:

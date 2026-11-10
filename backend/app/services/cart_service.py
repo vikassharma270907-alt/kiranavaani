@@ -35,9 +35,27 @@ class CartService:
                 logger.warning(f"SKU {inp.sku_id} not found in catalogue. Skipping.")
                 continue
 
-            qty = inp.quantity
-            unit = inp.unit or sku.unit
-            line_total = round(qty * sku.price_inr, 2)
+            raw_qty = inp.quantity
+            unit = (inp.unit or sku.unit).lower()
+
+            # Automatic unit normalization to catalogue SKU pricing unit
+            normalized_qty = raw_qty
+            final_unit = unit
+
+            if sku.unit.lower() == "kg":
+                if unit in ("gram", "gm", "g", "grams", "ग्राम"):
+                    normalized_qty = round(raw_qty / 1000.0, 3)
+                    final_unit = "kg"
+                else:
+                    final_unit = "kg"
+            elif sku.unit.lower() in ("litre", "liter"):
+                if unit in ("ml", "मिली"):
+                    normalized_qty = round(raw_qty / 1000.0, 3)
+                    final_unit = "litre"
+                else:
+                    final_unit = "litre"
+
+            line_total = round(normalized_qty * sku.price_inr, 2)
             subtotal += line_total
 
             cart_items.append(
@@ -46,8 +64,8 @@ class CartService:
                     name_en=sku.name_en,
                     name_hi=sku.name_hi,
                     category=sku.category,
-                    quantity=qty,
-                    unit=unit,
+                    quantity=normalized_qty,
+                    unit=final_unit,
                     unit_price=sku.price_inr,
                     line_total=line_total
                 )

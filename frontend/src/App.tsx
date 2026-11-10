@@ -44,22 +44,37 @@ export const App: React.FC = () => {
   const [isMockTts, setIsMockTts] = useState(true);
   const [isOrderConfirmed, setIsOrderConfirmed] = useState(false);
 
+  // Determine API base URL dynamically for local dev and Vercel production
+  const getApiBase = () => {
+    const envUrl = (import.meta as any).env?.VITE_API_BASE_URL;
+    if (envUrl) return envUrl;
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname;
+      if (host === "localhost" || host === "127.0.0.1") {
+        return "http://localhost:8000";
+      }
+      return "";
+    }
+    return "http://localhost:8000";
+  };
+
   // Check backend health on mount
   useEffect(() => {
     fetchHealth();
   }, []);
 
   const fetchHealth = async () => {
+    const apiBase = getApiBase();
     try {
-      const res = await fetch("http://localhost:8000/health");
+      const res = await fetch(`${apiBase}/health`);
       if (res.ok) {
         const data = await res.json();
         setHealth(data);
       }
     } catch (err) {
-      console.warn("Backend not reachable directly on port 8000. Trying relative /health.");
+      console.warn("Primary health endpoint attempt failed. Trying fallback /api/health:", err);
       try {
-        const res2 = await fetch("/health");
+        const res2 = await fetch("/api/health");
         if (res2.ok) {
           const data2 = await res2.json();
           setHealth(data2);
@@ -97,7 +112,8 @@ export const App: React.FC = () => {
         payload.transcript = utteranceText;
       }
 
-      const res = await fetch("http://localhost:8000/process-order", {
+      const apiBase = getApiBase();
+      const res = await fetch(`${apiBase}/process-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -198,6 +214,10 @@ export const App: React.FC = () => {
 
     // Remove this clarification question from state
     setClarifications((prev) => prev.filter((q) => !q.options.some((o) => o.sku_id === option.sku_id)));
+
+    // Update confirmation spoken text
+    setSpokenReplyHi(`${option.name_hi} (${option.quantity} ${option.unit}) कार्ट में जोड़ दिया गया है।`);
+    setSpokenReplyEn(`${option.name_en} (${option.quantity} ${option.unit}) added to cart.`);
   };
 
   const handleRemoveItem = (skuId: string) => {

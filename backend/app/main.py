@@ -51,8 +51,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount all API endpoints
+# Mount all API endpoints at both root and /api prefix for seamless local and Vercel routing
 app.include_router(api_router)
+app.include_router(api_router, prefix="/api")
 
 
 @app.get("/")

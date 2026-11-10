@@ -79,6 +79,22 @@ def test_cart_endpoint():
     assert len(data["items"]) == 2
 
 
+def test_cart_gram_to_kg_normalization():
+    """Verify 500 gram of sugar (SKU-020, ₹46/kg) bills as 0.5 kg = ₹23.0."""
+    payload = {
+        "items": [
+            {"sku_id": "SKU-020", "quantity": 500.0, "unit": "gram"}
+        ]
+    }
+    response = client.post("/cart", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    item = data["items"][0]
+    assert item["quantity"] == 0.5
+    assert item["unit"] == "kg"
+    assert item["line_total"] == 23.0
+
+
 def test_synthesize_endpoint_fallback():
     """Verify fallback audio is cleanly generated when live Timbre key is missing."""
     payload = {

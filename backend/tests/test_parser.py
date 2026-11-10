@@ -93,3 +93,13 @@ def test_order_completion_detection():
     assert order_parser.check_order_completion("bas itna hi bhaiya") is True
     assert order_parser.check_order_completion("ho gaya bill bana do") is True
     assert order_parser.check_order_completion("ek kilo chawal dena") is False
+
+
+def test_completion_verb_does_not_corrupt_product_name():
+    """Verify verbs like 'pack kar do' are stripped without converting 'do' into numeral 2."""
+    raw = "Gupta ji do kilo chawal aur ek packet Tata Salt pack kar do."
+    res = order_parser.parse_utterance(raw)
+    assert res.is_order_complete is True
+    prods = [i.product.strip() for i in res.items]
+    assert "Tata Salt" in prods
+    assert "Tata Salt pack kar 2" not in prods

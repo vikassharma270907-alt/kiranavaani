@@ -8,7 +8,7 @@ version = "2.0.0"
 description = "Noise-robust Hinglish grocery voice assistant using speech AI, NLP, catalogue matching, and audio evaluation."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = "MIT"
 authors = [
     { name = "KiranaVaani Engineering Team", email = "dev@kiranavaani.ai" }
 ]
@@ -43,6 +43,11 @@ dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0"
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["backend*", "noise_lab*", "api*"]
+exclude = ["frontend*", "docs*", "assets*", "data*", "reports*", "catalog*", "scripts*"]
 
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]
