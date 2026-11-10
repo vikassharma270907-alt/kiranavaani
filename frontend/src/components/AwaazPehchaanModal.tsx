@@ -6,12 +6,8 @@ import {
   Activity, 
   Volume2, 
   User, 
-  Play, 
-  CheckCircle2, 
   AlertTriangle, 
-  Fingerprint, 
-  RotateCcw,
-  Sparkles
+  Fingerprint
 } from "lucide-react";
 
 export interface VoiceprintResponse {
@@ -58,6 +54,15 @@ export const AwaazPehchaanModal: React.FC<AwaazPehchaanModalProps> = ({
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (isOpen) {
       verifyVoiceprint(isImposterMode);
     }
@@ -95,6 +100,9 @@ export const AwaazPehchaanModal: React.FC<AwaazPehchaanModalProps> = ({
       audioRef.current.pause();
       setIsPlayingAudio(false);
       return;
+    }
+    if (audioRef.current) {
+      audioRef.current.pause();
     }
     const audio = new Audio(`data:audio/${authResult.voice_audio_format || "wav"};base64,${authResult.voice_audio_base64}`);
     audioRef.current = audio;

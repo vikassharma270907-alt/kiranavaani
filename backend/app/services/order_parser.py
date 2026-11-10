@@ -29,6 +29,8 @@ NUMERAL_RULES: List[Tuple[List[str], str]] = [
     (["saadhe teen", "साढ़े तीन", "sadhe teen"], "3.5"),
     (["saadhe chaar", "साढ़े चार", "sadhe chaar"], "4.5"),
     (["saadhe paanch", "साढ़े पांच", "sadhe paanch"], "5.5"),
+    (["ek paav", "एक पाव", "ek pao"], "0.25"),
+    (["do paav", "दो पाव", "do pao"], "0.5"),
     (["aadha paav", "adha paav", "आधा पाव", "aadha pao"], "0.125"),
     (["dedh paav", "deydh paav", "डेढ़ पाव", "dedh pao"], "0.375"),
     (["sawa paav", "सवा पाव", "sawa pao"], "0.3125"),
@@ -291,8 +293,18 @@ class HinglishOrderParser:
         cust_name = detected_name or "शर्मा जी (Sharma Ji)"
         k_id = detected_id or "#42"
         prev_bal = 420.0
+        cust_id = "CUST-001"
+        if detected_name:
+            d_lower = detected_name.lower()
+            if "verma" in d_lower or "वर्मा" in d_lower:
+                cust_id = "CUST-002"
+                prev_bal = 1150.0
+            elif "patel" in d_lower or "पटेल" in d_lower:
+                cust_id = "CUST-003"
+                prev_bal = 280.0
         return KhataInfo(
             is_khata=True,
+            customer_id=cust_id,
             customer_name=cust_name,
             khata_id=k_id,
             previous_balance_inr=prev_bal,

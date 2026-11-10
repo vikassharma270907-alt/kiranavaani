@@ -5,12 +5,7 @@ import {
   AlertTriangle, 
   Send, 
   CheckCircle2, 
-  Volume2, 
-  Plus, 
   RefreshCw, 
-  ExternalLink,
-  ShoppingBag,
-  TrendingUp,
   Truck
 } from "lucide-react";
 
@@ -46,8 +41,16 @@ export const MandiRestockDrawer: React.FC<MandiRestockDrawerProps> = ({
   const [triggers, setTriggers] = useState<MandiReorderTrigger[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [dispatchSuccess, setDispatchSuccess] = useState<string | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -87,6 +90,9 @@ export const MandiRestockDrawer: React.FC<MandiRestockDrawerProps> = ({
         const data = await res.json();
         setDispatchSuccess(data.spoken_confirmation_hi);
         if (data.voice_audio_base64) {
+          if (audioRef.current) {
+            audioRef.current.pause();
+          }
           const a = new Audio(`data:audio/${data.voice_audio_format || "wav"};base64,${data.voice_audio_base64}`);
           audioRef.current = a;
           a.play();

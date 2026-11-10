@@ -110,3 +110,66 @@ def test_judge_stress_arena_listing_and_execution():
     assert exec_data["item_f1_score"] == 100.0
     assert len(exec_data["rules_applied"]) >= 3
     assert exec_data["latency_ms"] > 0
+
+
+def test_voiceprint_verification_unenrolled_404():
+    """Verify unenrolled customer ID returns HTTP 404 rather than false authentication."""
+    res = client.post("/khata/verify-voiceprint", json={
+        "customer_id": "CUST-UNKNOWN-999",
+        "caller_phone": "+91 99999-99999",
+        "test_imposter_mode": False
+    })
+    assert res.status_code == 404
+    assert "no enrolled voiceprint profile" in res.json()["detail"]
+
+
+def test_voiceprint_verification_aliases():
+    """Verify Khata ID alias '#42' and '42' correctly resolve to Sharma Ji's biometric profile."""
+    for alias in ["#42", "42"]:
+        res = client.post("/khata/verify-voiceprint", json={
+            "customer_id": alias,
+            "caller_phone": "+91 98111-23456",
+            "test_imposter_mode": False
+        })
+        assert res.status_code == 200
+        data = res.json()
+        assert data["verified"] is True
+        assert "Sharma Ji" in data["customer_name"]
+
+
+def test_mandi_wholesale_order_invalid_sku_404():
+    """Verify attempting to order a non-existent SKU returns HTTP 404."""
+    res = client.post("/inventory/mandi-order", json={
+        "sku_id": "SKU-NONEXISTENT",
+        "reorder_quantity": 25.0
+    })
+    assert res.status_code == 404
+    assert "not found in catalogue" in res.json()["detail"]
+
+
+def test_mandi_wholesale_order_fallback_phone():
+    """Verify mandi order without custom phone uses store fallback phone safely."""
+    res = client.post("/inventory/mandi-order", json={
+        "sku_id": "SKU-001",
+        "reorder_quantity": 20.0,
+        "wholesaler_phone": None
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert "wa.me" in data["whatsapp_url"]
+
+
+def test_mandi_order_quantity_validation():
+    """Verify invalid reorder quantities (e.g. <= 0 or > 5000) are rejected with HTTP 422."""
+    res = client.post("/inventory/mandi-order", json={
+        "sku_id": "SKU-001",
+        "reorder_quantity": -5.0
+    })
+    assert res.status_code == 422
+
+
+def test_judge_stress_arena_invalid_test_id_404():
+    """Verify executing a non-existent test case returns HTTP 404."""
+    res = client.post("/judge-arena/execute", json={"test_id": "TEST-INVALID-99"})
+    assert res.status_code == 404
+    assert "not found" in res.json()["detail"]

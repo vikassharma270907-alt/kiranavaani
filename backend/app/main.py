@@ -99,7 +99,8 @@ if not is_vercel and frontend_dist.exists() and (frontend_dist / "index.html").e
                     "/khata", "/ondc", "/audio-samples", "/transcribe", "/parse-order",
                     "/match-products", "/cart", "/synthesize", "/process-order",
                     "/price-check", "/budget-order", "/soundbox-chime", "/receipt",
-                    "/voiceprint", "/inventory", "/mandi", "/telemetry", "/judge"
+                    "/voiceprint", "/inventory", "/mandi", "/telemetry", "/judge",
+                    "/benchmark", "/judge-arena"
                 )
                 if not path.startswith(api_prefixes) and not is_system_path and not has_extension:
                     return FileResponse(frontend_dist / "index.html")

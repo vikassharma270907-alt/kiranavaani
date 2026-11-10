@@ -63,6 +63,7 @@ class TranscriptionResponse(BaseModel):
 # ---------------------------------------------------------
 class KhataInfo(BaseModel):
     is_khata: bool = Field(False, description="True if order was requested on store credit (udhaar/khata)")
+    customer_id: Optional[str] = Field("CUST-001", description="Associated customer ID in Khata Ledger")
     customer_name: Optional[str] = Field(None, description="Extracted customer name e.g. 'Sharma Ji'")
     khata_id: Optional[str] = Field(None, description="Account ID e.g. '#42'")
     previous_balance_inr: float = Field(420.0, description="Previous ledger balance")
@@ -537,9 +538,9 @@ class InventoryStatusResponse(BaseModel):
 
 class MandiOrderDispatchRequest(BaseModel):
     sku_id: str
-    reorder_quantity: float
+    reorder_quantity: float = Field(..., gt=0.0, le=5000.0, description="Replenishment quantity in units or kg")
     wholesaler_name: Optional[str] = "Radhe Shyam Agro Mandi Wholesalers"
-    wholesaler_phone: Optional[str] = "+91 98765-43210"
+    wholesaler_phone: Optional[str] = Field("+91 98765-43210", description="Wholesaler contact number")
     notes: Optional[str] = "Urgent Kirana morning delivery dispatch"
 
 

@@ -676,6 +676,8 @@ export const App: React.FC = () => {
         onApplyTestUtterance={(text) => {
           setShowJudgeArenaModal(false);
           setTranscript(text);
+          setClarifications([]);
+          setSubstitutions([]);
           processOrderUtterance(text);
         }}
       />
@@ -684,13 +686,11 @@ export const App: React.FC = () => {
       <AwaazPehchaanModal
         isOpen={showAwaazPehchaanModal}
         onClose={() => setShowAwaazPehchaanModal(false)}
-        customerId={khataInfo?.khata_id || "CUST-001"}
+        customerId={khataInfo?.customer_id || "CUST-001"}
         customerName={khataInfo?.customer_name || "Sharma Ji (शर्मा जी)"}
         apiBaseUrl={getApiBase()}
         onVerificationComplete={(res) => {
-          if (res.verified) {
-            setVoiceprintVerified(true);
-          }
+          setVoiceprintVerified(res.verified);
         }}
       />
 

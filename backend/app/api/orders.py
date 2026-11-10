@@ -868,6 +868,9 @@ VOICEPRINT_ENROLLED_PROFILES: Dict[str, Dict[str, Any]] = {
         "shimmer_db": 0.25
     }
 }
+# Map common ledger alias identifiers
+VOICEPRINT_ENROLLED_PROFILES["#42"] = VOICEPRINT_ENROLLED_PROFILES["CUST-001"]
+VOICEPRINT_ENROLLED_PROFILES["42"] = VOICEPRINT_ENROLLED_PROFILES["CUST-001"]
 
 
 @router.post("/khata/verify-voiceprint", response_model=VoiceprintVerificationResponse)
@@ -879,7 +882,12 @@ async def verify_voiceprint_authenticity(request: VoiceprintVerificationRequest)
     Inspired by Gnani.ai's enterprise Armour360 platform.
     """
     profile = VOICEPRINT_ENROLLED_PROFILES.get(request.customer_id)
-    cust_name = profile["name"] if profile else "Unknown Caller"
+    if not profile:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Customer ID '{request.customer_id}' has no enrolled voiceprint profile in the Khata ledger."
+        )
+    cust_name = profile["name"]
 
     if request.test_imposter_mode:
         # Simulate an imposter caller attempting to fraudulently charge Sharma Ji's account
@@ -956,6 +964,16 @@ INVENTORY_STOCK_LEVELS: Dict[str, Dict[str, Any]] = {
     "SKU-027": {"current_stock": 35.0, "threshold": 15.0, "reorder_qty": 72.0, "unit": "packet", "wholesale_rate": 11.5},
     "SKU-031": {"current_stock": 20.0, "threshold": 10.0, "reorder_qty": 48.0, "unit": "packet", "wholesale_rate": 8.0}
 }
+# Dynamically register all 35 SKUs into store inventory
+for _sku in catalogue_matcher.get_all_skus():
+    if _sku.sku_id not in INVENTORY_STOCK_LEVELS:
+        INVENTORY_STOCK_LEVELS[_sku.sku_id] = {
+            "current_stock": 20.0,
+            "threshold": 5.0,
+            "reorder_qty": 25.0,
+            "unit": _sku.unit,
+            "wholesale_rate": round(_sku.price_inr * 0.82, 2)
+        }
 
 
 @router.get("/inventory/status", response_model=InventoryStatusResponse)
@@ -1050,20 +1068,26 @@ async def dispatch_mandi_wholesale_order(request: MandiOrderDispatchRequest):
     import urllib.parse
     po_id = f"MND-PO-{uuid.uuid4().hex[:6].upper()}"
     sku = catalogue_matcher.get_sku(request.sku_id)
-    name = sku.name_en if sku else request.sku_id
-    name_hi = sku.name_hi if sku else request.sku_id
-    unit = sku.unit if sku else "kg"
-    ws_rate = round((sku.price_inr if sku else 50.0) * 0.82, 2)
+    if not sku:
+        raise HTTPException(status_code=404, detail=f"SKU '{request.sku_id}' not found in catalogue.")
+
+    name = sku.name_en
+    name_hi = sku.name_hi
+    unit = sku.unit
+    ws_rate = round(sku.price_inr * 0.82, 2)
     tot_cost = round(request.reorder_quantity * ws_rate, 2)
 
     # Restock inventory
     if request.sku_id in INVENTORY_STOCK_LEVELS:
         INVENTORY_STOCK_LEVELS[request.sku_id]["current_stock"] += request.reorder_quantity
 
+    wholesaler_name = request.wholesaler_name or "Radhe Shyam Agro Mandi Wholesalers"
+    wholesaler_phone = request.wholesaler_phone or "+91 98765-43210"
+
     po_text = (
         f"📦 *थोक खरीद आर्डर (Mandi Purchase Order)*\n"
         f"PO ID: {po_id}\n"
-        f"थोक विक्रेता: {request.wholesaler_name}\n"
+        f"थोक विक्रेता: {wholesaler_name}\n"
         f"सामान: {name} ({name_hi})\n"
         f"मात्रा: {request.reorder_quantity:g} {unit} @ ₹{ws_rate:g}\n"
         f"कुल राशि: ₹{tot_cost:g}\n"
@@ -1071,10 +1095,10 @@ async def dispatch_mandi_wholesale_order(request: MandiOrderDispatchRequest):
         f"डिलीवरी: कल सुबह 7:00 बजे तक भेजें।"
     )
     encoded_text = urllib.parse.quote(po_text)
-    clean_phone = request.wholesaler_phone.replace("+", "").replace("-", "").replace(" ", "")
+    clean_phone = wholesaler_phone.replace("+", "").replace("-", "").replace(" ", "")
     wa_url = f"https://wa.me/{clean_phone}?text={encoded_text}"
 
-    conf_hi = f"{request.wholesaler_name} को {request.reorder_quantity:g} {unit} {name_hi} का थोक आर्डर भेज दिया गया है।"
+    conf_hi = f"{wholesaler_name} को {request.reorder_quantity:g} {unit} {name_hi} का थोक आर्डर भेज दिया गया है।"
     synth = await timbre_service.synthesize_speech(text=conf_hi, voice="Nalini", language="hi-IN")
 
     return MandiOrderDispatchResponse(
@@ -1085,8 +1109,8 @@ async def dispatch_mandi_wholesale_order(request: MandiOrderDispatchRequest):
         unit=unit,
         wholesale_rate_inr=ws_rate,
         total_cost_inr=tot_cost,
-        wholesaler_name=request.wholesaler_name,
-        wholesaler_phone=request.wholesaler_phone,
+        wholesaler_name=wholesaler_name,
+        wholesaler_phone=wholesaler_phone,
         dispatch_status="DISPATCHED_TO_WHATSAPP",
         whatsapp_url=wa_url,
         spoken_confirmation_hi=conf_hi,
