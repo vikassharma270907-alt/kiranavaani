@@ -1,6 +1,7 @@
 # KiranaVaani (किरानावाणी) — Noise-Robust Hinglish Voice Assistant for Neighbourhood Kirana Stores
 
 [![Gnani.ai Challenge](https://img.shields.io/badge/Gnani.ai-Great%20Indian%20AI%20Internship%20Challenge-emerald.svg)](https://gnani.ai)
+[![CI Pipeline](https://github.com/vikassharma270907-alt/kiranavaani/actions/workflows/ci.yml/badge.svg)](https://github.com/vikassharma270907-alt/kiranavaani/actions/workflows/ci.yml)
 [![Models](https://img.shields.io/badge/Speech%20Models-Prisma%20v3.0%20%7C%20Timbre%20v2.5-sky.svg)](https://gnani.ai)
 [![Target Awards](https://img.shields.io/badge/Awards-Mixed%20Vibes%20%7C%20Real%20Deal%20%7C%20Noise%20Canceller%20%7C%20Demo%20Day%20Drop-amber.svg)](#target-award-categories)
 [![Synthetic Data](https://img.shields.io/badge/Data%20Compliance-100%25%20Synthetic%20(Zero%20PII)-blue.svg)](#15-synthetic-data-compliance-declaration)
