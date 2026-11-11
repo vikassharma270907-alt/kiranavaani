@@ -105,22 +105,6 @@ class PrismaSTTService:
         Transcribes audio bytes via Gnani AI Prisma REST API.
         If live credentials are unavailable, operates in clearly labelled mock mode.
         """
-        api_keys = get_configured_api_keys()
-        if not api_keys and self.api_key:
-            api_keys = [self.api_key]
-
-        if not api_keys:
-            logger.info("Gnani Prisma API key not configured or demo key used. Using realistic mock transcription.")
-            return TranscriptionResponse(
-                transcript=DEFAULT_MOCK_TRANSCRIPT,
-                language_detected="hi-Latn / hi-Deva (Code-Mixed Hinglish)",
-                confidence=0.96,
-                model=self.model,
-                is_mock=True,
-                duration_sec=3.5,
-                note="Demo mode: Configured without live Gnani API key. Set GNANI_API_KEY in .env for live telephony STT."
-            )
-
         if audio_bytes is None:
             return TranscriptionResponse(
                 transcript=DEFAULT_MOCK_TRANSCRIPT,
@@ -141,6 +125,22 @@ class PrismaSTTService:
                 is_mock=False,
                 duration_sec=0.0,
                 note="Microphone audio empty or too short."
+            )
+
+        api_keys = get_configured_api_keys()
+        if not api_keys and self.api_key:
+            api_keys = [self.api_key]
+
+        if not api_keys:
+            logger.info("Gnani Prisma API key not configured or demo key used. Using realistic mock transcription.")
+            return TranscriptionResponse(
+                transcript=DEFAULT_MOCK_TRANSCRIPT,
+                language_detected="hi-Latn / hi-Deva (Code-Mixed Hinglish)",
+                confidence=0.96,
+                model=self.model,
+                is_mock=True,
+                duration_sec=3.5,
+                note="Demo mode: Configured without live Gnani API key. Set GNANI_API_KEY in .env for live telephony STT."
             )
 
         # Transcode incoming audio (e.g. WebM/Opus from browser MediaRecorder) to 16 kHz mono WAV
