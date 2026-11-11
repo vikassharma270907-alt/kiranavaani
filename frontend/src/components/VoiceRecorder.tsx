@@ -248,13 +248,17 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerIntervalRef = useRef<number | null>(null);
+  const recordingStartTimeRef = useRef<number>(0);
 
-  // Web Audio PCM recorder refs for native 16 kHz WAV encoding
+  // Web Audio visualizer and processing refs
   const audioContextRef = useRef<AudioContext | null>(null);
-  const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
-  const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
-  const pcmChunksRef = useRef<Float32Array[]>([]);
+
+  // Real-time in-browser speech recognition refs & state
+  const [liveSpeechText, setLiveSpeechText] = useState<string>("");
+  const liveSpeechTextRef = useRef<string>("");
+  const speechRecognitionRef = useRef<any>(null);
 
   // Load clips from backend if available
   useEffect(() => {
@@ -286,13 +290,30 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       ctx.fillStyle = "#030712"; // Deep slate background
       ctx.fillRect(0, 0, w, h);
 
+      const analyser = analyserRef.current;
+      let freqData: Uint8Array | null = null;
+      let timeData: Uint8Array | null = null;
+
+      if (isRecording && analyser) {
+        freqData = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(freqData as any);
+        timeData = new Uint8Array(analyser.fftSize);
+        analyser.getByteTimeDomainData(timeData as any);
+      }
+
       // Frequency energy spectrum bars
       const numBars = 32;
       const barWidth = w / numBars;
       for (let i = 0; i < numBars; i++) {
-        const energy = (Math.sin(phase * 0.15 + i * 0.4) * 0.5 + 0.5) * (isRecording || playingAudioKey || isLoading ? 0.85 : 0.2);
-        const barHeight = Math.min(h * 0.5, energy * (h * 0.45));
-        ctx.fillStyle = isRecording ? "rgba(239, 68, 68, 0.35)" : "rgba(14, 165, 233, 0.28)";
+        let energy = 0;
+        if (freqData && freqData.length > 0) {
+          const binIdx = Math.floor((i / numBars) * (freqData.length * 0.65));
+          energy = freqData[binIdx] / 255;
+        } else {
+          energy = (Math.sin(phase * 0.15 + i * 0.4) * 0.5 + 0.5) * (playingAudioKey || isLoading ? 0.85 : 0.2);
+        }
+        const barHeight = Math.min(h * 0.5, Math.max(3, energy * (h * 0.45)));
+        ctx.fillStyle = isRecording ? "rgba(239, 68, 68, 0.45)" : "rgba(14, 165, 233, 0.28)";
         ctx.fillRect(i * barWidth + 1.5, h - barHeight, barWidth - 3, barHeight);
       }
 
@@ -309,12 +330,19 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       ctx.lineWidth = 2;
       ctx.strokeStyle = isRecording ? "#f43f5e" : playingAudioKey ? "#10b981" : "#38bdf8";
 
-      const amplitude = (isRecording || playingAudioKey) ? 26 : isLoading ? 18 : 8;
+      const amplitude = playingAudioKey ? 26 : isLoading ? 18 : 8;
 
       for (let x = 0; x < w; x++) {
-        const carrier = Math.sin(x * 0.045 + phase) * amplitude;
-        const noise = (Math.random() - 0.5) * (playingAudioKey?.includes("degraded") ? 10.0 : 2.0);
-        const signal = carrier + noise;
+        let signal = 0;
+        if (timeData && timeData.length > 0) {
+          const sampleIdx = Math.floor((x / w) * timeData.length);
+          const v = (timeData[sampleIdx] - 128) / 128; // -1 to 1
+          signal = v * (h * 0.42);
+        } else {
+          const carrier = Math.sin(x * 0.045 + phase) * amplitude;
+          const noise = (Math.random() - 0.5) * (playingAudioKey?.includes("degraded") ? 10.0 : 2.0);
+          signal = carrier + noise;
+        }
         // ITU-T G.711 8-bit logarithmic companding staircase quantization effect
         const quantized = Math.round(signal / 4.0) * 4.0;
         const y = h / 2 + quantized;
@@ -324,7 +352,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       }
       ctx.stroke();
 
-      phase += (isRecording || playingAudioKey) ? 0.2 : isLoading ? 0.15 : 0.05;
+      phase += isRecording ? 0.25 : playingAudioKey ? 0.2 : isLoading ? 0.15 : 0.05;
       animId = requestAnimationFrame(draw);
     };
 
@@ -336,6 +364,11 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
       if (audioPlayerRef.current) audioPlayerRef.current.pause();
+      if (speechRecognitionRef.current) {
+        try {
+          speechRecognitionRef.current.stop();
+        } catch (_) {}
+      }
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach((track) => track.stop());
       }
@@ -347,21 +380,62 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 
   const startRecording = async () => {
     setErrorMessage(null);
-    pcmChunksRef.current = [];
+    setLiveSpeechText("");
+    liveSpeechTextRef.current = "";
     audioChunksRef.current = [];
+
+    // Real-time in-browser speech recognition for instant visual feedback & robust fallback
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = "hi-IN"; // Hindi / Indic code-mixed speech
+        recognition.maxAlternatives = 1;
+
+        recognition.onresult = (event: any) => {
+          let finalStr = "";
+          let interimStr = "";
+          for (let i = 0; i < event.results.length; ++i) {
+            const res = event.results[i];
+            if (res.isFinal) {
+              finalStr += res[0].transcript + " ";
+            } else {
+              interimStr += res[0].transcript;
+            }
+          }
+          const combined = (finalStr + interimStr).trim();
+          if (combined) {
+            setLiveSpeechText(combined);
+            liveSpeechTextRef.current = combined;
+          }
+        };
+
+        recognition.onerror = (e: any) => {
+          console.warn("SpeechRecognition event:", e?.error);
+        };
+
+        recognition.start();
+        speechRecognitionRef.current = recognition;
+      } catch (srErr) {
+        console.warn("SpeechRecognition start warning:", srErr);
+      }
+    }
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          channelCount: 1,
+          channelCount: { ideal: 1 },
           echoCancellation: true,
-          noiseSuppression: true,
+          noiseSuppression: false,
           autoGainControl: true
         }
       });
       mediaStreamRef.current = stream;
 
-      // Primary: Web Audio API capturing raw PCM to encode standard 16 kHz Mono WAV
+      // Web Audio API: create AnalyserNode for live visual waveform feedback
+      // Note: We deliberately do NOT connect to ctx.destination to avoid feedback & AEC muting
       try {
         const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
         if (AudioCtx) {
@@ -370,51 +444,59 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
           if (ctx.state === "suspended") {
             await ctx.resume();
           }
+          const analyser = ctx.createAnalyser();
+          analyser.fftSize = 256;
+          analyser.smoothingTimeConstant = 0.6;
+          analyserRef.current = analyser;
 
           const source = ctx.createMediaStreamSource(stream);
-          sourceNodeRef.current = source;
-
-          const processor = ctx.createScriptProcessor(4096, 1, 1);
-          scriptProcessorRef.current = processor;
-
-          processor.onaudioprocess = (e) => {
-            const channelData = e.inputBuffer.getChannelData(0);
-            pcmChunksRef.current.push(new Float32Array(channelData));
-          };
-
-          source.connect(processor);
-          processor.connect(ctx.destination);
+          source.connect(analyser);
         }
       } catch (audioCtxErr) {
-        console.warn("Web Audio API processor init error, falling back to MediaRecorder:", audioCtxErr);
+        console.warn("Analyser init warning:", audioCtxErr);
       }
 
-      // Secondary: MediaRecorder fallback
-      try {
-        const mediaRecorder = new MediaRecorder(stream);
-        mediaRecorderRef.current = mediaRecorder;
-
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            audioChunksRef.current.push(event.data);
-          }
-        };
-
-        // Collect audio chunks every 200ms
-        mediaRecorder.start(200);
-      } catch (recErr) {
-        console.warn("MediaRecorder fallback init error:", recErr);
+      // Native MediaRecorder: bulletproof cross-browser audio capture
+      let chosenMime = "";
+      const candidateTypes = [
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/ogg;codecs=opus",
+        "audio/mp4"
+      ];
+      for (const t of candidateTypes) {
+        if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) {
+          chosenMime = t;
+          break;
+        }
       }
 
+      const mediaRecorder = chosenMime ? new MediaRecorder(stream, { mimeType: chosenMime }) : new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.start(100);
       setIsRecording(true);
       setRecordingSeconds(0);
+      recordingStartTimeRef.current = Date.now();
 
       timerIntervalRef.current = window.setInterval(() => {
         setRecordingSeconds((prev) => prev + 1);
       }, 1000);
     } catch (err: any) {
       console.warn("Microphone access error:", err);
-      setErrorMessage("Microphone permission denied or device unavailable. Please allow microphone access or choose a preset order below.");
+      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+        setErrorMessage("Microphone permission was denied. Please allow microphone access in your browser address bar.");
+      } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
+        setErrorMessage("No microphone device was detected. Please connect a microphone or use the Quick Presets below.");
+      } else {
+        setErrorMessage(`Microphone access error: ${err.message || err.name || "Device error"}. You can also choose a Quick Preset below.`);
+      }
     }
   };
 
@@ -427,66 +509,92 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       timerIntervalRef.current = null;
     }
 
-    if (scriptProcessorRef.current) {
-      scriptProcessorRef.current.disconnect();
-      scriptProcessorRef.current = null;
-    }
-    if (sourceNodeRef.current) {
-      sourceNodeRef.current.disconnect();
-      sourceNodeRef.current = null;
+    if (speechRecognitionRef.current) {
+      try {
+        speechRecognitionRef.current.stop();
+      } catch (_) {}
     }
 
-    const stream = mediaStreamRef.current;
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-      mediaStreamRef.current = null;
-    }
-
-    const ctx = audioContextRef.current;
-    const inputSampleRate = ctx ? ctx.sampleRate : 44100;
-    if (ctx && ctx.state !== "closed") {
-      ctx.close().catch(() => {});
-      audioContextRef.current = null;
-    }
-
-    // Check if we captured PCM chunks via Web Audio API
-    if (pcmChunksRef.current.length > 0) {
-      const totalLen = pcmChunksRef.current.reduce((acc, c) => acc + c.length, 0);
-      const merged = new Float32Array(totalLen);
-      let offset = 0;
-      for (const chunk of pcmChunksRef.current) {
-        merged.set(chunk, offset);
-        offset += chunk.length;
+    const recorder = mediaRecorderRef.current;
+    if (!recorder) {
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
       }
-      pcmChunksRef.current = [];
-
-      // Volume / silence check
-      let sumSq = 0;
-      for (let i = 0; i < merged.length; i++) {
-        sumSq += merged[i] * merged[i];
-      }
-      const rms = Math.sqrt(sumSq / Math.max(1, merged.length));
-      if (merged.length < 1600 || rms < 0.0001) {
-        setErrorMessage("Microphone audio was silent or very quiet. Please check your mic and speak clearly.");
-        return;
-      }
-
-      const downsampled = downsamplePcmBuffer(merged, inputSampleRate, 16000);
-      const wavBlob = encodePcmToWavBlob(downsampled, 16000);
-      onAudioRecorded(wavBlob);
       return;
     }
 
-    // Fallback: MediaRecorder chunks
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        audioChunksRef.current = [];
-        onAudioRecorded(audioBlob);
-      };
-      if (mediaRecorderRef.current.state !== "inactive") {
-        mediaRecorderRef.current.stop();
+    recorder.onstop = async () => {
+      const mime = recorder.mimeType || "audio/webm";
+      const rawBlob = new Blob(audioChunksRef.current, { type: mime });
+      audioChunksRef.current = [];
+
+      // Clean up stream tracks and analyser audio context
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
       }
+      if (audioContextRef.current && audioContextRef.current.state !== "closed") {
+        audioContextRef.current.close().catch(() => {});
+        audioContextRef.current = null;
+      }
+      analyserRef.current = null;
+
+      // Duration check to prevent accidental micro-clicks
+      const durationMs = Date.now() - recordingStartTimeRef.current;
+      if (durationMs < 400 || rawBlob.size < 300) {
+        setErrorMessage("Recording was too short. Please click to record, speak your order clearly, and click again to submit.");
+        return;
+      }
+
+      const capturedSpeech = liveSpeechTextRef.current.trim() || undefined;
+
+      // Convert captured audio to 16 kHz Linear PCM WAV via browser AudioContext
+      try {
+        const arrayBuffer = await rawBlob.arrayBuffer();
+        const decodeCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const audioBuffer = await decodeCtx.decodeAudioData(arrayBuffer);
+        const inputPcm = audioBuffer.getChannelData(0);
+        const inputRate = audioBuffer.sampleRate;
+        decodeCtx.close().catch(() => {});
+
+        // Amplitude and energy analysis
+        let maxAbs = 0;
+        for (let i = 0; i < inputPcm.length; i++) {
+          const abs = Math.abs(inputPcm[i]);
+          if (abs > maxAbs) maxAbs = abs;
+        }
+
+        // Only block if audio was literally 100% silent (hardware mute switch or zero input)
+        if (maxAbs < 0.0001 && !capturedSpeech) {
+          setErrorMessage("Microphone audio was silent. Please check that your microphone is unmuted in Windows/browser settings and speak clearly.");
+          return;
+        }
+
+        // Intelligent auto-gain normalization:
+        // If the speaker's microphone is quiet (maxAbs < 0.45), boost it safely up to 0.85 peak so Gnani STT hears it clearly!
+        let processedPcm = inputPcm;
+        if (maxAbs < 0.45 && maxAbs > 0.0001) {
+          const gain = Math.min(0.85 / maxAbs, 12.0);
+          processedPcm = new Float32Array(inputPcm.length);
+          for (let i = 0; i < inputPcm.length; i++) {
+            processedPcm[i] = inputPcm[i] * gain;
+          }
+        }
+
+        // Resample to 16 kHz Mono WAV
+        const downsampled = downsamplePcmBuffer(processedPcm, inputRate, 16000);
+        const wavBlob = encodePcmToWavBlob(downsampled, 16000);
+        onAudioRecorded(wavBlob, capturedSpeech);
+      } catch (decodeErr) {
+        console.warn("In-browser WAV decode fallback to direct blob:", decodeErr);
+        // Fallback: send raw blob; backend FFmpeg transcodes to 16 kHz WAV automatically
+        onAudioRecorded(rawBlob, capturedSpeech);
+      }
+    };
+
+    if (recorder.state !== "inactive") {
+      recorder.stop();
     }
   };
 
@@ -588,11 +696,23 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
           {isRecording ? <MicOff className="w-7 h-7" /> : <Mic className="w-7 h-7" />}
         </button>
 
-        <div className="mt-2 text-center">
+        <div className="mt-2 text-center w-full max-w-lg px-2">
           {isRecording ? (
-            <div className="flex items-center gap-2 text-red-400 text-xs font-medium animate-pulse">
-              <span className="w-2 h-2 rounded-full bg-red-500"></span>
-              Recording Caller Speech... 00:{recordingSeconds < 10 ? `0${recordingSeconds}` : recordingSeconds} (Click to Submit)
+            <div className="space-y-2">
+              <div className="flex items-center justify-center gap-2 text-red-400 text-xs font-medium animate-pulse">
+                <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                Recording Caller Speech... 00:{recordingSeconds < 10 ? `0${recordingSeconds}` : recordingSeconds} (Click Mic to Finish)
+              </div>
+              {liveSpeechText ? (
+                <div className="text-xs font-hindi text-teal-300 bg-slate-900/90 border border-teal-500/40 px-3.5 py-2 rounded-lg shadow-md flex items-center justify-center gap-2">
+                  <span className="text-teal-400 text-[10px] uppercase font-mono font-bold whitespace-nowrap">🗣️ Heard Live:</span>
+                  <span className="font-semibold text-slate-100">"{liveSpeechText}"</span>
+                </div>
+              ) : (
+                <div className="text-[11px] text-slate-400 italic">
+                  Listening... speak groceries in Hindi, English, Kannada or Tamil
+                </div>
+              )}
             </div>
           ) : isLoading ? (
             <div className="flex items-center gap-2 text-sky-400 text-xs font-medium">

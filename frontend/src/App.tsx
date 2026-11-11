@@ -162,6 +162,10 @@ export const App: React.FC = () => {
         payload.pending_clarification_family = clarifications[0].family;
       }
 
+      if (utteranceText && utteranceText.trim()) {
+        payload.transcript = utteranceText.trim();
+      }
+
       if (audioBlob) {
         // Convert audio blob to base64
         const reader = new FileReader();
@@ -175,8 +179,6 @@ export const App: React.FC = () => {
         });
         reader.readAsDataURL(audioBlob);
         payload.audio_base64 = await base64Promise;
-      } else if (utteranceText) {
-        payload.transcript = utteranceText;
       }
 
       const apiBase = getApiBase();
@@ -650,10 +652,10 @@ export const App: React.FC = () => {
           {/* Left Column: Voice Input, Spectrogram, Clarification, Transcription */}
           <div className="lg:col-span-7 space-y-6">
             <VoiceRecorder
-              onAudioRecorded={(blob) => {
+              onAudioRecorded={(blob, liveText) => {
                 setClarifications([]);
                 setSubstitutions([]);
-                processOrderUtterance(undefined, blob);
+                processOrderUtterance(liveText, blob);
               }}
               onPresetSelected={(text) => {
                 setClarifications([]);

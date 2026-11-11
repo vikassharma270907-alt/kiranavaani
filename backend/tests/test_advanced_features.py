@@ -978,3 +978,42 @@ def test_process_order_empty_microphone_audio():
     assert data["transcript"] == ""
     assert "माफ़ कीजिये" in data["spoken_reply_hi"] or "आवाज़" in data["spoken_reply_hi"]
     assert len(data["parsed_items"]) == 0
+
+
+def test_process_order_prioritizes_browser_transcript_over_mock():
+    """Verify live speech recognized in browser is strictly honored and never overwritten with Maggi."""
+    sample_wav = b"RIFF" + b"\x24\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00\x80>\x00\x00\x00}\x00\x00\x02\x00\x10\x00data\x00\x00\x00\x00" + b"\x00" * 200
+    audio_b64 = base64.b64encode(sample_wav).decode("ascii")
+    res = client.post("/process-order", json={
+        "audio_base64": audio_b64,
+        "transcript": "5 किलो आशीर्वाद आटा और 2 किलो चीनी",
+        "keyterms_enabled": True,
+        "synthesize_voice": False
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert "आशीर्वाद" in data["transcript"]
+    assert "चीनी" in data["transcript"]
+    assert "Maggi" not in data["transcript"]
+    assert data["is_mock_asr"] is False
+    assert len(data["parsed_items"]) >= 1
+    assert any("aashirvaad" in it["name_en"].lower() or "atta" in it["name_en"].lower() for it in data["confirmed_cart"]["items"])
+
+
+def test_process_order_audio_without_speech_never_defaults_to_maggi():
+    """Verify audio uploaded without speech prompt never injects Maggi."""
+    # 100 bytes of silence
+    sample_wav = b"RIFF" + b"\x24\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00\x80>\x00\x00\x00}\x00\x00\x02\x00\x10\x00data\x00\x00\x00\x00" + b"\x00" * 100
+    audio_b64 = base64.b64encode(sample_wav).decode("ascii")
+    res = client.post("/process-order", json={
+        "audio_base64": audio_b64,
+        "keyterms_enabled": True,
+        "synthesize_voice": False
+    })
+    assert res.status_code == 200
+    data = res.json()
+    # Transcript must either be real STT or empty, NEVER fake Maggi
+    if not data["transcript"]:
+        assert "माफ़ कीजिये" in data["spoken_reply_hi"] or "क्षमा करें" in data["spoken_reply_hi"] or "आवाज़" in data["spoken_reply_hi"]
+    assert "Maggi" not in data["transcript"] or "maggi" in data["transcript"].lower()
+

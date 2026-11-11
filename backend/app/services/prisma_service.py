@@ -132,16 +132,27 @@ class PrismaSTTService:
             api_keys = [self.api_key]
 
         if not api_keys:
-            logger.info("Gnani Prisma API key not configured or demo key used. Using realistic mock transcription.")
-            return TranscriptionResponse(
-                transcript=DEFAULT_MOCK_TRANSCRIPT,
-                language_detected="hi-Latn / hi-Deva (Code-Mixed Hinglish)",
-                confidence=0.96,
-                model=self.model,
-                is_mock=True,
-                duration_sec=3.5,
-                note="Demo mode: Configured without live Gnani API key. Set GNANI_API_KEY in .env for live telephony STT."
-            )
+            logger.info("Gnani Prisma API key not configured or demo key used.")
+            if audio_bytes is None:
+                return TranscriptionResponse(
+                    transcript=DEFAULT_MOCK_TRANSCRIPT,
+                    language_detected="hi-Latn / hi-Deva (Code-Mixed Hinglish)",
+                    confidence=0.96,
+                    model=self.model,
+                    is_mock=True,
+                    duration_sec=3.5,
+                    note="Demo mode: Configured without live Gnani API key. Set GNANI_API_KEY in .env for live telephony STT."
+                )
+            else:
+                return TranscriptionResponse(
+                    transcript="",
+                    language_detected="und",
+                    confidence=0.0,
+                    model=self.model,
+                    is_mock=False,
+                    duration_sec=0.0,
+                    note="No Gnani API key configured to transcribe live audio."
+                )
 
         # Transcode incoming audio (e.g. WebM/Opus from browser MediaRecorder) to 16 kHz mono WAV
         audio_bytes, filename = await convert_audio_to_wav(audio_bytes, filename)
@@ -236,12 +247,12 @@ class PrismaSTTService:
                 note=f"Upstream Gnani STT service unavailable (HTTP {last_status}). Please try speaking again."
             )
         return TranscriptionResponse(
-            transcript=DEFAULT_MOCK_TRANSCRIPT,
-            language_detected="hi-Latn (Fallback Mock)",
-            confidence=0.88,
+            transcript="",
+            language_detected="und",
+            confidence=0.0,
             model=self.model,
-            is_mock=True,
-            note=f"Fallback due to upstream Gnani API status {last_status}"
+            is_mock=False,
+            note=f"Upstream Gnani STT service unavailable (HTTP {last_status}). Please try speaking again."
         )
 
 

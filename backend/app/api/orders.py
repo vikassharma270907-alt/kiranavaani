@@ -360,8 +360,21 @@ async def process_order(request: ProcessOrderRequest):
                 filename="audio.wav",
                 keyterms=keyterms
             )
-            transcript = asr_res.transcript
-            is_mock_asr = asr_res.is_mock
+            from backend.app.services.prisma_service import DEFAULT_MOCK_TRANSCRIPT
+            # Prioritize genuine live transcription over generic fallback defaults
+            if asr_res.transcript and not asr_res.is_mock and asr_res.transcript.strip() and asr_res.transcript != DEFAULT_MOCK_TRANSCRIPT:
+                transcript = asr_res.transcript
+                is_mock_asr = False
+            elif request.transcript and request.transcript.strip():
+                # Client provided real-time transcribed user speech via browser mic
+                transcript = request.transcript.strip()
+                is_mock_asr = False
+            elif asr_res.is_mock and not request.transcript:
+                transcript = asr_res.transcript
+                is_mock_asr = True
+            else:
+                transcript = asr_res.transcript
+                is_mock_asr = asr_res.is_mock
         except Exception as e:
             logger.error(f"Failed to transcribe audio in process-order: {e}")
             transcript = request.transcript or ""
