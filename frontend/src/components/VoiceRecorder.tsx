@@ -367,6 +367,9 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         if (AudioCtx) {
           const ctx = new AudioCtx();
           audioContextRef.current = ctx;
+          if (ctx.state === "suspended") {
+            await ctx.resume();
+          }
 
           const source = ctx.createMediaStreamSource(stream);
           sourceNodeRef.current = source;
@@ -397,7 +400,8 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
           }
         };
 
-        mediaRecorder.start();
+        // Collect audio chunks every 200ms
+        mediaRecorder.start(200);
       } catch (recErr) {
         console.warn("MediaRecorder fallback init error:", recErr);
       }
@@ -462,8 +466,8 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         sumSq += merged[i] * merged[i];
       }
       const rms = Math.sqrt(sumSq / Math.max(1, merged.length));
-      if (merged.length < 3200 || rms < 0.002) {
-        setErrorMessage("Microphone audio was silent or very quiet. Please speak your grocery order clearly into the mic.");
+      if (merged.length < 1600 || rms < 0.0001) {
+        setErrorMessage("Microphone audio was silent or very quiet. Please check your mic and speak clearly.");
         return;
       }
 

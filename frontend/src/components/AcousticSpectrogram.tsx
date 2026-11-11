@@ -29,20 +29,15 @@ export const AcousticSpectrogram: React.FC<AcousticSpectrogramProps> = ({
   const [selectedTokenSlice, setSelectedTokenSlice] = useState<string | null>(null);
   const animationFrameId = useRef<number | null>(null);
 
-  // Fallback demo tokens if none passed from active transcription
+  // Fallback neutral tokens if none passed from active transcription
   const activeTokens: TokenConfidence[] = tokenConfidenceScores.length > 0
     ? tokenConfidenceScores
     : [
-        { token: "भैया", confidence: 0.94, tag: "NORMAL", offset_ms: 0 },
-        { token: "2", confidence: 0.98, tag: "KEYTERM_BOOSTED", offset_ms: 400 },
-        { token: "किलो", confidence: 0.96, tag: "COLLOQUIAL_FRACTION", offset_ms: 800 },
-        { token: "चावल", confidence: 0.62, tag: "AMBIGUOUS_TRIGGER", offset_ms: 1200 },
-        { token: "और", confidence: 0.92, tag: "NORMAL", offset_ms: 1600 },
-        { token: "1", confidence: 0.98, tag: "KEYTERM_BOOSTED", offset_ms: 2000 },
-        { token: "Maggi", confidence: 0.99, tag: "KEYTERM_BOOSTED", offset_ms: 2400 },
-        { token: "masala", confidence: 0.97, tag: "KEYTERM_BOOSTED", offset_ms: 2800 },
-        { token: "लिख", confidence: 0.91, tag: "NORMAL", offset_ms: 3200 },
-        { token: "लो", confidence: 0.90, tag: "NORMAL", offset_ms: 3600 }
+        { token: "किरानावाणी", confidence: 0.99, tag: "NORMAL", offset_ms: 0 },
+        { token: "वॉयस", confidence: 0.98, tag: "KEYTERM_BOOSTED", offset_ms: 500 },
+        { token: "ऑर्डर", confidence: 0.97, tag: "NORMAL", offset_ms: 1000 },
+        { token: "तैयार", confidence: 0.96, tag: "NORMAL", offset_ms: 1500 },
+        { token: "है", confidence: 0.95, tag: "NORMAL", offset_ms: 2000 }
       ];
 
   useEffect(() => {

@@ -650,8 +650,16 @@ export const App: React.FC = () => {
           {/* Left Column: Voice Input, Spectrogram, Clarification, Transcription */}
           <div className="lg:col-span-7 space-y-6">
             <VoiceRecorder
-              onAudioRecorded={(blob) => processOrderUtterance(undefined, blob)}
-              onPresetSelected={(text) => processOrderUtterance(text, undefined)}
+              onAudioRecorded={(blob) => {
+                setClarifications([]);
+                setSubstitutions([]);
+                processOrderUtterance(undefined, blob);
+              }}
+              onPresetSelected={(text) => {
+                setClarifications([]);
+                setSubstitutions([]);
+                processOrderUtterance(text, undefined);
+              }}
               isLoading={isLoading}
               keytermsEnabled={keytermsEnabled}
               onToggleKeyterms={() => setKeytermsEnabled((prev) => !prev)}

@@ -66,7 +66,7 @@ else:
     )
 
 
-# Standard HTTP security headers
+# Standard HTTP security headers and cache invalidation
 @app.middleware("http")
 async def add_security_headers(request, call_next):
     response = await call_next(request)
@@ -75,6 +75,10 @@ async def add_security_headers(request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(self), geolocation=()"
     response.headers["Content-Security-Policy"] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:;"
+    if request.url.path == "/" or request.url.path.endswith((".html", ".htm")):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
     return response
 
 # Mount all API endpoints at root, and secondary mirror at /api prefix (excluded from schema to avoid duplicate operation IDs)
