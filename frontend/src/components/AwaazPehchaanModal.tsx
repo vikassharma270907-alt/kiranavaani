@@ -129,6 +129,9 @@ export const AwaazPehchaanModal: React.FC<AwaazPehchaanModalProps> = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customer_id: customerId,
+          customer_name: customerName,
+          simulate_replay_attack: mode === "replay",
+          simulate_synthetic_voice: mode === "clone",
           simulate_attack_type: attackType
         })
       });

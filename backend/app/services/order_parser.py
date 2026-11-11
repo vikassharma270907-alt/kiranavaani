@@ -212,15 +212,15 @@ class HinglishOrderParser:
         )
         cleaned = re.sub(r"paise\s+.*?(?:dunga|denge|देंगे|दूंगा)", " ", cleaned, flags=re.IGNORECASE)
 
-        # Remove bargaining and past memory expressions to prevent phantom grocery items
+        # Remove bargaining and past memory expressions to prevent phantom grocery items (bounded lookaheads to avoid consuming subsequent order items)
         cleaned = re.sub(
-            r"(?:kuch\s+(?:to\s+)?discount|thoda\s+discount|discount\s+lagao|chhoot\s+do|kam\s+karo|kuch\s+kam|कुछ\s+तो\s+डिस्काउंट|डिस्काउंट\s+लगाओ|छूट\s+दो|कम\s+करो|कम\s+लगाओ|डिस्काउंट|discount)[^,\.;\n]*",
+            r"(?:kuch\s+(?:to\s+)?discount|thoda\s+discount|discount\s+lagao|chhoot\s+do|kam\s+karo|kuch\s+kam|कुछ\s+तो\s+डिस्काउंट|डिस्काउंट\s+लगाओ|छूट\s+दो|कम\s+करो|कम\s+लगाओ|डिस्काउंट|discount)(?:\s+(?:milega|dena|kya|bhaiya|gupta\s+ji|bhi))?",
             " ",
             cleaned,
             flags=re.IGNORECASE
         )
         cleaned = re.sub(
-            r"(?:pichli\s+baar|पिछली\s+बार|last\s+time)[^,\.;\n]*",
+            r"(?:pichli\s+baar|पिछली\s+बार|last\s+time)(?:\s+(?:to|bhi|lagaya\s+tha|diya\s+tha))?",
             " ",
             cleaned,
             flags=re.IGNORECASE
@@ -464,12 +464,13 @@ class HinglishOrderParser:
         """
         text_lower = text.lower()
         urgency_cues_map = {
-            "jaldi": ["jaldi", "जल्दी", "jaldi se", "jaldi bhejo", "fatafat", "फटाफट"],
+            "jaldi": ["jaldi se", "jaldi bhejo", "jaldi", "जल्दी", "fatafat", "फटाफट"],
             "emergency": ["emergency", "इमरजेंसी", "urgent", "अर्जेंट", "turant", "तुरंत"],
-            "guests": ["mehmaan", "मेहमान", "guests", "mehman aaye hain", "mehman baithe hain"],
-            "cooking_urgency": ["gas pe", "गैस पर", "doodh ubal", "chai chadhayi", "khatam ho gaya"],
-            "immediate_window": ["abhee", "अभी", "right now", "10 minute", "das minute", "10 min", "१० मिनट", "turant delivery"],
-            "dravidian_urgency": ["begane", "thumba urgent", "seekiram", "udane"]
+            "guests": ["mehman aaye hain", "mehman baithe hain", "mehmaan", "मेहमान", "guests"],
+            "cooking_urgency": ["doodh ubal", "chai chadhayi", "khatam ho gaya", "gas pe", "गैस पर"],
+            "immediate_window": ["turant delivery", "10 minute", "das minute", "10 min", "१० मिनट", "abhee", "अभी", "right now"],
+            "dravidian_fast": ["begane", "seekiram", "vegamaga", "sheeghra"],
+            "dravidian_immediate": ["thumba urgent", "udane", "koodane", "tannare"]
         }
 
         detected_cues: List[str] = []
@@ -490,13 +491,23 @@ class HinglishOrderParser:
             tempo_wpm = min(190.0, 130.0 + (word_count * 2.5))
             urgency_points += 0.15
 
+        # Check for explicit negation of urgency (e.g. "koi jaldi nahi hai", "aaram se bhej dena", "not urgent")
+        has_negated_urgency = bool(re.search(
+            r"(?:koi\s+)?(?:jaldi|urgent|emergency|turant)\s+(?:nahi|nahin|mat|nhi)|not\s+(?:urgent|in\s+a\s+rush)|aaram\s+se\s+bhej",
+            text_lower
+        ))
+        if has_negated_urgency:
+            urgency_points = 0.0
+            detected_cues = []
+
         urgency_score = min(0.98, max(0.10, round(0.15 + urgency_points, 2)))
 
         urgent_tatkal_keys = {
             "emergency", "इमरजेंसी", "urgent", "अर्जेंट", "turant", "तुरंत",
-            "10 minute", "१० मिनट", "das minute", "right now", "jaldi", "जल्दी", "fatafat", "फटाफट"
+            "10 minute", "१० मिनट", "das minute", "right now", "jaldi", "जल्दी", "fatafat", "फटाफट",
+            "seekiram", "udane", "begane", "thumba urgent"
         }
-        has_direct_tatkal = any(c in urgent_tatkal_keys for c in detected_cues)
+        has_direct_tatkal = (not has_negated_urgency) and any(c in urgent_tatkal_keys for c in detected_cues)
 
         if urgency_score >= 0.50 or len(detected_cues) >= 2 or has_direct_tatkal:
             return CustomerJazbaatInfo(

@@ -224,7 +224,18 @@ export const App: React.FC = () => {
       }
     } catch (error: any) {
       console.error("Order processing error:", error);
-      // Fallback local processing if backend is offline
+      if (audioBlob && !utteranceText) {
+        setTranscript("⚠️ Backend Connection Error: Could not reach the KiranaVaani API (http://localhost:8000). Please start the backend server with './run_server.ps1' or 'python -m uvicorn backend.app.main:app --port 8000'.");
+        setNormalizedTranscript("");
+        setIsMockAsr(true);
+        setParsedItems([]);
+        setClarifications([]);
+        setCartItems([]);
+        setSpokenReplyHi("बैकएंड सर्वर से संपर्क नहीं हो सका। कृपया सर्ver चालू करें।");
+        setSpokenReplyEn("Could not connect to backend server. Please ensure the KiranaVaani server is running on port 8000.");
+        return;
+      }
+      // Fallback local processing for preset sample tests if backend is offline
       setTranscript(utteranceText || "Bhaiya do packet Maggi, ek kilo sugar aur aadha litre milk bhej dena.");
       setNormalizedTranscript("Bhaiya 2 packet Maggi, 1 kg sugar aur 0.5 litre milk bhej dena.");
       setIsMockAsr(true);
@@ -406,6 +417,8 @@ export const App: React.FC = () => {
     setLandmarkInfo(null);
     setBhaavTaalInfo(null);
     setRecipeInfo(null);
+    setJazbaatInfo(null);
+    setLivenessInfo(null);
     setBargainDiscount(0);
   };
 

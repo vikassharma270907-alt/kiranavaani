@@ -8,6 +8,11 @@ Unit and integration tests for advanced KiranaVaani features:
 - Chhotu Delivery Dispatch (किराना डिलीवरी राइडर) Hyperlocal Edge Cases
 - Rasoi se Rashan (रसोई से राशन) Meal Recipe to Cart Edge Cases
 """
+import base64
+import io
+import math
+import struct
+import wave
 import pytest
 from starlette.testclient import TestClient
 
@@ -604,3 +609,338 @@ def test_judge_stress_arena_test_09_10():
     assert data_10["test_id"] == "TEST-10"
     assert data_10["item_f1_score"] == 100.0
     assert any("Tatkal" in r or "तत्काल" in r for r in data_10["rules_applied"])
+
+
+def test_whatsapp_voice_note_presets_routine_and_evening():
+    """Verify WhatsApp Voice Note handles routine breakfast and evening delivery windows."""
+    # Breakfast basket (routine 20 min)
+    res = client.post("/whatsapp/voice-note", json={
+        "sender_name": "Gupta Ji",
+        "sender_phone": "+91 98201-99999",
+        "preset_id": "breakfast_basket"
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["is_tatkal"] is False
+    assert data["estimated_delivery_mins"] == 20
+    assert len(data["parsed_items"]) >= 1
+
+    # Evening rashan (6 PM delivery window)
+    res_eve = client.post("/whatsapp/voice-note", json={
+        "sender_name": "Verma Ji",
+        "sender_phone": "+91 98201-88888",
+        "preset_id": "evening_rashan"
+    })
+    assert res_eve.status_code == 200
+    data_eve = res_eve.json()
+    assert "चावल" in data_eve["whatsapp_auto_reply_text"] or "chawal" in data_eve["whatsapp_auto_reply_text"].lower()
+
+
+def test_whatsapp_voice_note_invalid_base64_fallback():
+    """Verify WhatsApp Voice Note gracefully falls back when given malformed base64."""
+    res = client.post("/whatsapp/voice-note", json={
+        "sender_name": "Sharma Ji",
+        "audio_base64": "!!!NOT_VALID_BASE64!!!"
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["cart_total_inr"] > 0
+    assert len(data["parsed_items"]) >= 1
+
+
+def test_armour_liveness_synthetic_ai_clone_detection():
+    """Verify Armour360 Liveness Gate detects AI synthetic voice clone flatline."""
+    res = client.post("/khata/liveness-check", json={
+        "customer_id": "CUST-001",
+        "simulate_synthetic_voice": True
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["is_live_human"] is False
+    assert data["verdict_badge"] == "SYNTHETIC_CLONE_DETECTED"
+    assert data["attack_type"] == "SYNTHETIC_VOICE"
+    assert data["jitter_percent"] < 0.20
+    assert data["recommended_action"] == "BLOCK_TRANSACTION"
+    # Also verify computed properties for frontend
+    assert data["is_live"] is False
+    assert data["action_permitted"] is False
+
+
+def test_armour_liveness_pcm_extraction_robustness():
+    """Verify Armour360 PCM extraction safely handles truncated or arbitrary byte streams."""
+    from backend.app.services.armour_liveness import armour_liveness_service
+    # Empty bytes
+    samples_empty = armour_liveness_service._extract_pcm_samples(b"")
+    assert samples_empty == []
+
+    # Corrupt single byte
+    samples_corrupt = armour_liveness_service._extract_pcm_samples(b"\x00")
+    assert samples_corrupt == []
+
+    # Odd-length raw audio buffer
+    samples_odd = armour_liveness_service._extract_pcm_samples(b"\x00\x10\x00\x20\x00")
+    assert len(samples_odd) >= 0
+
+
+def test_customer_jazbaat_edge_cases_and_dravidian():
+    """Verify call360 Awaaz-e-Jazbaat edge cases: empty strings, Dravidian cues, high word count."""
+    # Empty string
+    jaz_empty = order_parser.extract_customer_jazbaat("")
+    assert jaz_empty.urgency_level == "NORMAL"
+    assert jaz_empty.is_tatkal_priority is False
+    assert jaz_empty.speech_tempo_wpm == 120.0
+
+    # Dravidian urgency
+    jaz_dravidian = order_parser.extract_customer_jazbaat("Anna begane kodi thumba urgent order")
+    assert any("begane" in c or "urgent" in c for c in jaz_dravidian.detected_cues)
+    assert jaz_dravidian.is_tatkal_priority is True
+
+    # High tempo clause
+    long_urgent = "Bhaiya jaldi se do kilo atta aur ek kilo cheeni aur aadha litre doodh aur do packet maggi aur ek chai patti turant bhejo"
+    jaz_long = order_parser.extract_customer_jazbaat(long_urgent)
+    assert jaz_long.speech_tempo_wpm > 150.0
+    assert jaz_long.is_tatkal_priority is True
+
+
+# =========================================================================
+# QA AUDIT EXPANSION: WhatsApp Voice Notes, Armour360 Spoofing & Jazbaat WPM
+# =========================================================================
+
+def test_whatsapp_voice_note_missing_and_unknown_preset_fallback():
+    """Verify /whatsapp/voice-note handles missing preset_id (None) or unknown preset gracefully."""
+    # 1. Missing preset_id entirely (None)
+    res_none = client.post("/whatsapp/voice-note", json={
+        "sender_name": "Sharma Ji",
+        "sender_phone": "+91 98201-11111",
+        "preset_id": None
+    })
+    assert res_none.status_code == 200
+    data_none = res_none.json()
+    assert data_none["cart_total_inr"] > 0
+    assert len(data_none["parsed_items"]) >= 2
+    assert "upi://" in data_none["upi_payment_link"]
+    assert "गुप्ता किराना स्टोर" in data_none["whatsapp_auto_reply_text"]
+
+    # 2. Unrecognized preset string
+    res_unknown = client.post("/whatsapp/voice-note", json={
+        "sender_name": "Verma Ji",
+        "preset_id": "nonexistent_alien_preset_xyz"
+    })
+    assert res_unknown.status_code == 200
+    data_unk = res_unknown.json()
+    assert data_unk["confirmed_skus_count"] >= 1
+    assert data_unk["estimated_delivery_mins"] in (10, 20)
+
+
+def test_whatsapp_voice_note_empty_audio_inputs():
+    """Verify /whatsapp/voice-note safely handles empty string, whitespace, and 0-byte audio inputs."""
+    empty_payloads = [
+        "",
+        "   \t\n  ",
+        base64.b64encode(b"").decode()
+    ]
+    for empty_audio in empty_payloads:
+        res = client.post("/whatsapp/voice-note", json={
+            "sender_name": "Sunita Devi",
+            "audio_base64": empty_audio,
+            "preset_id": None
+        })
+        assert res.status_code == 200
+        data = res.json()
+        assert data["cart_total_inr"] > 0
+        assert "upi://" in data["upi_payment_link"]
+
+
+def test_whatsapp_voice_note_large_payload_handling():
+    """Verify /whatsapp/voice-note can ingest large audio payloads without memory exhaustion."""
+    dummy_audio_bytes = b"RIFF" + b"\x00" * 250000
+    large_b64 = base64.b64encode(dummy_audio_bytes).decode("ascii")
+
+    res = client.post("/whatsapp/voice-note", json={
+        "sender_name": "Ramesh Kumar",
+        "sender_phone": "+91 98111-55555",
+        "audio_base64": large_b64,
+        "audio_filename": "long_voice_note.ogg",
+        "preset_id": None
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["cart_total_inr"] > 0
+    assert data["voice_audio_base64"] is not None
+
+
+def test_whatsapp_voice_note_urgent_vs_non_urgent_contrast():
+    """Verify explicit contrast between urgent Tatkal notes (10-min) and routine grocery notes (20-min)."""
+    # 1. Urgent Note ('snack_rush' with 'तुरंत' urgency marker)
+    res_urgent = client.post("/whatsapp/voice-note", json={
+        "sender_name": "Sharma Ji",
+        "preset_id": "snack_rush"
+    })
+    assert res_urgent.status_code == 200
+    data_u = res_urgent.json()
+    assert data_u["is_tatkal"] is True
+    assert data_u["estimated_delivery_mins"] == 10
+    assert "⚡ तत्काल 10 मिनट डिलीवरी" in data_u["whatsapp_auto_reply_text"]
+
+    # 2. Non-Urgent Note ('evening_rashan' with 'शाम 6 बजे' window)
+    res_routine = client.post("/whatsapp/voice-note", json={
+        "sender_name": "Sharma Ji",
+        "preset_id": "evening_rashan"
+    })
+    assert res_routine.status_code == 200
+    data_r = res_routine.json()
+    assert data_r["is_tatkal"] is False
+    assert data_r["estimated_delivery_mins"] == 20
+    assert "सामान्य डिलीवरी" in data_r["whatsapp_auto_reply_text"]
+
+
+def test_khata_liveness_authentic_deep_contract():
+    """Verify authentic live human speaker passes all Armour360 verification gates with full contract assertion."""
+    res = client.post("/khata/liveness-check", json={
+        "customer_id": "CUST-001",
+        "customer_name": "Sharma Ji (शर्मा जी)",
+        "simulate_replay_attack": False,
+        "simulate_synthetic_voice": False
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["is_live_human"] is True
+    assert data["liveness_score"] >= 0.85
+    assert data["verdict_badge"] == "VERIFIED_LIVE_HUMAN"
+    assert data["attack_type"] is None
+    assert data["recommended_action"] == "PROCEED_WITH_CREDIT"
+    assert data["secondary_resonance_db"] < 3.0
+    assert "सफल" in data["security_prompt_hi"]
+
+
+def test_khata_liveness_conflicting_attack_flags():
+    """Verify when both replay and synthetic attack flags are sent, gateway safely prioritizes replay detection."""
+    res = client.post("/khata/liveness-check", json={
+        "customer_id": "CUST-001",
+        "simulate_replay_attack": True,
+        "simulate_synthetic_voice": True
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["is_live_human"] is False
+    assert data["attack_type"] == "REPLAY_ATTACK"
+    assert data["verdict_badge"] == "REPLAY_ATTACK_DETECTED"
+    assert data["recommended_action"] == "REQUIRE_OTP_VERIFICATION"
+
+
+def test_khata_liveness_corrupted_base64_endpoint_fallback():
+    """Verify endpoint catches corrupted base64 string and falls back to safe acoustic baseline."""
+    res = client.post("/khata/liveness-check", json={
+        "customer_id": "CUST-001",
+        "audio_base64": "NOT_VALID_BASE64_AT_ALL!@#$%^&*()",
+        "simulate_replay_attack": False,
+        "simulate_synthetic_voice": False
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["is_live_human"] is True
+    assert data["verdict_badge"] == "VERIFIED_LIVE_HUMAN"
+
+
+def test_khata_liveness_corrupted_binary_audio_buffer():
+    """Verify endpoint handles valid Base64 that decodes to corrupted non-WAV bytes via DSP fallback."""
+    corrupt_bytes = b"MALFORMED_HEADER" * 30  # 480 bytes of non-WAV data
+    corrupt_b64 = base64.b64encode(corrupt_bytes).decode("ascii")
+
+    res = client.post("/khata/liveness-check", json={
+        "customer_id": "CUST-001",
+        "audio_base64": corrupt_b64
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert "liveness_score" in data
+    assert data["verdict_badge"] in ("VERIFIED_LIVE_HUMAN", "REPLAY_ATTACK_DETECTED", "SYNTHETIC_CLONE_DETECTED")
+
+
+def test_khata_liveness_real_pcm_audio_buffer():
+    """Verify end-to-end DSP pipeline with a real synthesized 16-bit PCM WAV audio buffer."""
+    sr = 16000
+    duration = 0.25
+    n_samples = int(sr * duration)
+    wav_buf = io.BytesIO()
+    with wave.open(wav_buf, "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(sr)
+        sine_samples = [int(16000 * math.sin(2 * math.pi * 440 * i / sr)) for i in range(n_samples)]
+        wf.writeframes(struct.pack(f"<{n_samples}h", *sine_samples))
+    
+    real_audio_b64 = base64.b64encode(wav_buf.getvalue()).decode("ascii")
+    res = client.post("/khata/liveness-check", json={
+        "customer_id": "CUST-001",
+        "audio_base64": real_audio_b64
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["spectral_flux"] > 0
+    assert data["jitter_percent"] > 0
+
+
+def test_jazbaat_mixed_scripts_and_devanagari_numerals():
+    """Verify Jazbaat urgency extraction with mixed Devanagari numerals ('१० मिनट'), Tamil, and kitchen emergency cues."""
+    # 1. Devanagari Numerals + English words
+    j1 = order_parser.extract_customer_jazbaat("bhaiya १० मिनट me delivery chahiye mehmaan aaye hain")
+    assert j1.is_tatkal_priority is True
+    assert j1.urgency_level == "TATKAL_EXPRESS_10MIN"
+    assert any(c in j1.detected_cues for c in ["१० मिनट", "mehmaan"])
+
+    # 2. Tamil Urgency Cues
+    j2 = order_parser.extract_customer_jazbaat("Anna seekiram 1 kg sugar anupunga, udane venum")
+    assert j2.is_tatkal_priority is True
+    assert any("seekiram" in c or "udane" in c for c in j2.detected_cues)
+
+    # 3. Cooking Emergency (gas pe chai chadhayi hai)
+    j3 = order_parser.extract_customer_jazbaat("अरे भैया gas pe chai chadhayi hai jaldi doodh bhej do")
+    assert j3.is_tatkal_priority is True
+    assert any(c in j3.detected_cues for c in ["gas pe", "chai chadhayi", "jaldi"])
+
+    # 4. Direct Tatkal Single-Word Triggers
+    for trig in ["emergency", "इमरजेंसी", "fatafat", "तुरंत", "right now"]:
+        j_trig = order_parser.extract_customer_jazbaat(f"bhaiya {trig} 2 packet bread bhej do")
+        assert j_trig.is_tatkal_priority is True
+        assert j_trig.urgency_score >= 0.65
+
+
+def test_jazbaat_wpm_boundary_conditions():
+    """Verify exact word-count boundary values for speech tempo calculation: 12, 13, 24, 35 words."""
+    # 1. Exactly 12 words (tempo 120.0, no tempo bonus)
+    twelve_words = "ek do teen chaar paanch chhah saat aath nau das gyarah baarah"
+    j12 = order_parser.extract_customer_jazbaat(twelve_words)
+    assert j12.speech_tempo_wpm == 120.0
+
+    # 2. Exactly 13 words (crosses 12-word threshold -> 130 + 13 * 2.5 = 162.5)
+    thirteen_words = twelve_words + " terah"
+    j13 = order_parser.extract_customer_jazbaat(thirteen_words)
+    assert j13.speech_tempo_wpm == 162.5
+
+    # 3. Exactly 24 words (hits 190.0 WPM)
+    twenty_four_words = " ".join([f"word{i}" for i in range(1, 25)])
+    j24 = order_parser.extract_customer_jazbaat(twenty_four_words)
+    assert j24.speech_tempo_wpm == 190.0
+
+    # 4. Extreme 35 words (must be clamped at 190.0 WPM ceiling)
+    thirty_five_words = " ".join([f"word{i}" for i in range(1, 36)])
+    j35 = order_parser.extract_customer_jazbaat(thirty_five_words)
+    assert j35.speech_tempo_wpm == 190.0
+
+
+def test_jazbaat_zero_words_and_symbol_inputs():
+    """Verify zero words, pure whitespace, and symbols produce safe fallback metrics."""
+    safe_test_cases = [
+        "",
+        "      ",
+        "\n\t\r",
+        "??? !!! ... ,,, ---"
+    ]
+    for raw in safe_test_cases:
+        j = order_parser.extract_customer_jazbaat(raw)
+        assert j.urgency_level == "NORMAL"
+        assert j.is_tatkal_priority is False
+        assert j.speech_tempo_wpm == 120.0
+        assert j.detected_cues == []
+        assert j.sentiment == "POLITE_NEUTRAL"

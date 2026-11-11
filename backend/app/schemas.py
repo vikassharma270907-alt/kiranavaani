@@ -3,7 +3,7 @@ Pydantic data models for KiranaVaani API requests and responses.
 """
 from __future__ import annotations
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 
 # ---------------------------------------------------------
@@ -765,9 +765,10 @@ class CustomerJazbaatInfo(BaseModel):
 class LivenessCheckRequest(BaseModel):
     customer_id: str = Field("CUST-001", max_length=50)
     customer_name: Optional[str] = Field("Sharma Ji (शर्मा जी)", max_length=100)
-    audio_base64: Optional[str] = None
+    audio_base64: Optional[str] = Field(None, max_length=15_000_000, description="Audio payload for acoustic feature extraction (max ~10MB)")
     simulate_replay_attack: bool = False
     simulate_synthetic_voice: bool = False
+    simulate_attack_type: Optional[str] = Field(None, description="Optional simulation preset: 'replay_attack' or 'ai_cloned_voice'")
 
 
 class LivenessCheckResponse(BaseModel):
@@ -785,6 +786,41 @@ class LivenessCheckResponse(BaseModel):
     recommended_action: str = Field(..., description="'PROCEED_WITH_CREDIT', 'REQUIRE_OTP_VERIFICATION', or 'BLOCK_TRANSACTION'")
     security_prompt_hi: str
 
+    @computed_field
+    @property
+    def is_live(self) -> bool:
+        return self.is_live_human
+
+    @computed_field
+    @property
+    def attack_detected(self) -> Optional[str]:
+        return self.attack_type
+
+    @computed_field
+    @property
+    def action_permitted(self) -> bool:
+        return self.is_live_human and self.recommended_action == "PROCEED_WITH_CREDIT"
+
+    @computed_field
+    @property
+    def jitter_ppq5(self) -> float:
+        return self.jitter_percent
+
+    @computed_field
+    @property
+    def loudspeaker_resonance_peak_db(self) -> float:
+        return self.secondary_resonance_db
+
+    @computed_field
+    @property
+    def analysis_text_en(self) -> str:
+        return self.diagnostic_details
+
+    @computed_field
+    @property
+    def analysis_text_hi(self) -> str:
+        return self.security_prompt_hi
+
 
 # ---------------------------------------------------------
 # WhatsApp Voice Note Ingestion & Bot Schemas
@@ -792,7 +828,7 @@ class LivenessCheckResponse(BaseModel):
 class WhatsAppVoiceNoteRequest(BaseModel):
     sender_name: str = Field("Sharma Ji (शर्मा जी)", max_length=100)
     sender_phone: str = Field("+91 98201-12345", max_length=25)
-    audio_base64: Optional[str] = None
+    audio_base64: Optional[str] = Field(None, max_length=15_000_000, description="Audio payload for WhatsApp voice note (max ~10MB)")
     audio_filename: str = Field("voice_note.ogg", max_length=100)
     preset_id: Optional[str] = None
     keyterms_enabled: bool = True

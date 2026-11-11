@@ -67,7 +67,7 @@ export const DeliveryRiderModal: React.FC<DeliveryRiderModalProps> = ({
         body: JSON.stringify({
           customer_name: customerName,
           transcript: transcript || "Bhaiya delivery Ram Mandir ke peeche, teesri gali me peela makaan, second floor pe bhej dena shaam 6 baje",
-          total_amount_inr: totalAmount || 465.0,
+          total_amount_inr: totalAmount ?? 465.0,
           cart_items: itemsPayload,
           landmark_info: landmarkInfo
         })

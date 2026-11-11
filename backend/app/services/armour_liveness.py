@@ -210,8 +210,15 @@ class ArmourLivenessService:
         jitter = (sum(diffs) / len(diffs)) / avg_period * 100.0 if diffs else 0.78
         jitter = max(0.05, min(4.5, jitter))
 
-        # Shimmer: amplitude diffs of cycle peaks
-        peaks = [abs(samples[c]) for c in crossings]
+        # Shimmer: amplitude diffs of true cycle peak extremum between adjacent zero-crossings
+        peaks = []
+        for i in range(len(crossings) - 1):
+            segment = samples[crossings[i]:crossings[i + 1]]
+            if segment:
+                peaks.append(max(abs(s) for s in segment))
+            else:
+                peaks.append(abs(samples[crossings[i]]))
+
         peak_diffs = [abs(peaks[i + 1] - peaks[i]) for i in range(len(peaks) - 1)]
         avg_peak = sum(peaks) / len(peaks) if peaks else 1.0
         shimmer = (sum(peak_diffs) / len(peak_diffs)) / (avg_peak + 1e-6) * 100.0 if peak_diffs else 2.15
@@ -236,8 +243,17 @@ class ArmourLivenessService:
         avg_diff = sum(energy_diffs) / len(energy_diffs) if energy_diffs else 0.01
         flux = min(0.95, max(0.05, avg_diff * 50.0))
 
-        # Resonance proxy
-        res_db = 1.2
+        # Secondary speaker resonance proxy via high-frequency derivative energy
+        # Phone micro-speakers show elevated high-frequency resonance coloration (> 2.8 kHz)
+        limit_n = min(len(samples), 3200)
+        high_diffs = sum(abs(samples[i] - samples[i - 1]) for i in range(1, limit_n))
+        low_energy = sum(abs(s) for s in samples[:limit_n]) + 1e-6
+        hf_ratio = high_diffs / low_energy
+        if hf_ratio > 0.88:
+            res_db = min(5.5, 3.4 + (hf_ratio - 0.88) * 6.0)
+        else:
+            res_db = max(0.6, min(2.4, 0.8 + hf_ratio * 1.5))
+
         return flux, res_db
 
 

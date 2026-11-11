@@ -344,12 +344,23 @@ async def process_order(request: ProcessOrderRequest):
     if request.audio_base64:
         try:
             audio_bytes = base64.b64decode(request.audio_base64)
-            asr_res = await prisma_service.transcribe_audio(audio_bytes=audio_bytes)
+            # Pass catalogue keyterms to bias beam search
+            keyterms: List[str] = []
+            if request.keyterms_enabled:
+                for sku in catalogue_matcher.get_all_skus():
+                    keyterms.append(sku.name_hi)
+                    keyterms.append(sku.name_en)
+                    keyterms.extend(sku.aliases)
+            asr_res = await prisma_service.transcribe_audio(
+                audio_bytes=audio_bytes,
+                filename="audio.wav",
+                keyterms=keyterms
+            )
             transcript = asr_res.transcript
             is_mock_asr = asr_res.is_mock
         except Exception as e:
             logger.error(f"Failed to transcribe audio in process-order: {e}")
-            transcript = request.transcript or "Bhaiya do packet Maggi, ek kilo sugar aur aadha litre milk bhej dena."
+            transcript = request.transcript or ""
             is_mock_asr = True
     elif request.transcript:
         transcript = request.transcript
@@ -439,6 +450,9 @@ async def process_order(request: ProcessOrderRequest):
         else:
             spoken_reply_hi = cart.spoken_summary_hi
             spoken_reply_en = cart.spoken_summary_en
+    elif not transcript.strip():
+        spoken_reply_hi = "माफ़ कीजिये, कोई आवाज़ सुनाई नहीं दी। कृपया माइक बटन दबाकर किराना सामान बोलें।"
+        spoken_reply_en = "Sorry, no voice was heard. Please click the mic and speak your grocery order."
     else:
         spoken_reply_hi = "क्षमा करें, कोई किराना सामान पहचाना नहीं जा सका। कृपया दोबारा बोलें।"
         spoken_reply_en = "Sorry, no grocery items were recognized. Please repeat your order."
@@ -498,6 +512,13 @@ async def process_order(request: ProcessOrderRequest):
             )
         except Exception as e:
             logger.warning(f"Liveness extraction bypass in process_order: {e}")
+
+    # Enforce Armour360 Liveness Gate on Khata Credit transactions
+    if liveness_info and not liveness_info.is_live_human and parsed_res.khata_info and parsed_res.khata_info.is_khata:
+        parsed_res.khata_info.is_khata = False
+        parsed_res.khata_info.payment_mode = "OTP_VERIFICATION_REQUIRED"
+        spoken_reply_hi = f"{liveness_info.security_prompt_hi} {spoken_reply_hi}"
+        spoken_reply_en = f"Security Notice: Voice liveness unconfirmed. OTP required for store credit. {spoken_reply_en}"
 
     # 7. Synthesize audio if requested
     voice_audio_b64 = None
@@ -1054,12 +1075,15 @@ async def check_audio_liveness(request: LivenessCheckRequest):
         except Exception:
             pass
 
+    is_replay = request.simulate_replay_attack or request.simulate_attack_type == "replay_attack"
+    is_clone = request.simulate_synthetic_voice or request.simulate_attack_type == "ai_cloned_voice"
+
     return armour_liveness_service.analyze_audio_liveness(
         customer_id=request.customer_id,
         customer_name=request.customer_name or "Sharma Ji (शर्मा जी)",
         audio_bytes=audio_bytes,
-        simulate_replay_attack=request.simulate_replay_attack,
-        simulate_synthetic_voice=request.simulate_synthetic_voice
+        simulate_replay_attack=is_replay,
+        simulate_synthetic_voice=is_clone
     )
 
 
@@ -1126,39 +1150,43 @@ async def process_whatsapp_voice_note(request: WhatsAppVoiceNoteRequest):
     est_mins = 10 if jazbaat.is_tatkal_priority else 20
     priority_text = "⚡ तत्काल 10 मिनट डिलीवरी" if jazbaat.is_tatkal_priority else "सामान्य डिलीवरी"
 
-    # Dynamic UPI payment link
+    # Dynamic UPI payment link and WhatsApp slip assembly
     safe_store = "Gupta+Kirana+Store"
-    cart_total = cart.total_inr if cart.items else 89.50
-    upi_link = f"upi://pay?pa=gupta.kirana@okaxis&pn={safe_store}&am={cart_total:.2f}&cu=INR&tn=KiranaOrder-{note_id[:8]}"
-
     item_lines = []
-    for it in cart.items:
-        item_lines.append(f"• {it.quantity:g} {it.unit} {it.name_hi} — ₹{it.line_total:.2f}")
-    if not item_lines:
-        item_lines.append("• 2 packet मैगी २-मिनट मसाला नूडल्स — ₹28.00")
-        item_lines.append("• 1 kg मधुर चीनी — ₹45.00")
-        item_lines.append("• 0.5 litre अमूल ताज़ा दूध — ₹16.50")
-        total_disp = 89.50
-    else:
+
+    if cart.items:
         total_disp = cart.total_inr
-
-    items_block = "\n".join(item_lines)
-
-    whatsapp_text = (
-        f"🛒 *गुप्ता किराना स्टोर (Gupta Kirana Store)*\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"नमस्ते *{request.sender_name}*! आपका वॉइस ऑर्डर प्राप्त हुआ:\n\n"
-        f"{items_block}\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"💰 *कुल राशि (Total Bill):* ₹{total_disp:.2f}\n"
-        f"⚡ *डिलीवरी समय:* {est_mins} मिनट में ({priority_text})\n\n"
-        f"📲 *UPI द्वारा तुरंत भुगतान करें:*\n"
-        f"{upi_link}\n\n"
-        f"📦 *ऑर्डर ट्रैकिंग आईडी:* #{note_id[:8]}\n"
-        f"_(खाता उधार विकल्प भी उपलब्ध है)_"
-    )
-
-    spoken_script = f"नमस्ते {request.sender_name}! आपका वॉइस ऑर्डर लिख लिया है। कुल बिल ₹{total_disp:.0f} हुआ है। {est_mins} मिनट में डिलीवरी पहुंच जाएगी। धन्यवाद!"
+        for it in cart.items:
+            item_lines.append(f"• {it.quantity:g} {it.unit} {it.name_hi} — ₹{it.line_total:.2f}")
+        items_block = "\n".join(item_lines)
+        upi_link = f"upi://pay?pa=gupta.kirana@okaxis&pn={safe_store}&am={total_disp:.2f}&cu=INR&tn=KiranaOrder-{note_id[:8]}"
+        whatsapp_text = (
+            f"🛒 *गुप्ता किराना स्टोर (Gupta Kirana Store)*\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"नमस्ते *{request.sender_name}*! आपका वॉइस ऑर्डर प्राप्त हुआ:\n\n"
+            f"{items_block}\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"💰 *कुल राशि (Total Bill):* ₹{total_disp:.2f}\n"
+            f"⚡ *डिलीवरी समय:* {est_mins} मिनट में ({priority_text})\n\n"
+            f"📲 *UPI द्वारा तुरंत भुगतान करें:*\n"
+            f"{upi_link}\n\n"
+            f"📦 *ऑर्डर ट्रैकिंग आईडी:* #{note_id[:8]}\n"
+            f"_(खाता उधार विकल्प भी उपलब्ध है)_"
+        )
+        spoken_script = f"नमस्ते {request.sender_name}! आपका वॉइस ऑर्डर लिख लिया है। कुल बिल ₹{total_disp:.0f} हुआ है। {est_mins} मिनट में डिलीवरी पहुंच जाएगी। धन्यवाद!"
+    else:
+        total_disp = 0.0
+        upi_link = ""
+        items_block = "• कोई किराना सामान स्पष्ट नहीं हो पाया"
+        whatsapp_text = (
+            f"🛒 *गुप्ता किराना स्टोर (Gupta Kirana Store)*\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"नमस्ते *{request.sender_name}*! हमें आपका वॉइस नोट मिला, लेकिन सामान का नाम या मात्रा स्पष्ट नहीं हो पाई।\n\n"
+            f"कृपया सामान का नाम और वजन (जैसे 1 किलो चीनी, 2 पैकेट मैगी) दोबारा बोलकर भेजें।\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"📦 *ट्रैकिंग आईडी:* #{note_id[:8]}"
+        )
+        spoken_script = f"नमस्ते {request.sender_name}! आपकी आवाज़ स्पष्ट नहीं हो पाई। कृपया सामान का नाम और मात्रा दोबारा बोलें।"
     synth = await timbre_service.synthesize_speech(
         text=spoken_script,
         voice="Nalini",

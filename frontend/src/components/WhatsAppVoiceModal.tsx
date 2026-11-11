@@ -360,7 +360,7 @@ export const WhatsAppVoiceModal: React.FC<WhatsAppVoiceModalProps> = ({
                       )}
 
                       <a
-                        href={`https://api.whatsapp.com/send?phone=919820112345&text=${encodeURIComponent(result.whatsapp_auto_reply_text)}`}
+                        href={`https://api.whatsapp.com/send?phone=${result.sender_phone ? result.sender_phone.replace(/\D/g, "") : "919820112345"}&text=${encodeURIComponent(result.whatsapp_auto_reply_text)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="px-3 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-900 text-emerald-300 text-xs font-semibold flex items-center gap-1 transition-colors"
