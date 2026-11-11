@@ -55,7 +55,8 @@ jobs:
         run: |
           python scripts/generate_synthetic_80.py
 
-      - name: Run Noise Lab Evaluation & Ablation Benchmark
+      - name: Run Noise Lab Evaluation & Ablation Benchmark (Python 3.12 Only)
+        if: matrix.python-version == '3.12'
         run: |
           python -m noise_lab.evaluate_asr
           python -m noise_lab.evaluate_orders

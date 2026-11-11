@@ -102,14 +102,19 @@ export const App: React.FC = () => {
   const [tokenConfidenceScores, setTokenConfidenceScores] = useState<any[]>([]);
   const [detectedIntent, setDetectedIntent] = useState<string>("ORDER");
 
-  // Determine API base URL dynamically for local dev and Vercel production
+  // Determine API base URL dynamically for local dev, unified FastAPI serving, and Vercel/Render production
   const getApiBase = () => {
     const envUrl = (import.meta as any).env?.VITE_API_BASE_URL;
     if (envUrl) return envUrl;
     if (typeof window !== "undefined") {
+      const port = window.location.port;
+      // If served directly from FastAPI full-stack server (port 8000) or standard ports, use same origin
+      if (port === "8000" || !port || port === "80" || port === "443") {
+        return window.location.origin;
+      }
       const host = window.location.hostname;
       if (host === "localhost" || host === "127.0.0.1") {
-        return "http://localhost:8000";
+        return `http://${host}:8000`;
       }
       return "";
     }
@@ -187,8 +192,8 @@ export const App: React.FC = () => {
 
       const data = await res.json();
 
-      setTranscript(data.transcript);
-      setNormalizedTranscript(data.normalized_transcript);
+      setTranscript(data.transcript || (audioBlob ? "माफ़ कीजिये, कोई आवाज़ सुनाई नहीं दी (No voice detected)" : ""));
+      setNormalizedTranscript(data.normalized_transcript || "");
       setIsMockAsr(data.is_mock_asr);
       setParsedItems(data.parsed_items || []);
       setIsOrderComplete(data.is_order_complete);
@@ -221,65 +226,38 @@ export const App: React.FC = () => {
       // Merge confirmed items into cart
       if (data.confirmed_cart && data.confirmed_cart.items) {
         setCartItems(data.confirmed_cart.items);
+      } else {
+        setCartItems([]);
       }
     } catch (error: any) {
       console.error("Order processing error:", error);
-      if (audioBlob && !utteranceText) {
+      if (audioBlob) {
         setTranscript("⚠️ Backend Connection Error: Could not reach the KiranaVaani API (http://localhost:8000). Please start the backend server with './run_server.ps1' or 'python -m uvicorn backend.app.main:app --port 8000'.");
         setNormalizedTranscript("");
         setIsMockAsr(true);
         setParsedItems([]);
         setClarifications([]);
         setCartItems([]);
-        setSpokenReplyHi("बैकएंड सर्वर से संपर्क नहीं हो सका। कृपया सर्ver चालू करें।");
+        setVoiceAudioBase64(undefined);
+        setSpokenReplyHi("बैकएंड सर्वर से संपर्क नहीं हो सका। कृपया सर्वर चालू करें।");
         setSpokenReplyEn("Could not connect to backend server. Please ensure the KiranaVaani server is running on port 8000.");
         return;
       }
-      // Fallback local processing for preset sample tests if backend is offline
-      setTranscript(utteranceText || "Bhaiya do packet Maggi, ek kilo sugar aur aadha litre milk bhej dena.");
-      setNormalizedTranscript("Bhaiya 2 packet Maggi, 1 kg sugar aur 0.5 litre milk bhej dena.");
-      setIsMockAsr(true);
-      setParsedItems([
-        { product: "Maggi", quantity: 2, unit: "packet" },
-        { product: "Sugar", quantity: 1, unit: "kg" },
-        { product: "Milk", quantity: 0.5, unit: "litre" }
-      ]);
-      setClarifications([
-        {
-          family: "maggi",
-          spoken_phrase: "do packet Maggi",
-          question_hi: "'मैगी 2-मिनट मसाला नूडल्स' (₹14) चाहिए या 'मैगी आटा नूडल्स' (₹25)?",
-          question_en: "Would you like Maggi 2-Minute Masala (₹14) or Maggi Veg Atta Noodles (₹25)?",
-          options: [
-            { sku_id: "SKU-027", name_en: "Maggi 2-Minute Masala Noodles", name_hi: "मैगी २-मिनट मसाला नूडल्स", quantity: 2, unit: "packet", price_inr: 14.0 },
-            { sku_id: "SKU-028", name_en: "Maggi Veg Atta Noodles", name_hi: "मैगी आटा नूडल्स", quantity: 2, unit: "packet", price_inr: 25.0 }
-          ],
-          confidence: 0.68
-        }
-      ]);
-      setCartItems([
-        {
-          sku_id: "SKU-020",
-          name_en: "Madhur Pure Sulphurless Sugar",
-          name_hi: "मधुर सल्फरलेस चीनी",
-          category: "Spices & Staples",
-          quantity: 1.0,
-          unit: "kg",
-          unit_price: 45.0,
-          line_total: 45.0
-        },
-        {
-          sku_id: "SKU-012",
-          name_en: "Amul Taaza Toned Milk",
-          name_hi: "अमूल ताज़ा टोंड दूध",
-          category: "Dairy",
-          quantity: 0.5,
-          unit: "litre",
-          unit_price: 33.0,
-          line_total: 16.5
-        }
-      ]);
-      setSpokenReplyHi("'मैगी 2-मिनट मसाला नूडल्स' (₹14) चाहिए या 'मैगी आटा नूडल्स' (₹25)?");
+      if (utteranceText) {
+        setTranscript(utteranceText);
+        setNormalizedTranscript(utteranceText);
+        setParsedItems([]);
+        setClarifications([]);
+        setCartItems([]);
+        setSpokenReplyHi("ऑफ़लाइन मोड: सर्वर उपलब्ध नहीं है।");
+        setSpokenReplyEn("Offline mode: Backend server not reachable.");
+      } else {
+        setTranscript("");
+        setNormalizedTranscript("");
+        setParsedItems([]);
+        setClarifications([]);
+        setCartItems([]);
+      }
     } finally {
       setIsLoading(false);
     }

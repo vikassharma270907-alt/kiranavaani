@@ -175,10 +175,13 @@ class ArmourLivenessService:
         samples = []
         try:
             with wave.open(io.BytesIO(audio_bytes), "rb") as wf:
+                n_channels = max(1, wf.getnchannels())
                 n_frames = wf.getnframes()
                 data = wf.readframes(min(n_frames, 16000 * 2))  # First 2 seconds max
                 fmt = f"<{len(data) // 2}h"
                 int_samples = struct.unpack(fmt, data)
+                if n_channels > 1:
+                    int_samples = int_samples[::n_channels]
                 samples = [s / 32768.0 for s in int_samples]
                 return samples
         except Exception:

@@ -41,6 +41,7 @@ async def convert_audio_to_wav(audio_bytes: bytes, filename: str = "audio.wav") 
     if is_wav_audio(audio_bytes):
         return audio_bytes, "audio.wav"
 
+    proc = None
     try:
         proc = await asyncio.create_subprocess_exec(
             "ffmpeg", "-y", "-i", "pipe:0", "-ar", "16000", "-ac", "1", "-f", "wav", "pipe:1",
@@ -55,6 +56,14 @@ async def convert_audio_to_wav(audio_bytes: bytes, filename: str = "audio.wav") 
         else:
             err_msg = stderr.decode("utf-8", errors="ignore")[:250]
             logger.warning(f"FFmpeg transcode non-zero exit ({proc.returncode}): {err_msg}")
+    except (asyncio.TimeoutError, TimeoutError):
+        if proc:
+            try:
+                proc.kill()
+                await proc.wait()
+            except Exception:
+                pass
+        logger.warning("FFmpeg transcode timed out after 10.0s.")
     except FileNotFoundError:
         logger.warning("FFmpeg executable not found in system PATH. Sending original audio bytes.")
     except Exception as e:
@@ -73,13 +82,13 @@ class PrismaSTTService:
         self.api_key = api_key if api_key is not None else GNANI_API_KEY
         self.endpoint = endpoint or GNANI_STT_ENDPOINT
         self.model = model or GNANI_STT_MODEL
-        self._lock: Optional[asyncio.Lock] = None
+        self._semaphore: Optional[asyncio.Semaphore] = None
 
     @property
-    def lock(self) -> asyncio.Lock:
-        if self._lock is None:
-            self._lock = asyncio.Lock()
-        return self._lock
+    def semaphore(self) -> asyncio.Semaphore:
+        if self._semaphore is None:
+            self._semaphore = asyncio.Semaphore(value=3)
+        return self._semaphore
 
     def is_configured(self) -> bool:
         """Checks if a valid live Gnani API key is configured."""
@@ -112,7 +121,7 @@ class PrismaSTTService:
                 note="Demo mode: Configured without live Gnani API key. Set GNANI_API_KEY in .env for live telephony STT."
             )
 
-        if not audio_bytes or len(audio_bytes) < 32:
+        if audio_bytes is None:
             return TranscriptionResponse(
                 transcript=DEFAULT_MOCK_TRANSCRIPT,
                 language_detected="hi-Latn / hi-Deva (Code-Mixed Hinglish)",
@@ -120,7 +129,18 @@ class PrismaSTTService:
                 model=self.model,
                 is_mock=True,
                 duration_sec=3.5,
-                note="Empty audio payload: returned default reference sample."
+                note="Demo/mock mode: Default reference sample returned."
+            )
+
+        if len(audio_bytes) < 32:
+            return TranscriptionResponse(
+                transcript="",
+                language_detected="und",
+                confidence=0.0,
+                model=self.model,
+                is_mock=False,
+                duration_sec=0.0,
+                note="Microphone audio empty or too short."
             )
 
         # Transcode incoming audio (e.g. WebM/Opus from browser MediaRecorder) to 16 kHz mono WAV
@@ -150,14 +170,14 @@ class PrismaSTTService:
         }
 
         last_status = None
-        async with self.lock:
-            for attempt in range(2):
-                for key in api_keys:
-                    headers = {
-                        "X-API-Key-ID": key
-                    }
-                    try:
-                        async with httpx.AsyncClient(timeout=15.0) as client:
+        async with self.semaphore:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                for attempt in range(2):
+                    for key in api_keys:
+                        headers = {
+                            "X-API-Key-ID": key
+                        }
+                        try:
                             logger.info(f"Dispatching STT request to Gnani Prisma at {self.endpoint} with model={self.model}")
                             response = await client.post(
                                 self.endpoint,
@@ -166,46 +186,55 @@ class PrismaSTTService:
                                 files=files
                             )
 
-                        last_status = response.status_code
-                        if response.status_code == 200:
-                            data = response.json()
-                            logger.info("Received successful transcription from Gnani Prisma API.")
-                            transcript_text = (
-                                data.get("transcript")
-                                or data.get("text")
-                                or data.get("data", {}).get("transcript", "")
-                            )
-                            confidence = float(data.get("confidence", 0.94))
-                            lang = data.get("language") or data.get("detected_language") or "indic-auto (Hinglish)"
+                            last_status = response.status_code
+                            if response.status_code == 200:
+                                data = response.json()
+                                logger.info("Received successful transcription from Gnani Prisma API.")
+                                transcript_text = (
+                                    data.get("transcript")
+                                    or data.get("text")
+                                    or data.get("data", {}).get("transcript", "")
+                                )
+                                confidence = float(data.get("confidence", 0.94))
+                                lang = data.get("language") or data.get("detected_language") or "indic-auto (Hinglish)"
 
-                            return TranscriptionResponse(
-                                transcript=transcript_text.strip(),
-                                language_detected=lang,
-                                confidence=confidence,
-                                model=self.model,
-                                is_mock=False,
-                                duration_sec=data.get("audio_duration")
-                            )
-                        elif response.status_code == 429:
-                            logger.warning(f"Gnani Prisma 429 rate limit (attempt {attempt+1}). Sleeping 0.8s before retry...")
-                            await asyncio.sleep(0.8)
+                                return TranscriptionResponse(
+                                    transcript=transcript_text.strip(),
+                                    language_detected=lang,
+                                    confidence=confidence,
+                                    model=self.model,
+                                    is_mock=False,
+                                    duration_sec=data.get("audio_duration")
+                                )
+                            elif response.status_code == 429:
+                                logger.warning(f"Gnani Prisma 429 rate limit (attempt {attempt+1}). Sleeping 0.8s before retry...")
+                                await asyncio.sleep(0.8)
+                                continue
+                            elif response.status_code in (401, 403) and len(api_keys) > 1:
+                                logger.warning(f"Gnani Prisma returned {response.status_code} with current key, attempting fallback key...")
+                                continue
+                            else:
+                                try:
+                                    err_payload = response.json()
+                                    logger.warning(f"Gnani Prisma returned HTTP {response.status_code}: {err_payload}")
+                                except Exception:
+                                    logger.warning(f"Gnani Prisma returned HTTP {response.status_code}: {response.text[:200]}")
+                        except Exception as exc:
+                            logger.warning(f"Error attempting Gnani Prisma call: {exc}")
                             continue
-                        elif response.status_code in (401, 403) and len(api_keys) > 1:
-                            logger.warning(f"Gnani Prisma returned {response.status_code} with current key, attempting fallback key...")
-                            continue
-                        else:
-                            try:
-                                err_payload = response.json()
-                                logger.warning(f"Gnani Prisma returned HTTP {response.status_code}: {err_payload}")
-                            except Exception:
-                                logger.warning(f"Gnani Prisma returned HTTP {response.status_code}: {response.text[:200]}")
-                    except Exception as exc:
-                        logger.warning(f"Error attempting Gnani Prisma call: {exc}")
-                        continue
 
         logger.warning(
-            f"Gnani Prisma requests exhausted (last HTTP {last_status}). Falling back to mock transcription."
+            f"Gnani Prisma requests exhausted (last HTTP {last_status})."
         )
+        if api_keys:
+            return TranscriptionResponse(
+                transcript="",
+                language_detected="und",
+                confidence=0.0,
+                model=self.model,
+                is_mock=False,
+                note=f"Upstream Gnani STT service unavailable (HTTP {last_status}). Please try speaking again."
+            )
         return TranscriptionResponse(
             transcript=DEFAULT_MOCK_TRANSCRIPT,
             language_detected="hi-Latn (Fallback Mock)",

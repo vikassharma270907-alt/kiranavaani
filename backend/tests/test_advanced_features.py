@@ -944,3 +944,37 @@ def test_jazbaat_zero_words_and_symbol_inputs():
         assert j.speech_tempo_wpm == 120.0
         assert j.detected_cues == []
         assert j.sentiment == "POLITE_NEUTRAL"
+
+
+def test_jazbaat_devanagari_urgency_negation():
+    """Verify Devanagari urgency negation ('कोई जल्दी नहीं है', 'आराम से भेजना') does not trigger false Tatkal."""
+    j1 = order_parser.extract_customer_jazbaat("भैया 2 किलो आटा भेज देना, कोई जल्दी नहीं है आराम से भेजना")
+    assert j1.is_tatkal_priority is False
+    assert j1.urgency_level != "TATKAL_EXPRESS_10MIN"
+
+    j2 = order_parser.extract_customer_jazbaat("गुप्ता जी जल्दी नहीं है, शाम तक भिजवा देना")
+    assert j2.is_tatkal_priority is False
+    assert j2.urgency_level != "TATKAL_EXPRESS_10MIN"
+
+
+def test_transcribe_payload_size_limit_413():
+    """Verify /transcribe returns 413 Payload Too Large when base64 payload exceeds 15 MB limit."""
+    oversized_b64 = "A" * 15_000_001
+    res = client.post("/transcribe", json={"audio_base64": oversized_b64})
+    assert res.status_code == 413
+
+
+def test_process_order_empty_microphone_audio():
+    """Verify sending silent or empty microphone audio returns prompt to re-speak instead of mock Maggi."""
+    # 20 bytes of audio (<32 bytes)
+    short_b64 = base64.b64encode(b"TINY_SILENT_CHUNKS!").decode("ascii")
+    res = client.post("/process-order", json={
+        "audio_base64": short_b64,
+        "keyterms_enabled": True,
+        "synthesize_voice": False
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["transcript"] == ""
+    assert "माफ़ कीजिये" in data["spoken_reply_hi"] or "आवाज़" in data["spoken_reply_hi"]
+    assert len(data["parsed_items"]) == 0

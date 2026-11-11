@@ -491,9 +491,9 @@ class HinglishOrderParser:
             tempo_wpm = min(190.0, 130.0 + (word_count * 2.5))
             urgency_points += 0.15
 
-        # Check for explicit negation of urgency (e.g. "koi jaldi nahi hai", "aaram se bhej dena", "not urgent")
+        # Check for explicit negation of urgency (Latin & Devanagari: "koi jaldi nahi hai", "कोई जल्दी नहीं है", "आराम से भेजना", "not urgent")
         has_negated_urgency = bool(re.search(
-            r"(?:koi\s+)?(?:jaldi|urgent|emergency|turant)\s+(?:nahi|nahin|mat|nhi)|not\s+(?:urgent|in\s+a\s+rush)|aaram\s+se\s+bhej",
+            r"(?:koi\s+|कोई\s+)?(?:jaldi|urgent|emergency|turant|जल्दी|अर्जेंट|इमरजेंसी|तुरंत)\s+(?:nahi|nahin|mat|nhi|नहीं|नही|मत)|not\s+(?:urgent|in\s+a\s+rush)|(?:aaram\s+se|आराम\s+से)(?:\s+(?:bhej|भेज|dena|देना))?",
             text_lower
         ))
         if has_negated_urgency:
